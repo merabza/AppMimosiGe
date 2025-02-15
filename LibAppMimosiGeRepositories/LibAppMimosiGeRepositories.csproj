@@ -3,6 +3,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <ItemGroup>
         <ProjectReference Include="..\..\AppMimosiGeDbPart\AppMimosiGeDb\AppMimosiGeDb.csproj" />
+        <ProjectReference Include="..\..\MimosiGeDbPart\MimosiGeDb\MimosiGeDb.csproj" />
     </ItemGroup>
     <PropertyGroup>
         <TargetFramework>net9.0</TargetFramework>

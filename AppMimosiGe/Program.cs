@@ -5,7 +5,6 @@ using FluentValidationInstaller;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
-using SignalRMessages.Installers;
 using SwaggerTools;
 using System;
 using System.Collections.Generic;
@@ -37,7 +36,7 @@ try
             CarcassDom.AssemblyReference.Assembly, CarcassIdentity.AssemblyReference.Assembly,
 
 //AppMimosiGeDbPart
-            AppMimosiGeDb.AssemblyReference.Assembly, AppMimosiGeRepositories.AssemblyReference.Assembly,
+            MimosiGeDb.AssemblyReference.Assembly, AppMimosiGeRepositories.AssemblyReference.Assembly,
 
 //WebSystemTools
             ApiExceptionHandler.AssemblyReference.Assembly, ConfigurationEncrypt.AssemblyReference.Assembly,

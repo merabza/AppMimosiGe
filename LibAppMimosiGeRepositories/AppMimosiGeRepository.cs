@@ -1,18 +1,17 @@
-//Created by RepositoryClassCreator at 2/15/2025 11:07:44 AM
-
 using System;
-using AppMimosiGeDb;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
+using MimosiGeDb;
 
 namespace LibAppMimosiGeRepositories;
 
 public sealed class AppMimosiGeRepository : IAppMimosiGeRepository
 {
-    private readonly AppMimosiGeDbContext _context;
+    private readonly MimosiGeDbContext _context;
     private readonly ILogger<AppMimosiGeRepository> _logger;
 
-    public AppMimosiGeRepository(AppMimosiGeDbContext ctx, ILogger<AppMimosiGeRepository> logger)
+    // ReSharper disable once ConvertToPrimaryConstructor
+    public AppMimosiGeRepository(MimosiGeDbContext ctx, ILogger<AppMimosiGeRepository> logger)
     {
         _context = ctx;
         _logger = logger;
@@ -35,10 +34,10 @@ public sealed class AppMimosiGeRepository : IAppMimosiGeRepository
     {
         try
         {
-            using IDbContextTransaction transaction = GetTransaction();
+            using var transaction = GetTransaction();
             try
             {
-                int ret = _context.SaveChanges();
+                var ret = _context.SaveChanges();
                 transaction.Commit();
                 return ret;
             }
