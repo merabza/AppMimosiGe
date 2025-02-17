@@ -2,7 +2,6 @@
 
 <Project Sdk="Microsoft.NET.Sdk">
     <ItemGroup>
-        <ProjectReference Include="..\..\AppMimosiGeDbPart\AppMimosiGeDb\AppMimosiGeDb.csproj" />
         <ProjectReference Include="..\..\BackendCarcass\CarcassRepositories\CarcassRepositories.csproj" />
         <ProjectReference Include="..\..\MimosiGeDbPart\MimosiGeDb\MimosiGeDb.csproj" />
     </ItemGroup>
