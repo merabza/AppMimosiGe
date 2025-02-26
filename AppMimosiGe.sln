@@ -85,6 +85,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BackendCarcassApi", "..\Bac
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MimosiGeDb", "..\MimosiGeDbPart\MimosiGeDb\MimosiGeDb.csproj", "{7D980FF6-8BE2-65B1-94FD-677228F9C6F5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DatabaseToolsShared", "..\SystemTools\DatabaseToolsShared\DatabaseToolsShared.csproj", "{C44870DB-E421-B877-9CA8-6CE64E0CBF62}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -509,6 +511,18 @@ Global
 		{7D980FF6-8BE2-65B1-94FD-677228F9C6F5}.Release|x64.Build.0 = Release|Any CPU
 		{7D980FF6-8BE2-65B1-94FD-677228F9C6F5}.Release|x86.ActiveCfg = Release|Any CPU
 		{7D980FF6-8BE2-65B1-94FD-677228F9C6F5}.Release|x86.Build.0 = Release|Any CPU
+		{C44870DB-E421-B877-9CA8-6CE64E0CBF62}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C44870DB-E421-B877-9CA8-6CE64E0CBF62}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C44870DB-E421-B877-9CA8-6CE64E0CBF62}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C44870DB-E421-B877-9CA8-6CE64E0CBF62}.Debug|x64.Build.0 = Debug|Any CPU
+		{C44870DB-E421-B877-9CA8-6CE64E0CBF62}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C44870DB-E421-B877-9CA8-6CE64E0CBF62}.Debug|x86.Build.0 = Debug|Any CPU
+		{C44870DB-E421-B877-9CA8-6CE64E0CBF62}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C44870DB-E421-B877-9CA8-6CE64E0CBF62}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C44870DB-E421-B877-9CA8-6CE64E0CBF62}.Release|x64.ActiveCfg = Release|Any CPU
+		{C44870DB-E421-B877-9CA8-6CE64E0CBF62}.Release|x64.Build.0 = Release|Any CPU
+		{C44870DB-E421-B877-9CA8-6CE64E0CBF62}.Release|x86.ActiveCfg = Release|Any CPU
+		{C44870DB-E421-B877-9CA8-6CE64E0CBF62}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -545,6 +559,7 @@ Global
 		{A24489EA-E924-482B-A940-DFAD033FF6F8} = {777DDE44-8409-0F7E-5879-0EC8C7467096}
 		{9CCEA31C-FDD6-48FD-BF1A-BA6300DC9FAA} = {777DDE44-8409-0F7E-5879-0EC8C7467096}
 		{7D980FF6-8BE2-65B1-94FD-677228F9C6F5} = {F6FD59EC-F351-1F82-1FAA-E9A4BFD2388A}
+		{C44870DB-E421-B877-9CA8-6CE64E0CBF62} = {3C5B3D1E-52CC-7748-3607-1E9B3B40885C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {44A6282C-5E61-4689-AC79-EE9BDB2446F2}
