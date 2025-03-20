@@ -2,9 +2,7 @@
     <ItemGroup>
         <ProjectReference Include="..\..\BackendCarcass\CarcassIdentity\CarcassIdentity.csproj" />
         <ProjectReference Include="..\..\MimosiGeDbPart\MimosiGeDb\MimosiGeDb.csproj" />
-        <ProjectReference Include="..\..\WebSystemTools\SignalRMessages\SignalRMessages.csproj" />
         <ProjectReference Include="..\..\WebSystemTools\FluentValidationInstaller\FluentValidationInstaller.csproj" />
-        <ProjectReference Include="..\..\SystemTools\SystemToolsShared\SystemToolsShared.csproj" />
         <ProjectReference Include="..\..\WebSystemTools\ApiExceptionHandler\ApiExceptionHandler.csproj" />
         <ProjectReference Include="..\..\WebSystemTools\TestToolsApi\TestToolsApi.csproj" />
         <ProjectReference Include="..\..\WebSystemTools\StaticFilesTools\StaticFilesTools.csproj" />
@@ -15,11 +13,9 @@
         <ProjectReference Include="..\..\WebSystemTools\WindowsServiceTools\WindowsServiceTools.csproj" />
         <ProjectReference Include="..\..\BackendCarcass\CarcassRepositories\CarcassRepositories.csproj" />
         <ProjectReference Include="..\..\BackendCarcass\BackendCarcassApi\BackendCarcassApi.csproj" />
-        <ProjectReference Include="..\LibAppMimosiGeRepositories\LibAppMimosiGeRepositories.csproj" />
         <ProjectReference Include="..\AppMimosiGeRepositories\AppMimosiGeRepositories.csproj" />
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="9.0.3" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.3">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
             <PrivateAssets>all</PrivateAssets>

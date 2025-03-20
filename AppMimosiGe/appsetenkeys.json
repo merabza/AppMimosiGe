@@ -1,8 +1,8 @@
 {
-  "Keys": [
-    "Data:AppMimosiGeDatabase:ConnectionString",
-    "IdentitySettings:JwtSecret",
-    "Serilog:WriteTo:1:Args:path",
-    "CorsSettings:Origins:[]"
-  ]
+    "Keys": [
+        "Data:AppMimosiGeDatabase:ConnectionString",
+        "IdentitySettings:JwtSecret",
+        "Serilog:WriteTo:1:Args:path",
+        "CorsSettings:Origins:[]"
+    ]
 }

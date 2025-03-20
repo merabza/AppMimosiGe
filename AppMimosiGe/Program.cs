@@ -1,15 +1,16 @@
 //Created by ApiProgramClassCreator at 2/15/2025 11:07:44 AM
 
+using System;
+using System.Collections.Generic;
 using ConfigurationEncrypt;
 using FluentValidationInstaller;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Serilog;
 using SwaggerTools;
-using System;
-using System.Collections.Generic;
 using WebInstallers;
-using Microsoft.Extensions.Hosting;
+using AssemblyReference = CarcassRepositories.AssemblyReference;
 
 try
 {
@@ -32,7 +33,7 @@ try
     if (!builder.InstallServices(debugMode, args, parameters,
 
 //BackendCarcass
-            CarcassRepositories.AssemblyReference.Assembly, BackendCarcassApi.AssemblyReference.Assembly,
+            AssemblyReference.Assembly, BackendCarcassApi.AssemblyReference.Assembly,
             CarcassDom.AssemblyReference.Assembly, CarcassIdentity.AssemblyReference.Assembly,
 
 //AppMimosiGeDbPart
@@ -43,9 +44,7 @@ try
             CorsTools.AssemblyReference.Assembly, SerilogLogger.AssemblyReference.Assembly,
             StaticFilesTools.AssemblyReference.Assembly, SwaggerTools.AssemblyReference.Assembly,
             TestToolsApi.AssemblyReference.Assembly, WindowsServiceTools.AssemblyReference.Assembly))
-    {
         return 2;
-    }
 
     builder.Services.AddMediatR(cfg =>
     {
@@ -68,10 +67,7 @@ try
 
     using var app = builder.Build();
 
-    if (!app.UseServices(debugMode))
-    {
-        return 1;
-    }
+    if (!app.UseServices(debugMode)) return 1;
 
     app.Run();
     return 0;

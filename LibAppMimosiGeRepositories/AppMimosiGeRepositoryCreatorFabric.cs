@@ -16,7 +16,7 @@ public sealed class AppMimosiGeRepositoryCreatorFabric : IAppMimosiGeRepositoryC
 
     public IAppMimosiGeRepository GetAppMimosiGeRepository()
     {
-        IServiceScope scope = _services.CreateScope();
+        var scope = _services.CreateScope();
         return scope.ServiceProvider.GetRequiredService<IAppMimosiGeRepository>();
     }
 }
