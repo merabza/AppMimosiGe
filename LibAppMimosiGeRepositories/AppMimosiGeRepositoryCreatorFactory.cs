@@ -1,15 +1,15 @@
-//Created by RepositoryCreatorFabricCreator at 2/15/2025 11:07:44 AM
+//Created by RepositoryCreatorFactoryCreator at 2/15/2025 11:07:44 AM
 
 using System;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace LibAppMimosiGeRepositories;
 
-public sealed class AppMimosiGeRepositoryCreatorFabric : IAppMimosiGeRepositoryCreatorFabric
+public sealed class AppMimosiGeRepositoryCreatorFactory : IAppMimosiGeRepositoryCreatorFactory
 {
     private readonly IServiceProvider _services;
 
-    public AppMimosiGeRepositoryCreatorFabric(IServiceProvider services)
+    public AppMimosiGeRepositoryCreatorFactory(IServiceProvider services)
     {
         _services = services;
     }
