@@ -1,15 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.0.31903.59
+# Visual Studio Version 18
+VisualStudioVersion = 18.0.11205.157 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppMimosiGe", "AppMimosiGe\AppMimosiGe.csproj", "{E8A24498-1128-4FEC-BEFA-59D3BB90C7F7}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LibAppMimosiGeRepositories", "LibAppMimosiGeRepositories\LibAppMimosiGeRepositories.csproj", "{0BAC65EE-E87B-402A-8A07-3A13BDDCA1F8}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "MimosiGeDbPart", "MimosiGeDbPart", "{F6FD59EC-F351-1F82-1FAA-E9A4BFD2388A}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppMimosiGeDbMigration", "AppMimosiGeDbMigration\AppMimosiGeDbMigration.csproj", "{FBD2A77C-9863-452B-9C09-DBD3B8D88790}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppMimosiGeRepositories", "AppMimosiGeRepositories\AppMimosiGeRepositories.csproj", "{74457C1E-7B67-495B-8052-CFD905060C25}"
 EndProject
@@ -121,18 +119,6 @@ Global
 		{0BAC65EE-E87B-402A-8A07-3A13BDDCA1F8}.Release|x64.Build.0 = Release|Any CPU
 		{0BAC65EE-E87B-402A-8A07-3A13BDDCA1F8}.Release|x86.ActiveCfg = Release|Any CPU
 		{0BAC65EE-E87B-402A-8A07-3A13BDDCA1F8}.Release|x86.Build.0 = Release|Any CPU
-		{FBD2A77C-9863-452B-9C09-DBD3B8D88790}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FBD2A77C-9863-452B-9C09-DBD3B8D88790}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FBD2A77C-9863-452B-9C09-DBD3B8D88790}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{FBD2A77C-9863-452B-9C09-DBD3B8D88790}.Debug|x64.Build.0 = Debug|Any CPU
-		{FBD2A77C-9863-452B-9C09-DBD3B8D88790}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{FBD2A77C-9863-452B-9C09-DBD3B8D88790}.Debug|x86.Build.0 = Debug|Any CPU
-		{FBD2A77C-9863-452B-9C09-DBD3B8D88790}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FBD2A77C-9863-452B-9C09-DBD3B8D88790}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FBD2A77C-9863-452B-9C09-DBD3B8D88790}.Release|x64.ActiveCfg = Release|Any CPU
-		{FBD2A77C-9863-452B-9C09-DBD3B8D88790}.Release|x64.Build.0 = Release|Any CPU
-		{FBD2A77C-9863-452B-9C09-DBD3B8D88790}.Release|x86.ActiveCfg = Release|Any CPU
-		{FBD2A77C-9863-452B-9C09-DBD3B8D88790}.Release|x86.Build.0 = Release|Any CPU
 		{74457C1E-7B67-495B-8052-CFD905060C25}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{74457C1E-7B67-495B-8052-CFD905060C25}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{74457C1E-7B67-495B-8052-CFD905060C25}.Debug|x64.ActiveCfg = Debug|Any CPU
