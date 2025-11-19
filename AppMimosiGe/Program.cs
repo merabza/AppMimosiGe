@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using ConfigurationEncrypt;
 using FluentValidationInstaller;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
@@ -32,35 +33,38 @@ try
 
     if (!builder.InstallServices(debugMode, args, parameters,
 
-//BackendCarcass
+            //BackendCarcass
             AssemblyReference.Assembly, BackendCarcassApi.AssemblyReference.Assembly,
             CarcassDom.AssemblyReference.Assembly, CarcassIdentity.AssemblyReference.Assembly,
 
-//AppMimosiGeDbPart
+            //AppMimosiGeDbPart
             MimosiGeDb.AssemblyReference.Assembly, AppMimosiGeRepositories.AssemblyReference.Assembly,
 
-//WebSystemTools
+            //WebSystemTools
             ApiExceptionHandler.AssemblyReference.Assembly, ConfigurationEncrypt.AssemblyReference.Assembly,
             CorsTools.AssemblyReference.Assembly, SerilogLogger.AssemblyReference.Assembly,
             StaticFilesTools.AssemblyReference.Assembly, SwaggerTools.AssemblyReference.Assembly,
             TestToolsApi.AssemblyReference.Assembly, WindowsServiceTools.AssemblyReference.Assembly))
         return 2;
 
+    var mediatRSettings = builder.Configuration.GetSection("MediatRLicenseKey");
+
+    var mediatRLicenseKey = mediatRSettings.Get<string>();
+
     builder.Services.AddMediatR(cfg =>
     {
-        {
-            //BackendCarcass
-            cfg.RegisterServicesFromAssembly(BackendCarcassApi.AssemblyReference.Assembly);
-            //AppMimosiGe
-        }
+        cfg.LicenseKey = mediatRLicenseKey;
+        //BackendCarcass
+        cfg.RegisterServicesFromAssembly(BackendCarcassApi.AssemblyReference.Assembly);
+        //AppMimosiGe
     });
 
     //FluentValidationInstaller
 
     builder.Services.InstallValidation(
-//BackendCarcass
+        //BackendCarcass
         BackendCarcassApi.AssemblyReference.Assembly
-//AppMimosiGe
+        //AppMimosiGe
     );
 
     //ReSharper disable once using
