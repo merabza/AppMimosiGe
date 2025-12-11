@@ -34,6 +34,7 @@ public sealed class AppMimosiGeRepository : IAppMimosiGeRepository
     {
         try
         {
+            // ReSharper disable once using
             using var transaction = GetTransaction();
             try
             {

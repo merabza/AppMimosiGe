@@ -16,6 +16,7 @@ public sealed class AppMimosiGeRepositoryCreatorFactory : IAppMimosiGeRepository
 
     public IAppMimosiGeRepository GetAppMimosiGeRepository()
     {
+        // ReSharper disable once using
         var scope = _services.CreateScope();
         return scope.ServiceProvider.GetRequiredService<IAppMimosiGeRepository>();
     }
