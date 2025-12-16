@@ -29,6 +29,7 @@ public sealed class RepositoriesInstaller : IInstaller
         builder.Services.AddScoped<IReturnValuesLoaderCreator, ReturnValuesLoaderCreator>();
         //builder.Services.AddScoped<IMasterDataLoaderCreator, MimMasterDataLoaderCrudCreator>()
         //builder.Services.AddScoped<IReturnValuesLoaderCreator, MimReturnValuesLoaderCreator>()
+        builder.Services.AddScoped<ICarcassMasterDataRepository, MimosiGeMasterDataRepository>();
 
         if (debugMode) Console.WriteLine($"{GetType().Name}.{nameof(InstallServices)} Started");
 
