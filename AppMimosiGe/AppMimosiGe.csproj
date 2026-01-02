@@ -2,11 +2,10 @@
     <ItemGroup>
         <ProjectReference Include="..\..\BackendCarcass\CarcassIdentity\CarcassIdentity.csproj" />
         <ProjectReference Include="..\..\MimosiGeDbPart\MimosiGeDb\MimosiGeDb.csproj" />
-        <ProjectReference Include="..\..\WebSystemTools\FluentValidationInstaller\FluentValidationInstaller.csproj" />
         <ProjectReference Include="..\..\WebSystemTools\ApiExceptionHandler\ApiExceptionHandler.csproj" />
+        <ProjectReference Include="..\..\WebSystemTools\MediatorTools\MediatorTools.csproj" />
         <ProjectReference Include="..\..\WebSystemTools\TestToolsApi\TestToolsApi.csproj" />
         <ProjectReference Include="..\..\WebSystemTools\StaticFilesTools\StaticFilesTools.csproj" />
-        <ProjectReference Include="..\..\WebSystemTools\WebInstallers\WebInstallers.csproj" />
         <ProjectReference Include="..\..\WebSystemTools\ConfigurationEncrypt\ConfigurationEncrypt.csproj" />
         <ProjectReference Include="..\..\WebSystemTools\SerilogLogger\SerilogLogger.csproj" />
         <ProjectReference Include="..\..\WebSystemTools\SwaggerTools\SwaggerTools.csproj" />

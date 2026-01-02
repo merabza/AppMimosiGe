@@ -5,6 +5,9 @@
         <ProjectReference Include="..\..\BackendCarcass\CarcassRepositories\CarcassRepositories.csproj" />
         <ProjectReference Include="..\..\MimosiGeDbPart\MimosiGeDb\MimosiGeDb.csproj" />
     </ItemGroup>
+    <ItemGroup>
+      <Folder Include="Installers\" />
+    </ItemGroup>
     <PropertyGroup>
         <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>disable</ImplicitUsings>

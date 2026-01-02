@@ -1,0 +1,56 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/AppMimosiGeFront/">
+    <Project Path="../AppMimosiGeFront/appmimosigefrontend/appmimosigefrontend.esproj">
+      <Platform Project="AnyCPU" />
+    </Project>
+  </Folder>
+  <Folder Name="/BackendCarcass/">
+    <Project Path="../BackendCarcass/BackendCarcassApi/BackendCarcassApi.csproj" />
+    <Project Path="../BackendCarcass/CarcassApplication/CarcassApplication.csproj" />
+    <Project Path="../BackendCarcass/CarcassDb/CarcassDb.csproj" />
+    <Project Path="../BackendCarcass/CarcassDom/CarcassDom.csproj" />
+    <Project Path="../BackendCarcass/CarcassIdentity/CarcassIdentity.csproj" />
+    <Project Path="../BackendCarcass/CarcassMappers/CarcassMappers.csproj" />
+    <Project Path="../BackendCarcass/CarcassMasterDataDom/CarcassMasterDataDom.csproj" />
+    <Project Path="../BackendCarcass/CarcassRepositories/CarcassRepositories.csproj" />
+    <Project Path="../BackendCarcass/CarcassRights/CarcassRights.csproj" />
+    <Project Path="../BackendCarcass/LibCrud/LibCrud.csproj" />
+  </Folder>
+  <Folder Name="/BackendCarcassShared/">
+    <Project Path="../BackendCarcassShared/BackendCarcassContracts/BackendCarcassContracts.csproj" />
+  </Folder>
+  <Folder Name="/MimosiGeDbPart/">
+    <Project Path="../MimosiGeDbPart/MimosiGeDb/MimosiGeDb.csproj" />
+  </Folder>
+  <Folder Name="/SystemTools/">
+    <Project Path="../SystemTools/ApiContracts/ApiContracts.csproj" />
+    <Project Path="../SystemTools/DatabaseToolsShared/DatabaseToolsShared.csproj" />
+    <Project Path="../SystemTools/MediatRMessagingAbstractions/MediatRMessagingAbstractions.csproj" />
+    <Project Path="../SystemTools/ReCounterContracts/ReCounterContracts.csproj" />
+    <Project Path="../SystemTools/RepositoriesDom/RepositoriesDom.csproj" />
+    <Project Path="../SystemTools/StringMessagesApiContracts/StringMessagesApiContracts.csproj" />
+    <Project Path="../SystemTools/SystemToolsShared/SystemToolsShared.csproj" />
+    <Project Path="../SystemTools/TestApiContracts/TestApiContracts.csproj" />
+  </Folder>
+  <Folder Name="/WebSystemTools/">
+    <Project Path="../WebSystemTools/ApiExceptionHandler/ApiExceptionHandler.csproj" />
+    <Project Path="../WebSystemTools/ConfigurationEncrypt/ConfigurationEncrypt.csproj" />
+    <Project Path="../WebSystemTools/CorsTools/CorsTools.csproj" />
+    <Project Path="../WebSystemTools/MediatorTools/MediatorTools.csproj" />
+    <Project Path="../WebSystemTools/SerilogLogger/SerilogLogger.csproj" />
+    <Project Path="../WebSystemTools/SignalRMessages/SignalRMessages.csproj" />
+    <Project Path="../WebSystemTools/StaticFilesTools/StaticFilesTools.csproj" />
+    <Project Path="../WebSystemTools/SwaggerTools/SwaggerTools.csproj" />
+    <Project Path="../WebSystemTools/TestToolsApi/TestToolsApi.csproj" />
+    <Project Path="../WebSystemTools/TestToolsData/TestToolsData.csproj" />
+    <Project Path="../WebSystemTools/WindowsServiceTools/WindowsServiceTools.csproj" />
+  </Folder>
+  <Project Path="AppMimosiGe/AppMimosiGe.csproj" />
+  <Project Path="AppMimosiGeRepositories/AppMimosiGeRepositories.csproj" />
+  <Project Path="LibAppMimosiGeRepositories/LibAppMimosiGeRepositories.csproj" />
+</Solution>
