@@ -1,10 +1,11 @@
 //Created by ApiProgramClassCreator at 2/15/2025 11:07:44 AM
 
+using System;
+using System.Reflection;
 using AppMimosiGeRepositories.DependencyInjection;
 using BackendCarcassApi;
 using BackendCarcassApi.DependencyInjection;
-using CarcassApplication.DependencyInjection;
-using CarcassDom.DependencyInjection;
+using Carcass.Application.DependencyInjection;
 using CarcassIdentity.DependencyInjection;
 using CarcassRepositories.DependencyInjection;
 using ConfigurationEncrypt;
@@ -12,12 +13,10 @@ using CorsTools.DependencyInjection;
 using MediatorTools.DependencyInjection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Hosting;
+using MimosiGeDb.DependencyInjection;
 using Serilog;
 using SerilogLogger;
 using SwaggerTools.DependencyInjection;
-using System;
-using System.Reflection;
-using MimosiGeDb.DependencyInjection;
 using TestToolsApi.DependencyInjection;
 using WindowsServiceTools;
 
@@ -118,7 +117,7 @@ try
         .AddCarcassRepositories(debugMode)
         .AddCarcassIdentity(builder.Configuration, debugMode)
         .AddScopedAllCarcassApplicationServices(debugMode)
-        .AddCarcassDom(debugMode)
+        //.AddCarcassDom(debugMode)
         .AddAppMimosiGeRepositories(debugMode)
         .AddMimosiGeDb(builder.Configuration,debugMode);
     //GrammarGeDbPart

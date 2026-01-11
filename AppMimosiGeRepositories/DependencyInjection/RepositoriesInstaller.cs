@@ -1,11 +1,11 @@
 //Created by RepositoriesInstallerClassCreator at 2/15/2025 11:07:44 AM
 
 using System;
-using CarcassDom;
-using CarcassMasterDataDom;
+using CarcassMasterData;
 using CarcassRepositories;
+using CarcassRights;
+using DomainShared.Repositories;
 using Microsoft.Extensions.DependencyInjection;
-using RepositoriesDom;
 
 namespace AppMimosiGeRepositories.DependencyInjection;
 
@@ -17,7 +17,7 @@ public static class AppMimosiGeRepositoriesDependencyInjection
         if (debugMode) Console.WriteLine($"{nameof(AddAppMimosiGeRepositories)} Started");
 
         services.AddScoped<IUserRightsRepository, UserRightsRepository>();
-        services.AddScoped<IAbstractRepository, MimAbstractRepository>();
+        services.AddScoped<IUnitOfWork, MimosiGeUnitOfWork>();
         services.AddScoped<IMasterDataLoaderCreator, MasterDataLoaderCreator>();
         services.AddScoped<IReturnValuesLoaderCreator, ReturnValuesLoaderCreator>();
         //builder.Services.AddScoped<IMasterDataLoaderCreator, MimMasterDataLoaderCrudCreator>()

@@ -2,6 +2,7 @@
 
 <Project Sdk="Microsoft.NET.Sdk">
     <ItemGroup>
+        <ProjectReference Include="..\..\BackendCarcass\Carcass.Persistence\Carcass.Persistence.csproj" />
         <ProjectReference Include="..\..\BackendCarcass\CarcassRepositories\CarcassRepositories.csproj" />
         <ProjectReference Include="..\..\MimosiGeDbPart\MimosiGeDb\MimosiGeDb.csproj" />
     </ItemGroup>

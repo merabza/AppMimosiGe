@@ -11,12 +11,14 @@
   </Folder>
   <Folder Name="/BackendCarcass/">
     <Project Path="../BackendCarcass/BackendCarcassApi/BackendCarcassApi.csproj" />
-    <Project Path="../BackendCarcass/CarcassApplication/CarcassApplication.csproj" />
+    <Project Path="../BackendCarcass/Carcass.Application/Carcass.Application.csproj" />
+    <Project Path="../BackendCarcass/Carcass.Database/Carcass.Database.csproj" />
+    <Project Path="../BackendCarcass/Carcass.Persistence/Carcass.Persistence.csproj" />
     <Project Path="../BackendCarcass/CarcassDb/CarcassDb.csproj" />
-    <Project Path="../BackendCarcass/CarcassDom/CarcassDom.csproj" />
+    <Project Path="../BackendCarcass/CarcassFilterSort/CarcassFilterSort.csproj" />
     <Project Path="../BackendCarcass/CarcassIdentity/CarcassIdentity.csproj" />
     <Project Path="../BackendCarcass/CarcassMappers/CarcassMappers.csproj" />
-    <Project Path="../BackendCarcass/CarcassMasterDataDom/CarcassMasterDataDom.csproj" />
+    <Project Path="../BackendCarcass/CarcassMasterData/CarcassMasterData.csproj" />
     <Project Path="../BackendCarcass/CarcassRepositories/CarcassRepositories.csproj" />
     <Project Path="../BackendCarcass/CarcassRights/CarcassRights.csproj" />
     <Project Path="../BackendCarcass/LibCrud/LibCrud.csproj" />
@@ -30,9 +32,10 @@
   <Folder Name="/SystemTools/">
     <Project Path="../SystemTools/ApiContracts/ApiContracts.csproj" />
     <Project Path="../SystemTools/DatabaseToolsShared/DatabaseToolsShared.csproj" />
+    <Project Path="../SystemTools/DomainShared/DomainShared.csproj" />
     <Project Path="../SystemTools/MediatRMessagingAbstractions/MediatRMessagingAbstractions.csproj" />
     <Project Path="../SystemTools/ReCounterContracts/ReCounterContracts.csproj" />
-    <Project Path="../SystemTools/RepositoriesDom/RepositoriesDom.csproj" />
+    <Project Path="../SystemTools/RepositoriesShared/RepositoriesShared.csproj" />
     <Project Path="../SystemTools/StringMessagesApiContracts/StringMessagesApiContracts.csproj" />
     <Project Path="../SystemTools/SystemToolsShared/SystemToolsShared.csproj" />
     <Project Path="../SystemTools/TestApiContracts/TestApiContracts.csproj" />
