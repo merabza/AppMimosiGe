@@ -29,6 +29,11 @@
   <Folder Name="/MimosiGeDbPart/">
     <Project Path="../MimosiGeDbPart/MimosiGeDb/MimosiGeDb.csproj" />
   </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+  </Folder>
   <Folder Name="/SystemTools/">
     <Project Path="../SystemTools/ApiContracts/ApiContracts.csproj" />
     <Project Path="../SystemTools/DatabaseToolsShared/DatabaseToolsShared.csproj" />

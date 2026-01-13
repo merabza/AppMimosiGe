@@ -1,0 +1,7 @@
+2026-01-13 21:40:06.832 +04:00 [FTL] Host terminated unexpectedly
+System.IO.FileNotFoundException: The configuration file 'appsettingsEncoded.json' was not found and is not optional. The expected physical path was 'D:\1WorkMimosi\AppMimosiGe\AppMimosiGe\AppMimosiGe\appsettingsEncoded.json'.
+   at Microsoft.Extensions.Configuration.FileConfigurationProvider.Load(Boolean reload)
+   at Microsoft.Extensions.Configuration.ConfigurationRoot..ctor(IList`1 providers)
+   at Microsoft.Extensions.Configuration.ConfigurationBuilder.Build()
+   at ConfigurationEncrypt.ConfigurationEncryptHostBuilderExtensions.AddConfigurationEncryption(IConfigurationBuilder configurationBuilder, Boolean debugMode, String appKey) in D:\1WorkMimosi\AppMimosiGe\WebSystemTools\ConfigurationEncrypt\ConfigurationEncryptHostBuilderExtensions.cs:line 31
+   at Program.<Main>$(String[] args) in D:\1WorkMimosi\AppMimosiGe\AppMimosiGe\AppMimosiGe\Program.cs:line 58

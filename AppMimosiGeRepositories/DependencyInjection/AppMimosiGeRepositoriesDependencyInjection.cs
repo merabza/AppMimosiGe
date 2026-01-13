@@ -1,20 +1,24 @@
 //Created by RepositoriesInstallerClassCreator at 2/15/2025 11:07:44 AM
 
-using System;
 using CarcassMasterData;
 using CarcassRepositories;
 using CarcassRights;
 using DomainShared.Repositories;
 using Microsoft.Extensions.DependencyInjection;
+using Serilog;
 
 namespace AppMimosiGeRepositories.DependencyInjection;
 
 // ReSharper disable once UnusedType.Global
 public static class AppMimosiGeRepositoriesDependencyInjection
 {
-    public static IServiceCollection AddAppMimosiGeRepositories(this IServiceCollection services, bool debugMode)
+    public static IServiceCollection AddAppMimosiGeRepositories(this IServiceCollection services, ILogger logger,
+        bool debugMode)
     {
-        if (debugMode) Console.WriteLine($"{nameof(AddAppMimosiGeRepositories)} Started");
+        if (debugMode)
+        {
+            logger.Information("{MethodName} Started", nameof(AddAppMimosiGeRepositories));
+        }
 
         services.AddScoped<IUserRightsRepository, UserRightsRepository>();
         services.AddScoped<IUnitOfWork, MimosiGeUnitOfWork>();
@@ -24,7 +28,10 @@ public static class AppMimosiGeRepositoriesDependencyInjection
         //builder.Services.AddScoped<IReturnValuesLoaderCreator, MimReturnValuesLoaderCreator>()
         services.AddScoped<ICarcassMasterDataRepository, MimosiGeMasterDataRepository>();
 
-        if (debugMode) Console.WriteLine($"{nameof(AddAppMimosiGeRepositories)} Started");
+        if (debugMode)
+        {
+            logger.Information("{MethodName} Finished", nameof(AddAppMimosiGeRepositories));
+        }
 
         return services;
     }

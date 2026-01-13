@@ -10,6 +10,7 @@ using CarcassIdentity.DependencyInjection;
 using CarcassRepositories.DependencyInjection;
 using ConfigurationEncrypt;
 using CorsTools.DependencyInjection;
+using Figgle.Fonts;
 using MediatorTools.DependencyInjection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Hosting;
@@ -24,14 +25,16 @@ using WindowsServiceTools;
 
 try
 {
+#pragma warning disable CA1303 // Do not pass literals as localized parameters
     Console.WriteLine("Loading...");
+#pragma warning restore CA1303 // Do not pass literals as localized parameters
 
     const string appName = "App.Mimosi.Ge";
     const string appKey = "01e719dc51534a83988741c50da6a87b";
     const int versionCount = 1;
 
     var header = $"{appName} {Assembly.GetEntryAssembly()?.GetName().Version}";
-    //Console.WriteLine(FiggleFonts.Standard.Render(header));
+    Console.WriteLine(FiggleFonts.Standard.Render(header));
 
     //var parameters = new Dictionary<string, string>
     //{
@@ -49,7 +52,7 @@ try
 
     var debugMode = builder.Environment.IsDevelopment();
 
-    builder.Host.UseSerilogLogger(builder.Configuration, debugMode);
+    var logger = builder.Host.UseSerilogLogger(builder.Configuration, debugMode);
     builder.Host.UseWindowsServiceOnWindows(debugMode, args);
 
     builder.Configuration.AddConfigurationEncryption(debugMode, appKey);
@@ -118,7 +121,7 @@ try
         .AddCarcassIdentity(builder.Configuration, debugMode)
         .AddScopedAllCarcassApplicationServices(debugMode)
         //.AddCarcassDom(debugMode)
-        .AddAppMimosiGeRepositories(debugMode)
+        .AddAppMimosiGeRepositories(logger, debugMode)
         .AddMimosiGeDb(builder.Configuration,debugMode);
     //GrammarGeDbPart
     //.AddGeoModelDatabaseRepositories(debugMode)
@@ -156,7 +159,7 @@ try
     //app.UseRootDerivationInflectionViewApi(debugMode);
     //app.UseRootsEditorApi(debugMode);
 
-    app.Run();
+    await app.RunAsync();
     return 0;
 }
 catch (Exception e)
@@ -166,5 +169,5 @@ catch (Exception e)
 }
 finally
 {
-    Log.CloseAndFlush();
+    await Log.CloseAndFlushAsync();
 }
