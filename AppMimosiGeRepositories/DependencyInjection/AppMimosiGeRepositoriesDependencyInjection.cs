@@ -1,11 +1,11 @@
 //Created by RepositoriesInstallerClassCreator at 2/15/2025 11:07:44 AM
 
-using CarcassMasterData;
-using CarcassRepositories;
-using CarcassRights;
-using DomainShared.Repositories;
+using BackendCarcass.MasterData;
+using BackendCarcass.Repositories;
+using BackendCarcass.Rights;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
+using SystemTools.DomainShared.Repositories;
 
 namespace AppMimosiGeRepositories.DependencyInjection;
 

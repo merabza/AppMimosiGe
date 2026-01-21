@@ -3,11 +3,10 @@
 using System;
 using System.Reflection;
 using AppMimosiGeRepositories.DependencyInjection;
-using BackendCarcassApi;
-using BackendCarcassApi.DependencyInjection;
-using Carcass.Application.DependencyInjection;
-using CarcassIdentity.DependencyInjection;
-using CarcassRepositories.DependencyInjection;
+using BackendCarcass.Api.DependencyInjection;
+using BackendCarcass.Application.DependencyInjection;
+using BackendCarcass.Identity.DependencyInjection;
+using BackendCarcass.Repositories.DependencyInjection;
 using ConfigurationEncrypt;
 using CorsTools.DependencyInjection;
 using Figgle.Fonts;
@@ -25,9 +24,7 @@ using WindowsServiceTools;
 
 try
 {
-#pragma warning disable CA1303 // Do not pass literals as localized parameters
     Console.WriteLine("Loading...");
-#pragma warning restore CA1303 // Do not pass literals as localized parameters
 
     const string appName = "App.Mimosi.Ge";
     const string appKey = "01e719dc51534a83988741c50da6a87b";
@@ -53,9 +50,8 @@ try
     var debugMode = builder.Environment.IsDevelopment();
 
     var logger = builder.Host.UseSerilogLogger(builder.Configuration, debugMode);
-    builder.Host.UseWindowsServiceOnWindows(debugMode, args);
-
-    builder.Configuration.AddConfigurationEncryption(debugMode, appKey);
+    builder.Host.UseWindowsServiceOnWindows(logger, debugMode, args);
+    builder.Configuration.AddConfigurationEncryption(logger, debugMode, appKey);
 
     //if (!builder.InstallServices(debugMode, args, parameters,
 
@@ -95,63 +91,25 @@ try
 
     // @formatter:off
     builder.Services
-        //SystemTools
-        //.AddReCounterDom(debugMode) //ReCounter
-                                    //WebSystemTools
+        .AddMediator(builder.Configuration, debugMode)
         .AddSwagger(debugMode, true, versionCount, appName)
-        .AddCorsService(builder.Configuration, debugMode)
-        //.AddFluentValidation(
-        //    debugMode,
-        //    AssemblyReference.Assembly,
-        //    ModelEditorApi.AssemblyReference.Assembly,
-        //    RootsEditorApi.AssemblyReference.Assembly)
-        .AddMediator(
-            builder.Configuration,
-            debugMode,
-            AssemblyReference.Assembly)
-            //SignalRRecounterMessages.AssemblyReference.Assembly,
-            //DataBaseReCounterApi.AssemblyReference.Assembly,
-            //IssuesApi.AssemblyReference.Assembly,
-            //ModelEditorApi.AssemblyReference.Assembly,
-            //RootDerivationInflectionViewApi.AssemblyReference.Assembly,
-            //RootsEditorApi.AssemblyReference.Assembly)
-        //.AddSignalRRecounterMessages(debugMode)  //ReCounter
-                                                 //BackendCarcass
-        .AddCarcassRepositories(debugMode)
-        .AddCarcassIdentity(builder.Configuration, debugMode)
-        .AddScopedAllCarcassApplicationServices(debugMode)
+        .AddCorsService(logger, builder.Configuration, debugMode)
+        .AddCarcassRepositories(logger, debugMode)
+        .AddCarcassIdentity(logger, builder.Configuration, debugMode)
+        .AddScopedAllCarcassApplicationServices(logger, debugMode)
         //.AddCarcassDom(debugMode)
         .AddAppMimosiGeRepositories(logger, debugMode)
         .AddMimosiGeDb(builder.Configuration,debugMode);
-    //GrammarGeDbPart
-    //.AddGeoModelDatabaseRepositories(debugMode)
-    //.AddGrammarGeDb(builder.Configuration, debugMode)
-    //AppGrammarGe
-    //.AddLModel(x =>
-    //{
-    //    x.UseReCounters = true;
-    //    x.UseObservers = true;
-    //})
-    //.AddModelEditorRepositories(debugMode)
-    //.AddAppGrammarGeRepositories(debugMode)
-    //.AddDataBaseReCounterRepositories(debugMode)
-    //.AddIssuesRepositories(debugMode)
-    //.AddRootDerivationInflectionRepositories(debugMode)
-    //.AddRootsEditorRepositories(debugMode);
-
     // @formatter:on
 
     //ReSharper disable once using
-    using var app = builder.Build();
-
-    //if (!app.UseServices(debugMode)) return 1;
+    await using var app = builder.Build();
 
     // ReSharper disable once RedundantArgumentDefaultValue
     app.UseSwaggerServices(debugMode, versionCount);
     app.UseTestToolsApiEndpoints(debugMode);
-    //app.UseSignalRRecounterMessages(debugMode);
 
-    app.UseBackendCarcassApiEndpoints(debugMode);
+    app.UseBackendCarcassApiEndpoints(logger, debugMode);
 
     //app.UseModelEditorApi(debugMode);
     //app.UseArticlesApiEndpoints(debugMode);

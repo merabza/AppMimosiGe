@@ -1,4 +1,4 @@
-﻿using Carcass.Persistence;
+﻿using BackendCarcass.Persistence;
 using MimosiGeDb;
 
 namespace AppMimosiGeRepositories;

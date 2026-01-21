@@ -3,6 +3,9 @@
       <PackageReference Include="Figgle.Fonts" />
     </ItemGroup>
     <ItemGroup>
+        <ProjectReference Include="..\..\BackendCarcass\BackendCarcass.Api\BackendCarcass.Api.csproj" />
+        <ProjectReference Include="..\..\BackendCarcass\BackendCarcass.Application\BackendCarcass.Application.csproj" />
+        <ProjectReference Include="..\..\BackendCarcass\BackendCarcass.Repositories\BackendCarcass.Repositories.csproj" />
         <ProjectReference Include="..\..\BackendCarcass\CarcassIdentity\CarcassIdentity.csproj" />
         <ProjectReference Include="..\..\MimosiGeDbPart\MimosiGeDb\MimosiGeDb.csproj" />
         <ProjectReference Include="..\..\WebSystemTools\MediatorTools\MediatorTools.csproj" />

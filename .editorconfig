@@ -270,6 +270,8 @@ dotnet_diagnostic.CA1062.severity = none
 # CA1063: Implement IDisposable Correctly
 dotnet_diagnostic.CA1063.severity = none
 
+dotnet_diagnostic.CA1303.severity = none
+
 # CA1307: Specify StringComparison for clarity
 dotnet_diagnostic.CA1307.severity = none
 
@@ -402,6 +404,10 @@ dotnet_diagnostic.S2365.severity = none
 
 # S3267: Loops should be simplified with "LINQ" expressions
 dotnet_diagnostic.S3267.severity = none
+
+# S1168: Empty arrays and collections should be returned instead of null
+# Disabled for Option types where null represents None in functional programming
+dotnet_diagnostic.S1168.severity = none
 
 # S3881: "IDisposable" should be implemented correctly
 dotnet_diagnostic.S3881.severity = none
