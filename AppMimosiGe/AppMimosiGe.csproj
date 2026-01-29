@@ -6,7 +6,6 @@
         <ProjectReference Include="..\..\BackendCarcass\BackendCarcass.Api\BackendCarcass.Api.csproj" />
         <ProjectReference Include="..\..\BackendCarcass\BackendCarcass.Application\BackendCarcass.Application.csproj" />
         <ProjectReference Include="..\..\BackendCarcass\BackendCarcass.Repositories\BackendCarcass.Repositories.csproj" />
-        <ProjectReference Include="..\..\BackendCarcass\CarcassIdentity\CarcassIdentity.csproj" />
         <ProjectReference Include="..\..\MimosiGeDbPart\MimosiGeDb\MimosiGeDb.csproj" />
         <ProjectReference Include="..\..\WebSystemTools\MediatorTools\MediatorTools.csproj" />
         <ProjectReference Include="..\..\WebSystemTools\TestToolsApi\TestToolsApi.csproj" />
@@ -14,8 +13,6 @@
         <ProjectReference Include="..\..\WebSystemTools\SerilogLogger\SerilogLogger.csproj" />
         <ProjectReference Include="..\..\WebSystemTools\SwaggerTools\SwaggerTools.csproj" />
         <ProjectReference Include="..\..\WebSystemTools\WindowsServiceTools\WindowsServiceTools.csproj" />
-        <ProjectReference Include="..\..\BackendCarcass\CarcassRepositories\CarcassRepositories.csproj" />
-        <ProjectReference Include="..\..\BackendCarcass\BackendCarcassApi\BackendCarcassApi.csproj" />
         <ProjectReference Include="..\AppMimosiGeRepositories\AppMimosiGeRepositories.csproj" />
     </ItemGroup>
     <PropertyGroup>

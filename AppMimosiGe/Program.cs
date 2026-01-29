@@ -30,28 +30,22 @@ try
     const string appKey = "01e719dc51534a83988741c50da6a87b";
     const int versionCount = 1;
 
-    var header = $"{appName} {Assembly.GetEntryAssembly()?.GetName().Version}";
+    string header = $"{appName} {Assembly.GetEntryAssembly()?.GetName().Version}";
     Console.WriteLine(FiggleFonts.Standard.Render(header));
 
-    //var parameters = new Dictionary<string, string>
-    //{
-    //    { ConfigurationEncryptInstaller.AppKeyKey, "01e719dc51534a83988741c50da6a87b" },
-    //    { SwaggerInstaller.AppNameKey, "App Mimosi Ge" },
-    //    { SwaggerInstaller.VersionCountKey, 1.ToString() },
-    //    { SwaggerInstaller.UseSwaggerWithJwtBearerKey, string.Empty } //Allow Swagger
-    //};
-
-    var builder =
+    WebApplicationBuilder builder =
         WebApplication.CreateBuilder(new WebApplicationOptions
         {
             ContentRootPath = AppContext.BaseDirectory, Args = args
         });
 
-    var debugMode = builder.Environment.IsDevelopment();
+    bool debugMode = builder.Environment.IsDevelopment();
 
-    var logger = builder.Host.UseSerilogLogger(builder.Configuration, debugMode);
-    builder.Host.UseWindowsServiceOnWindows(logger, debugMode, args);
-    builder.Configuration.AddConfigurationEncryption(logger, debugMode, appKey);
+    ILogger logger = builder.Host.UseSerilogLogger(debugMode, builder.Configuration);
+    ILogger? debugLogger = debugMode ? logger : null;
+
+    builder.Host.UseWindowsServiceOnWindows(debugLogger, args);
+    builder.Configuration.AddConfigurationEncryption(debugLogger, appKey);
 
     //if (!builder.InstallServices(debugMode, args, parameters,
 
@@ -91,25 +85,25 @@ try
 
     // @formatter:off
     builder.Services
-        .AddMediator(builder.Configuration, debugMode)
-        .AddSwagger(debugMode, true, versionCount, appName)
-        .AddCorsService(logger, builder.Configuration, debugMode)
-        .AddCarcassRepositories(logger, debugMode)
-        .AddCarcassIdentity(logger, builder.Configuration, debugMode)
-        .AddScopedAllCarcassApplicationServices(logger, debugMode)
+        .AddMediator(debugLogger, builder.Configuration)
+        .AddSwagger(debugLogger, true, versionCount, appName)
+        .AddCorsService(debugLogger, builder.Configuration)
+        .AddCarcassRepositories(debugLogger)
+        .AddCarcassIdentity(debugLogger, builder.Configuration)
+        .AddScopedAllCarcassApplicationServices(debugLogger)
         //.AddCarcassDom(debugMode)
-        .AddAppMimosiGeRepositories(logger, debugMode)
-        .AddMimosiGeDb(builder.Configuration,debugMode);
+        .AddAppMimosiGeRepositories(debugLogger)
+        .AddMimosiGeDb(debugLogger, builder.Configuration);
     // @formatter:on
 
     //ReSharper disable once using
-    await using var app = builder.Build();
+    await using WebApplication app = builder.Build();
 
     // ReSharper disable once RedundantArgumentDefaultValue
-    app.UseSwaggerServices(debugMode, versionCount);
-    app.UseTestToolsApiEndpoints(debugMode);
+    app.UseSwaggerServices(debugLogger, versionCount);
+    app.UseTestToolsApiEndpoints(debugLogger);
 
-    app.UseBackendCarcassApiEndpoints(logger, debugMode);
+    app.UseBackendCarcassApiEndpoints(debugLogger);
 
     //app.UseModelEditorApi(debugMode);
     //app.UseArticlesApiEndpoints(debugMode);

@@ -5,8 +5,6 @@
         <ProjectReference Include="..\..\BackendCarcass\BackendCarcass.Persistence\BackendCarcass.Persistence.csproj" />
         <ProjectReference Include="..\..\BackendCarcass\BackendCarcass.Repositories\BackendCarcass.Repositories.csproj" />
         <ProjectReference Include="..\..\BackendCarcass\BackendCarcass.Rights\BackendCarcass.Rights.csproj" />
-        <ProjectReference Include="..\..\BackendCarcass\Carcass.Persistence\Carcass.Persistence.csproj" />
-        <ProjectReference Include="..\..\BackendCarcass\CarcassRepositories\CarcassRepositories.csproj" />
         <ProjectReference Include="..\..\MimosiGeDbPart\MimosiGeDb\MimosiGeDb.csproj" />
     </ItemGroup>
     <ItemGroup>

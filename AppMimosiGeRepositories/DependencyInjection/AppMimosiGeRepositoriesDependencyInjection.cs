@@ -12,13 +12,9 @@ namespace AppMimosiGeRepositories.DependencyInjection;
 // ReSharper disable once UnusedType.Global
 public static class AppMimosiGeRepositoriesDependencyInjection
 {
-    public static IServiceCollection AddAppMimosiGeRepositories(this IServiceCollection services, ILogger logger,
-        bool debugMode)
+    public static IServiceCollection AddAppMimosiGeRepositories(this IServiceCollection services, ILogger? debugLogger)
     {
-        if (debugMode)
-        {
-            logger.Information("{MethodName} Started", nameof(AddAppMimosiGeRepositories));
-        }
+        debugLogger?.Information("{MethodName} Started", nameof(AddAppMimosiGeRepositories));
 
         services.AddScoped<IUserRightsRepository, UserRightsRepository>();
         services.AddScoped<IUnitOfWork, MimosiGeUnitOfWork>();
@@ -28,10 +24,7 @@ public static class AppMimosiGeRepositoriesDependencyInjection
         //builder.Services.AddScoped<IReturnValuesLoaderCreator, MimReturnValuesLoaderCreator>()
         services.AddScoped<ICarcassMasterDataRepository, MimosiGeMasterDataRepository>();
 
-        if (debugMode)
-        {
-            logger.Information("{MethodName} Finished", nameof(AddAppMimosiGeRepositories));
-        }
+        debugLogger?.Information("{MethodName} Finished", nameof(AddAppMimosiGeRepositories));
 
         return services;
     }
