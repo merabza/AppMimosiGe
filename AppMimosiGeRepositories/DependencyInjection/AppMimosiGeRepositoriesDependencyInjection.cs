@@ -4,6 +4,7 @@ using BackendCarcass.MasterData;
 using BackendCarcass.Repositories;
 using BackendCarcass.Rights;
 using Microsoft.Extensions.DependencyInjection;
+using MimosiGeDb;
 using Serilog;
 using SystemTools.DomainShared.Repositories;
 
