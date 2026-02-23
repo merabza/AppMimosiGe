@@ -7,18 +7,18 @@ using BackendCarcass.Api.DependencyInjection;
 using BackendCarcass.Application.DependencyInjection;
 using BackendCarcass.Identity.DependencyInjection;
 using BackendCarcass.Repositories.DependencyInjection;
-using ConfigurationEncrypt;
-using CorsTools.DependencyInjection;
 using Figgle.Fonts;
-using MediatorTools.DependencyInjection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Hosting;
-using MimosiGeDb.DependencyInjection;
+using MimosiGeDbPart.Db.DependencyInjection;
 using Serilog;
-using SerilogLogger;
-using SwaggerTools.DependencyInjection;
-using TestToolsApi.DependencyInjection;
-using WindowsServiceTools;
+using WebSystemTools.ConfigurationEncrypt;
+using WebSystemTools.CorsTools.DependencyInjection;
+using WebSystemTools.MediatorTools.DependencyInjection;
+using WebSystemTools.SerilogLogger;
+using WebSystemTools.SwaggerTools.DependencyInjection;
+using WebSystemTools.TestToolsApi.DependencyInjection;
+using WebSystemTools.WindowsServiceTools;
 
 //using AssemblyReference = CarcassRepositories.AssemblyReference;
 
@@ -85,7 +85,7 @@ try
 
     // @formatter:off
     builder.Services
-        .AddMediator(debugLogger, builder.Configuration)
+        .AddMediator(debugLogger, builder.Configuration, BackendCarcass.Api.AssemblyReference.Assembly)
         .AddSwagger(debugLogger, true, versionCount, appName)
         .AddCorsService(debugLogger, builder.Configuration)
         .AddCarcassRepositories(debugLogger)

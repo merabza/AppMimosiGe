@@ -1,5 +1,5 @@
 ﻿using BackendCarcass.Repositories;
-using MimosiGeDb;
+using MimosiGeDbPart.Db;
 
 namespace AppMimosiGeRepositories;
 

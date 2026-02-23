@@ -24,10 +24,10 @@
     <Project Path="../BackendCarcass/BackendCarcass.LibCrud/BackendCarcass.LibCrud.csproj" />
   </Folder>
   <Folder Name="/BackendCarcassShared/">
-    <Project Path="../BackendCarcassShared/BackendCarcassContracts/BackendCarcassContracts.csproj" />
+    <Project Path="../BackendCarcassShared/BackendCarcassShared.BackendCarcassContracts/BackendCarcassShared.BackendCarcassContracts.csproj" />
   </Folder>
   <Folder Name="/MimosiGeDbPart/">
-    <Project Path="../MimosiGeDbPart/MimosiGeDb/MimosiGeDb.csproj" />
+    <Project Path="../MimosiGeDbPart/MimosiGeDbPart.Db/MimosiGeDbPart.Db.csproj" />
   </Folder>
   <Folder Name="/Solution Items/">
     <File Path=".editorconfig" />
@@ -46,17 +46,17 @@
     <Project Path="../SystemTools/SystemTools.TestApiContracts/SystemTools.TestApiContracts.csproj" />
   </Folder>
   <Folder Name="/WebSystemTools/">
-    <Project Path="../WebSystemTools/ApiExceptionHandler/ApiExceptionHandler.csproj" />
-    <Project Path="../WebSystemTools/ConfigurationEncrypt/ConfigurationEncrypt.csproj" />
-    <Project Path="../WebSystemTools/CorsTools/CorsTools.csproj" />
-    <Project Path="../WebSystemTools/MediatorTools/MediatorTools.csproj" />
-    <Project Path="../WebSystemTools/SerilogLogger/SerilogLogger.csproj" />
-    <Project Path="../WebSystemTools/SignalRMessages/SignalRMessages.csproj" />
-    <Project Path="../WebSystemTools/StaticFilesTools/StaticFilesTools.csproj" />
-    <Project Path="../WebSystemTools/SwaggerTools/SwaggerTools.csproj" />
-    <Project Path="../WebSystemTools/TestToolsApi/TestToolsApi.csproj" />
-    <Project Path="../WebSystemTools/TestToolsData/TestToolsData.csproj" />
-    <Project Path="../WebSystemTools/WindowsServiceTools/WindowsServiceTools.csproj" />
+    <Project Path="../WebSystemTools/WebSystemTools.ApiExceptionHandler/WebSystemTools.ApiExceptionHandler.csproj" />
+    <Project Path="../WebSystemTools/WebSystemTools.ConfigurationEncrypt/WebSystemTools.ConfigurationEncrypt.csproj" />
+    <Project Path="../WebSystemTools/WebSystemTools.CorsTools/WebSystemTools.CorsTools.csproj" />
+    <Project Path="../WebSystemTools/WebSystemTools.MediatorTools/WebSystemTools.MediatorTools.csproj" />
+    <Project Path="../WebSystemTools/WebSystemTools.SerilogLogger/WebSystemTools.SerilogLogger.csproj" />
+    <Project Path="../WebSystemTools/WebSystemTools.SignalRMessages/WebSystemTools.SignalRMessages.csproj" />
+    <Project Path="../WebSystemTools/WebSystemTools.StaticFilesTools/WebSystemTools.StaticFilesTools.csproj" />
+    <Project Path="../WebSystemTools/WebSystemTools.SwaggerTools/WebSystemTools.SwaggerTools.csproj" />
+    <Project Path="../WebSystemTools/WebSystemTools.TestToolsApi/WebSystemTools.TestToolsApi.csproj" />
+    <Project Path="../WebSystemTools/WebSystemTools.TestToolsData/WebSystemTools.TestToolsData.csproj" />
+    <Project Path="../WebSystemTools/WebSystemTools.WindowsServiceTools/WebSystemTools.WindowsServiceTools.csproj" />
   </Folder>
   <Project Path="AppMimosiGe/AppMimosiGe.csproj" />
   <Project Path="AppMimosiGeRepositories/AppMimosiGeRepositories.csproj" />
