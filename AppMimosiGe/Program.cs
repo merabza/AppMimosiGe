@@ -3,6 +3,7 @@
 using System;
 using System.Reflection;
 using AppMimosiGeRepositories.DependencyInjection;
+using BackendCarcass.Api;
 using BackendCarcass.Api.DependencyInjection;
 using BackendCarcass.Application.DependencyInjection;
 using BackendCarcass.Identity.DependencyInjection;
@@ -85,7 +86,7 @@ try
 
     // @formatter:off
     builder.Services
-        .AddMediator(debugLogger, builder.Configuration, BackendCarcass.Api.AssemblyReference.Assembly)
+        .AddMediator(debugLogger, builder.Configuration, AssemblyReference.Assembly)
         .AddSwagger(debugLogger, true, versionCount, appName)
         .AddCorsService(debugLogger, builder.Configuration)
         .AddCarcassRepositories(debugLogger)

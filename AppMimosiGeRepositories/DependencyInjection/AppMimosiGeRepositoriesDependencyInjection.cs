@@ -6,7 +6,7 @@ using BackendCarcass.Rights;
 using Microsoft.Extensions.DependencyInjection;
 using MimosiGeDbPart.Db;
 using Serilog;
-using SystemTools.DomainShared.Repositories;
+using SystemTools.Domain.Abstractions;
 
 namespace AppMimosiGeRepositories.DependencyInjection;
 

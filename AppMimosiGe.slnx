@@ -13,7 +13,6 @@
     <Project Path="../BackendCarcass/BackendCarcass.Api/BackendCarcass.Api.csproj" />
     <Project Path="../BackendCarcass/BackendCarcass.Application/BackendCarcass.Application.csproj" />
     <Project Path="../BackendCarcass/BackendCarcass.Database/BackendCarcass.Database.csproj" />
-    <Project Path="../BackendCarcass/BackendCarcass.Persistence/BackendCarcass.Persistence.csproj" />
     <Project Path="../BackendCarcass/BackendCarcass.Db/BackendCarcass.Db.csproj" />
     <Project Path="../BackendCarcass/BackendCarcass.FilterSort/BackendCarcass.FilterSort.csproj" />
     <Project Path="../BackendCarcass/BackendCarcass.Identity/BackendCarcass.Identity.csproj" />
@@ -24,7 +23,7 @@
     <Project Path="../BackendCarcass/BackendCarcass.LibCrud/BackendCarcass.LibCrud.csproj" />
   </Folder>
   <Folder Name="/BackendCarcassShared/">
-    <Project Path="../BackendCarcassShared/BackendCarcassShared.BackendCarcassContracts/BackendCarcassShared.BackendCarcassContracts.csproj" />
+    <Project Path="../BackendCarcassShared/BackendCarcassShared.Contracts/BackendCarcassShared.Contracts.csproj" />
   </Folder>
   <Folder Name="/MimosiGeDbPart/">
     <Project Path="../MimosiGeDbPart/MimosiGeDbPart.Db/MimosiGeDbPart.Db.csproj" />
@@ -37,6 +36,7 @@
   <Folder Name="/SystemTools/">
     <Project Path="../SystemTools/SystemTools.ApiContracts/SystemTools.ApiContracts.csproj" />
     <Project Path="../SystemTools/SystemTools.DatabaseToolsShared/SystemTools.DatabaseToolsShared.csproj" />
+    <Project Path="../SystemTools/SystemTools.Domain.Abstractions/SystemTools.Domain.Abstractions.csproj" />
     <Project Path="../SystemTools/SystemTools.DomainShared/SystemTools.DomainShared.csproj" />
     <Project Path="../SystemTools/SystemTools.MediatRMessagingAbstractions/SystemTools.MediatRMessagingAbstractions.csproj" />
     <Project Path="../SystemTools/SystemTools.ReCounterContracts/SystemTools.ReCounterContracts.csproj" />
