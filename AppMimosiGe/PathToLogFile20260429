@@ -1,46 +1,46 @@
-2026-04-29 21:20:35.877 +04:00 [INF] UseWindowsServiceOnWindows Started
-2026-04-29 21:20:35.915 +04:00 [INF] UseWindowsServiceOnWindows Finished
-2026-04-29 21:20:35.916 +04:00 [INF] AddConfigurationEncryption Started
-2026-04-29 21:20:36.017 +04:00 [INF] AddConfigurationEncryption Finished
-2026-04-29 21:20:36.020 +04:00 [INF] AddMediator Started
-2026-04-29 21:20:36.064 +04:00 [INF] AddMediator Finished
-2026-04-29 21:20:36.067 +04:00 [INF] AddSwagger Started
-2026-04-29 21:20:36.075 +04:00 [INF] AddSwagger Finished
-2026-04-29 21:20:36.079 +04:00 [INF] AddCorsService Started
-2026-04-29 21:20:36.080 +04:00 [INF] AddCorsService Finished
-2026-04-29 21:20:36.081 +04:00 [INF] AddCarcassRepositories Started
-2026-04-29 21:20:36.090 +04:00 [INF] AddCarcassRepositories Finished
-2026-04-29 21:20:36.144 +04:00 [INF] AddCarcassIdentity Started
-2026-04-29 21:20:36.168 +04:00 [INF] AddCarcassIdentity Finished
-2026-04-29 21:20:36.169 +04:00 [INF] AddScopedAllCarcassApplicationServices Started
-2026-04-29 21:20:36.171 +04:00 [INF] AddScopedAllCarcassApplicationServices Finished
-2026-04-29 21:20:36.186 +04:00 [INF] AddAppMimosiGeRepositories Started
-2026-04-29 21:20:36.187 +04:00 [INF] AddAppMimosiGeRepositories Finished
-2026-04-29 21:20:36.188 +04:00 [INF] AddMimosiGeDb Started
-2026-04-29 21:20:36.191 +04:00 [INF] AddMimosiGeDb Finished
-2026-04-29 21:20:36.381 +04:00 [INF] UseSwaggerServices Started
-2026-04-29 21:20:36.390 +04:00 [INF] UseSwaggerServices Finished
-2026-04-29 21:20:36.391 +04:00 [INF] UseTestToolsApiEndpoints Started
-2026-04-29 21:20:36.392 +04:00 [INF] UseTestEndpoints Started
-2026-04-29 21:20:36.398 +04:00 [INF] UseTestEndpoints Finished
-2026-04-29 21:20:36.399 +04:00 [INF] UseTestToolsApiEndpoints Finished
-2026-04-29 21:20:36.400 +04:00 [INF] UseBackendCarcassApiEndpoints Started
-2026-04-29 21:20:36.401 +04:00 [INF] UseAuthenticationEndpoints Started
-2026-04-29 21:20:36.402 +04:00 [INF] UseAuthenticationEndpoints Finished
-2026-04-29 21:20:36.403 +04:00 [INF] UseDataTypesEndpoints Started
-2026-04-29 21:20:36.407 +04:00 [INF] UseDataTypesEndpoints Finished
-2026-04-29 21:20:36.408 +04:00 [INF] UseMasterDataEndpoints Started
-2026-04-29 21:20:36.439 +04:00 [INF] UseMasterDataEndpoints Finished
-2026-04-29 21:20:36.440 +04:00 [INF] UseProcessesEndpoints Started
-2026-04-29 21:20:36.442 +04:00 [INF] UseProcessesEndpoints Finished
-2026-04-29 21:20:36.443 +04:00 [INF] UseRightsEndpoints Started
-2026-04-29 21:20:36.448 +04:00 [INF] UseRightsEndpoints Finished
-2026-04-29 21:20:36.460 +04:00 [INF] UseUserRightsEndpoints Started
-2026-04-29 21:20:36.462 +04:00 [INF] UseUserRightsEndpoints Finished
-2026-04-29 21:20:36.463 +04:00 [INF] UseBackendCarcassApiEndpoints Finished
-2026-04-29 21:20:36.504 +04:00 [INF] User profile is available. Using 'C:\Users\merab\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
-2026-04-29 21:20:36.767 +04:00 [INF] Now listening on: http://[::]:5070
-2026-04-29 21:20:36.769 +04:00 [FTL] Hosting startup assembly exception
+2026-04-29 21:22:39.221 +04:00 [INF] UseWindowsServiceOnWindows Started
+2026-04-29 21:22:39.247 +04:00 [INF] UseWindowsServiceOnWindows Finished
+2026-04-29 21:22:39.248 +04:00 [INF] AddConfigurationEncryption Started
+2026-04-29 21:22:39.345 +04:00 [INF] AddConfigurationEncryption Finished
+2026-04-29 21:22:39.350 +04:00 [INF] AddMediator Started
+2026-04-29 21:22:39.395 +04:00 [INF] AddMediator Finished
+2026-04-29 21:22:39.399 +04:00 [INF] AddSwagger Started
+2026-04-29 21:22:39.407 +04:00 [INF] AddSwagger Finished
+2026-04-29 21:22:39.411 +04:00 [INF] AddCorsService Started
+2026-04-29 21:22:39.412 +04:00 [INF] AddCorsService Finished
+2026-04-29 21:22:39.414 +04:00 [INF] AddCarcassRepositories Started
+2026-04-29 21:22:39.424 +04:00 [INF] AddCarcassRepositories Finished
+2026-04-29 21:22:39.448 +04:00 [INF] AddCarcassIdentity Started
+2026-04-29 21:22:39.479 +04:00 [INF] AddCarcassIdentity Finished
+2026-04-29 21:22:39.481 +04:00 [INF] AddScopedAllCarcassApplicationServices Started
+2026-04-29 21:22:39.483 +04:00 [INF] AddScopedAllCarcassApplicationServices Finished
+2026-04-29 21:22:39.501 +04:00 [INF] AddAppMimosiGeRepositories Started
+2026-04-29 21:22:39.502 +04:00 [INF] AddAppMimosiGeRepositories Finished
+2026-04-29 21:22:39.504 +04:00 [INF] AddMimosiGeDb Started
+2026-04-29 21:22:39.508 +04:00 [INF] AddMimosiGeDb Finished
+2026-04-29 21:22:39.563 +04:00 [INF] UseSwaggerServices Started
+2026-04-29 21:22:39.573 +04:00 [INF] UseSwaggerServices Finished
+2026-04-29 21:22:39.575 +04:00 [INF] UseTestToolsApiEndpoints Started
+2026-04-29 21:22:39.576 +04:00 [INF] UseTestEndpoints Started
+2026-04-29 21:22:39.583 +04:00 [INF] UseTestEndpoints Finished
+2026-04-29 21:22:39.583 +04:00 [INF] UseTestToolsApiEndpoints Finished
+2026-04-29 21:22:39.584 +04:00 [INF] UseBackendCarcassApiEndpoints Started
+2026-04-29 21:22:39.585 +04:00 [INF] UseAuthenticationEndpoints Started
+2026-04-29 21:22:39.586 +04:00 [INF] UseAuthenticationEndpoints Finished
+2026-04-29 21:22:39.587 +04:00 [INF] UseDataTypesEndpoints Started
+2026-04-29 21:22:39.591 +04:00 [INF] UseDataTypesEndpoints Finished
+2026-04-29 21:22:39.592 +04:00 [INF] UseMasterDataEndpoints Started
+2026-04-29 21:22:39.609 +04:00 [INF] UseMasterDataEndpoints Finished
+2026-04-29 21:22:39.610 +04:00 [INF] UseProcessesEndpoints Started
+2026-04-29 21:22:39.611 +04:00 [INF] UseProcessesEndpoints Finished
+2026-04-29 21:22:39.612 +04:00 [INF] UseRightsEndpoints Started
+2026-04-29 21:22:39.613 +04:00 [INF] UseRightsEndpoints Finished
+2026-04-29 21:22:39.614 +04:00 [INF] UseUserRightsEndpoints Started
+2026-04-29 21:22:39.615 +04:00 [INF] UseUserRightsEndpoints Finished
+2026-04-29 21:22:39.615 +04:00 [INF] UseBackendCarcassApiEndpoints Finished
+2026-04-29 21:22:39.641 +04:00 [INF] User profile is available. Using 'C:\Users\merab\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
+2026-04-29 21:22:39.948 +04:00 [INF] Now listening on: http://[::]:5070
+2026-04-29 21:22:39.950 +04:00 [FTL] Hosting startup assembly exception
 System.InvalidOperationException: Startup assembly App.Mimosi.Ge failed to execute. See the inner exception for more details.
  ---> System.IO.FileNotFoundException: Could not load file or assembly 'App.Mimosi.Ge, Culture=neutral, PublicKeyToken=null'. The system cannot find the file specified.
 File name: 'App.Mimosi.Ge, Culture=neutral, PublicKeyToken=null'
@@ -48,33 +48,105 @@ File name: 'App.Mimosi.Ge, Culture=neutral, PublicKeyToken=null'
    at System.Reflection.Assembly.Load(AssemblyName assemblyRef)
    at Microsoft.AspNetCore.Hosting.GenericWebHostBuilder.ExecuteHostingStartups()
    --- End of inner exception stack trace ---
-2026-04-29 21:20:36.785 +04:00 [INF] No action descriptors found. This may indicate an incorrectly configured application or missing application parts. To learn more, visit https://aka.ms/aspnet/mvc/app-parts
-2026-04-29 21:20:36.810 +04:00 [INF] Application started. Press Ctrl+C to shut down.
-2026-04-29 21:20:36.811 +04:00 [INF] Hosting environment: Development
-2026-04-29 21:20:36.811 +04:00 [INF] Content root path: D:\1WorkMimosi\AppMimosiGe\AppMimosiGe\AppMimosiGe\bin\Debug\net10.0\
-2026-04-29 21:20:37.521 +04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5070/swagger/index.html - null null
-2026-04-29 21:20:38.925 +04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5070/swagger/index.html - 304 null null 1413.1366ms
-2026-04-29 21:20:38.939 +04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5070/_framework/aspnetcore-browser-refresh.js - null null
-2026-04-29 21:20:38.939 +04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5070/swagger/index.js - null null
-2026-04-29 21:20:38.939 +04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5070/swagger/swagger-ui-bundle.js - null null
-2026-04-29 21:20:38.979 +04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5070/swagger/index.js - 304 null null 39.9503ms
-2026-04-29 21:20:38.948 +04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5070/_framework/aspnetcore-browser-refresh.js - 200 14927 application/javascript; charset=utf-8 9.0185ms
-2026-04-29 21:20:38.939 +04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5070/swagger/swagger-ui-standalone-preset.js - null null
-2026-04-29 21:20:38.939 +04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5070/swagger/index.css - null null
-2026-04-29 21:20:38.939 +04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5070/swagger/swagger-ui.css - null null
-2026-04-29 21:20:38.983 +04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5070/_framework/aspnetcore-browser-refresh.js - null null
-2026-04-29 21:20:39.008 +04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5070/swagger/index.css - 304 null null 70.4174ms
-2026-04-29 21:20:39.009 +04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5070/swagger/swagger-ui.css - 200 26479 text/css 71.7124ms
-2026-04-29 21:20:39.009 +04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5070/_framework/aspnetcore-browser-refresh.js - 200 14927 application/javascript; charset=utf-8 25.5415ms
-2026-04-29 21:20:39.011 +04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5070/swagger/swagger-ui-standalone-preset.js - 200 76613 text/javascript 72.3882ms
-2026-04-29 21:20:39.023 +04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5070/swagger/swagger-ui-bundle.js - 200 418181 text/javascript 83.9588ms
-2026-04-29 21:20:39.216 +04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5070/swagger/v1/swagger.json - null null
-2026-04-29 21:20:39.220 +04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5070/swagger/favicon-32x32.png - null null
-2026-04-29 21:20:39.224 +04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5070/swagger/favicon-32x32.png - 304 null null 3.9584ms
-2026-04-29 21:20:39.238 +04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5070/swagger/v1/swagger.json - 200 null application/json;charset=utf-8 22.0138ms
-2026-04-29 21:20:39.421 +04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5070/swagger/index.js - null null
-2026-04-29 21:20:39.426 +04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5070/swagger/index.js - 200 null application/javascript;charset=utf-8 5.4663ms
-2026-04-29 21:20:39.435 +04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5070/swagger/swagger-ui-bundle.js - null null
-2026-04-29 21:20:39.442 +04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5070/swagger/swagger-ui-standalone-preset.js - null null
-2026-04-29 21:20:39.445 +04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5070/swagger/swagger-ui-standalone-preset.js - 200 76613 text/javascript 2.9724ms
-2026-04-29 21:20:39.463 +04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5070/swagger/swagger-ui-bundle.js - 200 418181 text/javascript 28.6112ms
+2026-04-29 21:22:39.963 +04:00 [INF] No action descriptors found. This may indicate an incorrectly configured application or missing application parts. To learn more, visit https://aka.ms/aspnet/mvc/app-parts
+2026-04-29 21:22:39.983 +04:00 [INF] Application started. Press Ctrl+C to shut down.
+2026-04-29 21:22:39.983 +04:00 [INF] Hosting environment: Development
+2026-04-29 21:22:39.984 +04:00 [INF] Content root path: D:\1WorkMimosi\AppMimosiGe\AppMimosiGe\AppMimosiGe\bin\Debug\net10.0\
+2026-04-29 21:22:40.554 +04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5070/swagger/index.html - null null
+2026-04-29 21:22:40.740 +04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5070/swagger/index.html - 304 null null 192.847ms
+2026-04-29 21:22:40.753 +04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5070/swagger/swagger-ui.css - null null
+2026-04-29 21:22:40.753 +04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5070/swagger/swagger-ui-bundle.js - null null
+2026-04-29 21:22:40.753 +04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5070/_framework/aspnetcore-browser-refresh.js - null null
+2026-04-29 21:22:40.753 +04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5070/swagger/index.js - null null
+2026-04-29 21:22:40.753 +04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5070/swagger/swagger-ui-standalone-preset.js - null null
+2026-04-29 21:22:40.770 +04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5070/_framework/aspnetcore-browser-refresh.js - 200 14927 application/javascript; charset=utf-8 16.5229ms
+2026-04-29 21:22:40.773 +04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5070/swagger/index.js - 304 null null 19.5345ms
+2026-04-29 21:22:40.785 +04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5070/swagger/swagger-ui-standalone-preset.js - 304 null null 31.5213ms
+2026-04-29 21:22:40.785 +04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5070/swagger/swagger-ui.css - 304 null null 33.3189ms
+2026-04-29 21:22:40.785 +04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5070/swagger/swagger-ui-bundle.js - 304 null null 32.7331ms
+2026-04-29 21:22:40.805 +04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5070/_framework/aspnetcore-browser-refresh.js - null null
+2026-04-29 21:22:40.809 +04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5070/_framework/aspnetcore-browser-refresh.js - 200 14927 application/javascript; charset=utf-8 3.7847ms
+2026-04-29 21:22:40.811 +04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5070/swagger/index.js - null null
+2026-04-29 21:22:40.812 +04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5070/swagger/swagger-ui-standalone-preset.js - null null
+2026-04-29 21:22:40.814 +04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5070/swagger/swagger-ui-bundle.js - null null
+2026-04-29 21:22:40.817 +04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5070/swagger/index.js - 304 null null 5.3177ms
+2026-04-29 21:22:40.820 +04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5070/swagger/swagger-ui-standalone-preset.js - 304 null null 7.6249ms
+2026-04-29 21:22:40.822 +04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5070/swagger/swagger-ui-bundle.js - 304 null null 8.7216ms
+2026-04-29 21:22:41.027 +04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5070/swagger/v1/swagger.json - null null
+2026-04-29 21:22:41.070 +04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5070/swagger/v1/swagger.json - 200 null application/json;charset=utf-8 43.5546ms
+2026-04-29 21:23:26.502 +04:00 [INF] UseWindowsServiceOnWindows Started
+2026-04-29 21:23:26.527 +04:00 [INF] UseWindowsServiceOnWindows Finished
+2026-04-29 21:23:26.527 +04:00 [INF] AddConfigurationEncryption Started
+2026-04-29 21:23:26.602 +04:00 [INF] AddConfigurationEncryption Finished
+2026-04-29 21:23:26.606 +04:00 [INF] AddMediator Started
+2026-04-29 21:23:26.647 +04:00 [INF] AddMediator Finished
+2026-04-29 21:23:26.650 +04:00 [INF] AddSwagger Started
+2026-04-29 21:23:26.656 +04:00 [INF] AddSwagger Finished
+2026-04-29 21:23:26.659 +04:00 [INF] AddCorsService Started
+2026-04-29 21:23:26.660 +04:00 [INF] AddCorsService Finished
+2026-04-29 21:23:26.661 +04:00 [INF] AddCarcassRepositories Started
+2026-04-29 21:23:26.662 +04:00 [INF] AddCarcassRepositories Finished
+2026-04-29 21:23:26.682 +04:00 [INF] AddCarcassIdentity Started
+2026-04-29 21:23:26.705 +04:00 [INF] AddCarcassIdentity Finished
+2026-04-29 21:23:26.706 +04:00 [INF] AddScopedAllCarcassApplicationServices Started
+2026-04-29 21:23:26.708 +04:00 [INF] AddScopedAllCarcassApplicationServices Finished
+2026-04-29 21:23:26.724 +04:00 [INF] AddAppMimosiGeRepositories Started
+2026-04-29 21:23:26.725 +04:00 [INF] AddAppMimosiGeRepositories Finished
+2026-04-29 21:23:26.727 +04:00 [INF] AddMimosiGeDb Started
+2026-04-29 21:23:26.731 +04:00 [INF] AddMimosiGeDb Finished
+2026-04-29 21:23:26.769 +04:00 [INF] UseSwaggerServices Started
+2026-04-29 21:23:26.775 +04:00 [INF] UseSwaggerServices Finished
+2026-04-29 21:23:26.776 +04:00 [INF] UseTestToolsApiEndpoints Started
+2026-04-29 21:23:26.778 +04:00 [INF] UseTestEndpoints Started
+2026-04-29 21:23:26.785 +04:00 [INF] UseTestEndpoints Finished
+2026-04-29 21:23:26.785 +04:00 [INF] UseTestToolsApiEndpoints Finished
+2026-04-29 21:23:26.787 +04:00 [INF] UseBackendCarcassApiEndpoints Started
+2026-04-29 21:23:26.788 +04:00 [INF] UseAuthenticationEndpoints Started
+2026-04-29 21:23:26.790 +04:00 [INF] UseAuthenticationEndpoints Finished
+2026-04-29 21:23:26.792 +04:00 [INF] UseDataTypesEndpoints Started
+2026-04-29 21:23:26.796 +04:00 [INF] UseDataTypesEndpoints Finished
+2026-04-29 21:23:26.797 +04:00 [INF] UseMasterDataEndpoints Started
+2026-04-29 21:23:26.812 +04:00 [INF] UseMasterDataEndpoints Finished
+2026-04-29 21:23:26.813 +04:00 [INF] UseProcessesEndpoints Started
+2026-04-29 21:23:26.814 +04:00 [INF] UseProcessesEndpoints Finished
+2026-04-29 21:23:26.814 +04:00 [INF] UseRightsEndpoints Started
+2026-04-29 21:23:26.815 +04:00 [INF] UseRightsEndpoints Finished
+2026-04-29 21:23:26.816 +04:00 [INF] UseUserRightsEndpoints Started
+2026-04-29 21:23:26.817 +04:00 [INF] UseUserRightsEndpoints Finished
+2026-04-29 21:23:26.817 +04:00 [INF] UseBackendCarcassApiEndpoints Finished
+2026-04-29 21:23:26.837 +04:00 [INF] User profile is available. Using 'C:\Users\merab\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
+2026-04-29 21:23:27.024 +04:00 [INF] Now listening on: http://[::]:5070
+2026-04-29 21:23:27.025 +04:00 [FTL] Hosting startup assembly exception
+System.InvalidOperationException: Startup assembly App.Mimosi.Ge failed to execute. See the inner exception for more details.
+ ---> System.IO.FileNotFoundException: Could not load file or assembly 'App.Mimosi.Ge, Culture=neutral, PublicKeyToken=null'. The system cannot find the file specified.
+File name: 'App.Mimosi.Ge, Culture=neutral, PublicKeyToken=null'
+   at System.Reflection.RuntimeAssembly.InternalLoad(AssemblyName assemblyName, StackCrawlMark& stackMark, AssemblyLoadContext assemblyLoadContext, RuntimeAssembly requestingAssembly, Boolean throwOnFileNotFound)
+   at System.Reflection.Assembly.Load(AssemblyName assemblyRef)
+   at Microsoft.AspNetCore.Hosting.GenericWebHostBuilder.ExecuteHostingStartups()
+   --- End of inner exception stack trace ---
+2026-04-29 21:23:27.036 +04:00 [INF] No action descriptors found. This may indicate an incorrectly configured application or missing application parts. To learn more, visit https://aka.ms/aspnet/mvc/app-parts
+2026-04-29 21:23:27.054 +04:00 [INF] Application started. Press Ctrl+C to shut down.
+2026-04-29 21:23:27.055 +04:00 [INF] Hosting environment: Development
+2026-04-29 21:23:27.055 +04:00 [INF] Content root path: D:\1WorkMimosi\AppMimosiGe\AppMimosiGe\AppMimosiGe\bin\Debug\net10.0\
+2026-04-29 21:23:27.515 +04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5070/swagger/index.html - null null
+2026-04-29 21:23:27.648 +04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5070/swagger/index.html - 304 null null 139.8263ms
+2026-04-29 21:23:27.698 +04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5070/swagger/swagger-ui.css - null null
+2026-04-29 21:23:27.698 +04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5070/swagger/swagger-ui-standalone-preset.js - null null
+2026-04-29 21:23:27.698 +04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5070/swagger/swagger-ui-bundle.js - null null
+2026-04-29 21:23:27.698 +04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5070/_framework/aspnetcore-browser-refresh.js - null null
+2026-04-29 21:23:27.698 +04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5070/swagger/index.js - null null
+2026-04-29 21:23:27.739 +04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5070/swagger/index.js - 304 null null 40.5974ms
+2026-04-29 21:23:27.739 +04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5070/_framework/aspnetcore-browser-refresh.js - 200 14927 application/javascript; charset=utf-8 74.8578ms
+2026-04-29 21:23:27.744 +04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5070/swagger/swagger-ui-standalone-preset.js - 304 null null 81.1422ms
+2026-04-29 21:23:27.744 +04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5070/swagger/swagger-ui.css - 304 null null 83.8283ms
+2026-04-29 21:23:27.744 +04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5070/swagger/swagger-ui-bundle.js - 304 null null 83.8283ms
+2026-04-29 21:23:27.921 +04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5070/swagger/v1/swagger.json - null null
+2026-04-29 21:23:27.933 +04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5070/swagger/v1/swagger.json - 200 null application/json;charset=utf-8 11.982ms
+2026-04-29 21:23:28.157 +04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5070/swagger/index.js - null null
+2026-04-29 21:23:28.157 +04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5070/_framework/aspnetcore-browser-refresh.js - null null
+2026-04-29 21:23:28.158 +04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5070/swagger/swagger-ui-standalone-preset.js - null null
+2026-04-29 21:23:28.158 +04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5070/swagger/swagger-ui-bundle.js - null null
+2026-04-29 21:23:28.159 +04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5070/swagger/index.js - 304 null null 2.0496ms
+2026-04-29 21:23:28.160 +04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5070/_framework/aspnetcore-browser-refresh.js - 200 14927 application/javascript; charset=utf-8 3.062ms
+2026-04-29 21:23:28.162 +04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5070/swagger/swagger-ui-standalone-preset.js - 304 null null 3.5834ms
+2026-04-29 21:23:28.163 +04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5070/swagger/swagger-ui-bundle.js - 304 null null 4.8488ms

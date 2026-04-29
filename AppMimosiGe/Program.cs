@@ -1,5 +1,3 @@
-//Created by ApiProgramClassCreator at 2/15/2025 11:07:44 AM
-
 using System;
 using System.Reflection;
 using AppMimosiGeRepositories.DependencyInjection;
@@ -36,7 +34,7 @@ try
 
     WebApplicationBuilder builder = WebApplication.CreateBuilder(new WebApplicationOptions
     {
-        ContentRootPath = AppContext.BaseDirectory, Args = args, ApplicationName = appName
+        ContentRootPath = AppContext.BaseDirectory, Args = args//, ApplicationName = appName
     });
 
     bool debugMode = builder.Environment.IsDevelopment();
