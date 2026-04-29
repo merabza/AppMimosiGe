@@ -34,11 +34,10 @@ try
     string header = $"{appName} {Assembly.GetEntryAssembly()?.GetName().Version}";
     Console.WriteLine(FiggleFonts.Standard.Render(header));
 
-    WebApplicationBuilder builder =
-        WebApplication.CreateBuilder(new WebApplicationOptions
-        {
-            ContentRootPath = AppContext.BaseDirectory, Args = args
-        });
+    WebApplicationBuilder builder = WebApplication.CreateBuilder(new WebApplicationOptions
+    {
+        ContentRootPath = AppContext.BaseDirectory, Args = args, ApplicationName = appName
+    });
 
     bool debugMode = builder.Environment.IsDevelopment();
 

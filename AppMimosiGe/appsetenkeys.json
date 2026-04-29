@@ -2,6 +2,8 @@
   "Keys": [
     "Data:MimosiGeDatabase:ConnectionString",
     "IdentitySettings:JwtSecret",
+    "IdentitySettings:JwtIssuer",
+    "IdentitySettings:JwtAudience",
     "Serilog:WriteTo:1:Args:path",
     "CorsSettings:Origins:[]",
     "MediatRLicenseKey"
