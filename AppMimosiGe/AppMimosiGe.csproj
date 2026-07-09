@@ -1,18 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
     <ItemGroup>
+      <PackageReference Include="BackendCarcass.Api" />
+      <PackageReference Include="BackendCarcass.Application" />
+      <PackageReference Include="BackendCarcass.Repositories" />
       <PackageReference Include="Figgle.Fonts" />
+      <PackageReference Include="MimosiGeDbPart.Db" />
+      <PackageReference Include="WebSystemTools.ConfigurationEncrypt" />
+      <PackageReference Include="WebSystemTools.MediatorTools" />
+      <PackageReference Include="WebSystemTools.SerilogLogger" />
+      <PackageReference Include="WebSystemTools.SwaggerTools" />
+      <PackageReference Include="WebSystemTools.TestToolsApi" />
+      <PackageReference Include="WebSystemTools.WindowsServiceTools" />
     </ItemGroup>
     <ItemGroup>
-        <ProjectReference Include="..\..\BackendCarcass\BackendCarcass.Api\BackendCarcass.Api.csproj" />
-        <ProjectReference Include="..\..\BackendCarcass\BackendCarcass.Application\BackendCarcass.Application.csproj" />
-        <ProjectReference Include="..\..\BackendCarcass\BackendCarcass.Repositories\BackendCarcass.Repositories.csproj" />
-        <ProjectReference Include="..\..\MimosiGeDbPart\MimosiGeDbPart.Db\MimosiGeDbPart.Db.csproj" />
-        <ProjectReference Include="..\..\WebSystemTools\WebSystemTools.MediatorTools\WebSystemTools.MediatorTools.csproj" />
-        <ProjectReference Include="..\..\WebSystemTools\WebSystemTools.TestToolsApi\WebSystemTools.TestToolsApi.csproj" />
-        <ProjectReference Include="..\..\WebSystemTools\WebSystemTools.ConfigurationEncrypt\WebSystemTools.ConfigurationEncrypt.csproj" />
-        <ProjectReference Include="..\..\WebSystemTools\WebSystemTools.SerilogLogger\WebSystemTools.SerilogLogger.csproj" />
-        <ProjectReference Include="..\..\WebSystemTools\WebSystemTools.SwaggerTools\WebSystemTools.SwaggerTools.csproj" />
-        <ProjectReference Include="..\..\WebSystemTools\WebSystemTools.WindowsServiceTools\WebSystemTools.WindowsServiceTools.csproj" />
         <ProjectReference Include="..\AppMimosiGeRepositories\AppMimosiGeRepositories.csproj" />
     </ItemGroup>
     <PropertyGroup>

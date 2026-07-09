@@ -2,11 +2,11 @@
 
 <Project Sdk="Microsoft.NET.Sdk">
     <ItemGroup>
-        <ProjectReference Include="..\..\BackendCarcass\BackendCarcass.Repositories\BackendCarcass.Repositories.csproj" />
-        <ProjectReference Include="..\..\BackendCarcass\BackendCarcass.Rights\BackendCarcass.Rights.csproj" />
-        <ProjectReference Include="..\..\MimosiGeDbPart\MimosiGeDbPart.Db\MimosiGeDbPart.Db.csproj" />
+      <Folder Include="Installers\" />
     </ItemGroup>
     <ItemGroup>
-      <Folder Include="Installers\" />
+      <PackageReference Include="BackendCarcass.Repositories" />
+      <PackageReference Include="BackendCarcass.Rights" />
+      <PackageReference Include="MimosiGeDbPart.Db" />
     </ItemGroup>
 </Project>
