@@ -1,4 +1,4 @@
-<Project>
+﻿<?xml version="1.0" encoding="utf-8"?><Project>
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
@@ -38,12 +38,12 @@
     <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.21.0.135717" />
     <PackageVersion Include="System.CodeDom" Version="9.0.10" />
     <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0" />
-    <PackageVersion Include="WebSystemTools.ConfigurationEncrypt" Version="1.0.9686.34761" />
-    <PackageVersion Include="WebSystemTools.MediatorTools" Version="1.0.9686.34761" />
-    <PackageVersion Include="WebSystemTools.SerilogLogger" Version="1.0.9686.34761" />
-    <PackageVersion Include="WebSystemTools.SwaggerTools" Version="1.0.9686.34761" />
-    <PackageVersion Include="WebSystemTools.TestToolsApi" Version="1.0.9686.34761" />
-    <PackageVersion Include="WebSystemTools.WindowsServiceTools" Version="1.0.9686.34761" />
+    <PackageVersion Include="WebSystemTools.ConfigurationEncrypt" Version="1.0.9691.25983" />
+    <PackageVersion Include="WebSystemTools.MediatorTools" Version="1.0.9691.25983" />
+    <PackageVersion Include="WebSystemTools.SerilogLogger" Version="1.0.9691.25983" />
+    <PackageVersion Include="WebSystemTools.SwaggerTools" Version="1.0.9691.25983" />
+    <PackageVersion Include="WebSystemTools.TestToolsApi" Version="1.0.9691.25983" />
+    <PackageVersion Include="WebSystemTools.WindowsServiceTools" Version="1.0.9691.25983" />
     <PackageVersion Include="xunit" Version="2.9.3" />
     <PackageVersion Include="xunit.assert" Version="2.9.3" />
     <PackageVersion Include="xunit.extensibility.core" Version="2.9.3" />
