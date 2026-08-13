@@ -34,7 +34,7 @@ try
 
     WebApplicationBuilder builder = WebApplication.CreateBuilder(new WebApplicationOptions
     {
-        ContentRootPath = AppContext.BaseDirectory, Args = args//, ApplicationName = appName
+        ContentRootPath = AppContext.BaseDirectory, Args = args //, ApplicationName = appName
     });
 
     bool debugMode = builder.Environment.IsDevelopment();
