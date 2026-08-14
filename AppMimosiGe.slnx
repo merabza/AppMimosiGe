@@ -13,7 +13,6 @@
     <Project Path="../BackendCarcass/BackendCarcass.Api/BackendCarcass.Api.csproj" />
     <Project Path="../BackendCarcass/BackendCarcass.Application/BackendCarcass.Application.csproj" />
     <Project Path="../BackendCarcass/BackendCarcass.Database/BackendCarcass.Database.csproj" />
-    <Project Path="../BackendCarcass/BackendCarcass.Db/BackendCarcass.Db.csproj" />
     <Project Path="../BackendCarcass/BackendCarcass.FilterSort/BackendCarcass.FilterSort.csproj" />
     <Project Path="../BackendCarcass/BackendCarcass.Identity/BackendCarcass.Identity.csproj" />
     <Project Path="../BackendCarcass/BackendCarcass.Mappers/BackendCarcass.Mappers.csproj" />
@@ -40,7 +39,6 @@
     <Project Path="../SystemTools/SystemTools.ApiContracts/SystemTools.ApiContracts.csproj" />
     <Project Path="../SystemTools/SystemTools.DatabaseToolsShared/SystemTools.DatabaseToolsShared.csproj" />
     <Project Path="../SystemTools/SystemTools.Domain.Abstractions/SystemTools.Domain.Abstractions.csproj" />
-    <Project Path="../SystemTools/SystemTools.DomainShared/SystemTools.DomainShared.csproj" />
     <Project Path="../SystemTools/SystemTools.MediatRMessagingAbstractions/SystemTools.MediatRMessagingAbstractions.csproj" />
     <Project Path="../SystemTools/SystemTools.ReCounterContracts/SystemTools.ReCounterContracts.csproj" />
     <Project Path="../SystemTools/SystemTools.RepositoriesShared/SystemTools.RepositoriesShared.csproj" />
