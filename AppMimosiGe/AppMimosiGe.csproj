@@ -3,6 +3,7 @@
       <PackageReference Include="Figgle.Fonts" />
     </ItemGroup>
     <ItemGroup>
+        <ProjectReference Include="..\..\WebSystemTools\WebSystemTools.CorsTools\WebSystemTools.CorsTools.csproj" />
         <ProjectReference Include="..\AppMimosiGeRepositories\AppMimosiGeRepositories.csproj" />
         <ProjectReference Include="..\..\BackendCarcass\BackendCarcass.Api\BackendCarcass.Api.csproj" />
         <ProjectReference Include="..\..\BackendCarcass\BackendCarcass.Application\BackendCarcass.Application.csproj" />

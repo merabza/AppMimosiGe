@@ -4,13 +4,14 @@ using AppMimosiGeRepositories.DependencyInjection;
 using BackendCarcass.Api;
 using BackendCarcass.Api.DependencyInjection;
 using BackendCarcass.Application.DependencyInjection;
-using BackendCarcass.Identity.DependencyInjection;
-using BackendCarcass.Repositories.DependencyInjection;
+using BackendCarcass.Application.Identity.DependencyInjection;
+using BackendCarcass.Application.Repositories.DependencyInjection;
 using Figgle.Fonts;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Hosting;
 using MimosiGeDbPart.Db.DependencyInjection;
 using Serilog;
+using SystemTools.Application.Abstractions;
 using WebSystemTools.ConfigurationEncrypt;
 using WebSystemTools.CorsTools.DependencyInjection;
 using WebSystemTools.MediatorTools.DependencyInjection;
@@ -27,6 +28,8 @@ try
 
     const string appName = "App.Mimosi.Ge";
     const string appKey = "01e719dc51534a83988741c50da6a87b";
+    const string myAllowSpecificOrigins = "_myAllowSpecificOrigins";
+
     const int versionCount = 1;
 
     string header = $"{appName} {Assembly.GetEntryAssembly()?.GetName().Version}";
@@ -85,10 +88,11 @@ try
     builder.Services
         .AddMediator(debugLogger, builder.Configuration, AssemblyReference.Assembly)
         .AddSwagger(debugLogger, true, versionCount, appName)
-        .AddCorsService(debugLogger, builder.Configuration)
+        .AddCorsService(myAllowSpecificOrigins ,debugLogger, builder.Configuration)
         .AddCarcassRepositories(debugLogger)
         .AddCarcassIdentity(debugLogger, builder.Configuration)
         .AddScopedAllCarcassApplicationServices(debugLogger)
+        .AddApplication(debugLogger, typeof(BackendCarcass.Application.AssemblyReference))
         //.AddCarcassDom(debugMode)
         .AddAppMimosiGeRepositories(debugLogger)
         .AddMimosiGeDb(debugLogger, builder.Configuration);
@@ -100,8 +104,9 @@ try
     // ReSharper disable once RedundantArgumentDefaultValue
     app.UseSwaggerServices(debugLogger, versionCount);
     app.UseTestToolsApiEndpoints(debugLogger);
-
-    app.UseBackendCarcassApiEndpoints(debugLogger);
+    app.UseCorsService(myAllowSpecificOrigins, debugLogger);
+    //BackendCarcass
+    app.UseBackendCarcassApiEndpoints(myAllowSpecificOrigins, debugLogger);
 
     //app.UseModelEditorApi(debugMode);
     //app.UseArticlesApiEndpoints(debugMode);

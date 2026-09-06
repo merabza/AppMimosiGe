@@ -1,8 +1,8 @@
 //Created by RepositoriesInstallerClassCreator at 2/15/2025 11:07:44 AM
 
-using BackendCarcass.MasterData;
-using BackendCarcass.Repositories;
-using BackendCarcass.Rights;
+using BackendCarcass.Application.MasterData;
+using BackendCarcass.Application.Repositories;
+using BackendCarcass.Application.Rights;
 using Microsoft.Extensions.DependencyInjection;
 using MimosiGeDbPart.Db;
 using Serilog;

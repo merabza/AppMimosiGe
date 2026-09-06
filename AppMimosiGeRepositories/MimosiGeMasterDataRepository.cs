@@ -1,4 +1,4 @@
-﻿using BackendCarcass.Repositories;
+﻿using BackendCarcass.Application.Repositories;
 using MimosiGeDbPart.Db;
 
 namespace AppMimosiGeRepositories;
