@@ -13,16 +13,7 @@
     <Project Path="../BackendCarcass/BackendCarcass.Api/BackendCarcass.Api.csproj" />
     <Project Path="../BackendCarcass/BackendCarcass.Application/BackendCarcass.Application.csproj" />
     <Project Path="../BackendCarcass/BackendCarcass.Database/BackendCarcass.Database.csproj" />
-    <Project Path="../BackendCarcass/BackendCarcass.FilterSort/BackendCarcass.FilterSort.csproj" />
-    <Project Path="../BackendCarcass/BackendCarcass.Identity/BackendCarcass.Identity.csproj" />
-    <Project Path="../BackendCarcass/BackendCarcass.Mappers/BackendCarcass.Mappers.csproj" />
-    <Project Path="../BackendCarcass/BackendCarcass.MasterData/BackendCarcass.MasterData.csproj" />
-    <Project Path="../BackendCarcass/BackendCarcass.Repositories/BackendCarcass.Repositories.csproj" />
-    <Project Path="../BackendCarcass/BackendCarcass.Rights/BackendCarcass.Rights.csproj" />
-    <Project Path="../BackendCarcass/BackendCarcass.LibCrud/BackendCarcass.LibCrud.csproj" />
-  </Folder>
-  <Folder Name="/BackendCarcassDomain/">
-    <Project Path="../BackendCarcassDomain/BackendCarcassDomain.Entities/BackendCarcassDomain.Entities.csproj" />
+    <Project Path="../BackendCarcass/BackendCarcass.Domain/BackendCarcass.Domain.csproj" />
   </Folder>
   <Folder Name="/BackendCarcassShared/">
     <Project Path="../BackendCarcassShared/BackendCarcassShared.Contracts/BackendCarcassShared.Contracts.csproj" />
@@ -37,29 +28,27 @@
   </Folder>
   <Folder Name="/SystemTools/">
     <Project Path="../SystemTools/SystemTools.ApiContracts/SystemTools.ApiContracts.csproj" />
+    <Project Path="../SystemTools/SystemTools.Application.Abstractions/SystemTools.Application.Abstractions.csproj" />
     <Project Path="../SystemTools/SystemTools.DatabaseToolsShared/SystemTools.DatabaseToolsShared.csproj" />
     <Project Path="../SystemTools/SystemTools.Domain.Abstractions/SystemTools.Domain.Abstractions.csproj" />
-    <Project Path="../SystemTools/SystemTools.MediatRMessagingAbstractions/SystemTools.MediatRMessagingAbstractions.csproj" />
     <Project Path="../SystemTools/SystemTools.ReCounterContracts/SystemTools.ReCounterContracts.csproj" />
     <Project Path="../SystemTools/SystemTools.RepositoriesShared/SystemTools.RepositoriesShared.csproj" />
+    <Project Path="../SystemTools/SystemTools.SharedKernel/SystemTools.SharedKernel.csproj" />
     <Project Path="../SystemTools/SystemTools.StringMessagesApiContracts/SystemTools.StringMessagesApiContracts.csproj" />
     <Project Path="../SystemTools/SystemTools.SystemToolsShared/SystemTools.SystemToolsShared.csproj" />
     <Project Path="../SystemTools/SystemTools.TestApiContracts/SystemTools.TestApiContracts.csproj" />
   </Folder>
   <Folder Name="/WebSystemTools/">
-    <Project Path="../WebSystemTools/WebSystemTools.ApiExceptionHandler/WebSystemTools.ApiExceptionHandler.csproj" />
     <Project Path="../WebSystemTools/WebSystemTools.ConfigurationEncrypt/WebSystemTools.ConfigurationEncrypt.csproj" />
     <Project Path="../WebSystemTools/WebSystemTools.CorsTools/WebSystemTools.CorsTools.csproj" />
     <Project Path="../WebSystemTools/WebSystemTools.MediatorTools/WebSystemTools.MediatorTools.csproj" />
     <Project Path="../WebSystemTools/WebSystemTools.SerilogLogger/WebSystemTools.SerilogLogger.csproj" />
-    <Project Path="../WebSystemTools/WebSystemTools.SignalRMessages/WebSystemTools.SignalRMessages.csproj" />
-    <Project Path="../WebSystemTools/WebSystemTools.StaticFilesTools/WebSystemTools.StaticFilesTools.csproj" />
     <Project Path="../WebSystemTools/WebSystemTools.SwaggerTools/WebSystemTools.SwaggerTools.csproj" />
     <Project Path="../WebSystemTools/WebSystemTools.TestToolsApi/WebSystemTools.TestToolsApi.csproj" />
     <Project Path="../WebSystemTools/WebSystemTools.TestToolsData/WebSystemTools.TestToolsData.csproj" />
+    <Project Path="../WebSystemTools/WebSystemTools.WebApi.Abstractions/WebSystemTools.WebApi.Abstractions.csproj" />
     <Project Path="../WebSystemTools/WebSystemTools.WindowsServiceTools/WebSystemTools.WindowsServiceTools.csproj" />
   </Folder>
   <Project Path="AppMimosiGe/AppMimosiGe.csproj" />
   <Project Path="AppMimosiGeRepositories/AppMimosiGeRepositories.csproj" />
-  <Project Path="LibAppMimosiGeRepositories/LibAppMimosiGeRepositories.csproj" />
 </Solution>

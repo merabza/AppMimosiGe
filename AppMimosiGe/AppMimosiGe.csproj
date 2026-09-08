@@ -7,7 +7,6 @@
         <ProjectReference Include="..\AppMimosiGeRepositories\AppMimosiGeRepositories.csproj" />
         <ProjectReference Include="..\..\BackendCarcass\BackendCarcass.Api\BackendCarcass.Api.csproj" />
         <ProjectReference Include="..\..\BackendCarcass\BackendCarcass.Application\BackendCarcass.Application.csproj" />
-        <ProjectReference Include="..\..\BackendCarcass\BackendCarcass.Repositories\BackendCarcass.Repositories.csproj" />
         <ProjectReference Include="..\..\MimosiGeDbPart\MimosiGeDbPart.Db\MimosiGeDbPart.Db.csproj" />
         <ProjectReference Include="..\..\WebSystemTools\WebSystemTools.ConfigurationEncrypt\WebSystemTools.ConfigurationEncrypt.csproj" />
         <ProjectReference Include="..\..\WebSystemTools\WebSystemTools.MediatorTools\WebSystemTools.MediatorTools.csproj" />

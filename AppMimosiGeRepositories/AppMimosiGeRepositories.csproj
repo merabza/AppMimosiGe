@@ -5,8 +5,6 @@
       <Folder Include="Installers\" />
     </ItemGroup>
     <ItemGroup>
-      <ProjectReference Include="..\..\BackendCarcass\BackendCarcass.Repositories\BackendCarcass.Repositories.csproj" />
-      <ProjectReference Include="..\..\BackendCarcass\BackendCarcass.Rights\BackendCarcass.Rights.csproj" />
       <ProjectReference Include="..\..\MimosiGeDbPart\MimosiGeDbPart.Db\MimosiGeDbPart.Db.csproj" />
     </ItemGroup>
 </Project>
