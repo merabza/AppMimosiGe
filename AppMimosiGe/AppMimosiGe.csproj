@@ -11,11 +11,25 @@
         <ProjectReference Include="..\..\WebSystemTools\WebSystemTools.ConfigurationEncrypt\WebSystemTools.ConfigurationEncrypt.csproj" />
         <ProjectReference Include="..\..\WebSystemTools\WebSystemTools.MediatorTools\WebSystemTools.MediatorTools.csproj" />
         <ProjectReference Include="..\..\WebSystemTools\WebSystemTools.SerilogLogger\WebSystemTools.SerilogLogger.csproj" />
+        <ProjectReference Include="..\..\WebSystemTools\WebSystemTools.StaticFilesTools\WebSystemTools.StaticFilesTools.csproj" />
         <ProjectReference Include="..\..\WebSystemTools\WebSystemTools.SwaggerTools\WebSystemTools.SwaggerTools.csproj" />
         <ProjectReference Include="..\..\WebSystemTools\WebSystemTools.TestToolsApi\WebSystemTools.TestToolsApi.csproj" />
         <ProjectReference Include="..\..\WebSystemTools\WebSystemTools.WindowsServiceTools\WebSystemTools.WindowsServiceTools.csproj" />
     </ItemGroup>
     <PropertyGroup>
         <UserSecretsId>245797f3-a8f3-4898-bd90-48b87927e5fc</UserSecretsId>
+        <SpaRoot>..\..\AppMimosiGeFront\appmimosigefrontend\</SpaRoot>
     </PropertyGroup>
+    <!-- publish-ის დროს React-ის ფრონტი იბილდება და მისი dist ფოლდერი პაკეტში wwwroot-ის სახით ხვდება -->
+    <Target Name="PublishSpa" AfterTargets="ComputeFilesToPublish">
+        <Exec WorkingDirectory="$(SpaRoot)" Command="npm install" />
+        <Exec WorkingDirectory="$(SpaRoot)" Command="npm run build" />
+        <ItemGroup>
+            <SpaDistFiles Include="$(SpaRoot)dist\**" />
+            <ResolvedFileToPublish Include="@(SpaDistFiles->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
+                <RelativePath>wwwroot\%(RecursiveDir)%(Filename)%(Extension)</RelativePath>
+                <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+            </ResolvedFileToPublish>
+        </ItemGroup>
+    </Target>
 </Project>

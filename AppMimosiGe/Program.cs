@@ -6,8 +6,10 @@ using BackendCarcass.Api.DependencyInjection;
 using BackendCarcass.Application.DependencyInjection;
 using BackendCarcass.Application.Identity.DependencyInjection;
 using BackendCarcass.Application.Repositories.DependencyInjection;
+using BackendCarcassShared.Contracts.V1.Routes;
 using Figgle.Fonts;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Hosting;
 using MimosiGeDbPart.Db.DependencyInjection;
 using Serilog;
@@ -16,6 +18,7 @@ using WebSystemTools.ConfigurationEncrypt;
 using WebSystemTools.CorsTools.DependencyInjection;
 using WebSystemTools.MediatorTools.DependencyInjection;
 using WebSystemTools.SerilogLogger;
+using WebSystemTools.StaticFilesTools.DependencyInjection;
 using WebSystemTools.SwaggerTools.DependencyInjection;
 using WebSystemTools.TestToolsApi.DependencyInjection;
 using WebSystemTools.WindowsServiceTools;
@@ -103,6 +106,7 @@ try
 
     // ReSharper disable once RedundantArgumentDefaultValue
     app.UseSwaggerServices(debugLogger, versionCount);
+    app.UseDefaultAndStaticFiles(debugLogger);
     app.UseTestToolsApiEndpoints(debugLogger);
     app.UseCorsService(myAllowSpecificOrigins, debugLogger);
     //BackendCarcass
@@ -113,6 +117,13 @@ try
     //app.UseIssuesApiEndpoints(debugMode);
     //app.UseRootDerivationInflectionViewApi(debugMode);
     //app.UseRootsEditorApi(debugMode);
+
+    //SPA-ს კლიენტის მხარეს რაუტინგი: უცნობი მისამართისთვის index.html გაიცემა,
+    //რომ ბრაუზერში გვერდის განახლებამ ან პირდაპირმა ბმულმა 404 არ დააბრუნოს
+    app.MapFallbackToFile("index.html");
+
+    //API-ს უცნობი მისამართები SPA-ს არ უნდა დაუბრუნდეს, ისინი ისევ 404 რჩება
+    app.Map("/" + CarcassApiRoutes.ApiBase + "/{*rest}", () => Results.NotFound());
 
     await app.RunAsync();
     return 0;
