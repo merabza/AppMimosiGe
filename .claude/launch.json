@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "AppMimosiGe backend",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": [
+        "run",
+        "--project",
+        "D:\\1WorkMimosi\\AppMimosiGe\\AppMimosiGe\\AppMimosiGe",
+        "--",
+        "--CorsSettings:Origins:20=http://localhost:5173"
+      ],
+      "port": 5070
+    }
+  ]
+}
