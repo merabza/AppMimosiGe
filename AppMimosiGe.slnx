@@ -18,6 +18,13 @@
   <Folder Name="/BackendCarcassShared/">
     <Project Path="../BackendCarcassShared/BackendCarcassShared.Contracts/BackendCarcassShared.Contracts.csproj" />
   </Folder>
+  <Folder Name="/AppMimosiGeShared/">
+    <Project Path="../AppMimosiGeShared/AppMimosiGeShared.Contracts/AppMimosiGeShared.Contracts.csproj" />
+  </Folder>
+  <Folder Name="/MimosiGeCore/">
+    <Project Path="../MimosiGeCore/MimosiGeCore.Application.Abstractions/MimosiGeCore.Application.Abstractions.csproj" />
+    <Project Path="../MimosiGeCore/MimosiGeCore.Domain/MimosiGeCore.Domain.csproj" />
+  </Folder>
   <Folder Name="/MimosiGeDbPart/">
     <Project Path="../MimosiGeDbPart/MimosiGeDbPart.Db/MimosiGeDbPart.Db.csproj" />
   </Folder>
@@ -46,9 +53,16 @@
     <Project Path="../WebSystemTools/WebSystemTools.SwaggerTools/WebSystemTools.SwaggerTools.csproj" />
     <Project Path="../WebSystemTools/WebSystemTools.TestToolsApi/WebSystemTools.TestToolsApi.csproj" />
     <Project Path="../WebSystemTools/WebSystemTools.TestToolsData/WebSystemTools.TestToolsData.csproj" />
+    <Project Path="../WebSystemTools/WebSystemTools.ValidationTools/WebSystemTools.ValidationTools.csproj" />
     <Project Path="../WebSystemTools/WebSystemTools.WebApi.Abstractions/WebSystemTools.WebApi.Abstractions.csproj" />
     <Project Path="../WebSystemTools/WebSystemTools.WindowsServiceTools/WebSystemTools.WindowsServiceTools.csproj" />
   </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="AppMimosiGe.Application.Tests/AppMimosiGe.Application.Tests.csproj" />
+  </Folder>
+  <Project Path="AppMimosiGe.Application/AppMimosiGe.Application.csproj" />
+  <Project Path="AppMimosiGe.Infrastructure/AppMimosiGe.Infrastructure.csproj" />
+  <Project Path="AppMimosiGe.WebApi/AppMimosiGe.WebApi.csproj" />
   <Project Path="AppMimosiGe/AppMimosiGe.csproj" />
   <Project Path="AppMimosiGeRepositories/AppMimosiGeRepositories.csproj" />
 </Solution>

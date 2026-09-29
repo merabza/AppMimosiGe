@@ -1,5 +1,7 @@
 using System;
 using System.Reflection;
+using AppMimosiGe.Infrastructure.DependencyInjection;
+using AppMimosiGe.WebApi.DependencyInjection;
 using AppMimosiGeRepositories.DependencyInjection;
 using BackendCarcass.Api;
 using BackendCarcass.Api.DependencyInjection;
@@ -10,6 +12,7 @@ using BackendCarcassShared.Contracts.V1.Routes;
 using Figgle.Fonts;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using MimosiGeDbPart.Db.DependencyInjection;
 using Serilog;
@@ -21,6 +24,7 @@ using WebSystemTools.SerilogLogger;
 using WebSystemTools.StaticFilesTools.DependencyInjection;
 using WebSystemTools.SwaggerTools.DependencyInjection;
 using WebSystemTools.TestToolsApi.DependencyInjection;
+using WebSystemTools.ValidationTools.DependencyInjection;
 using WebSystemTools.WindowsServiceTools;
 
 //using AssemblyReference = CarcassRepositories.AssemblyReference;
@@ -95,11 +99,17 @@ try
         .AddCarcassRepositories(debugLogger)
         .AddCarcassIdentity(debugLogger, builder.Configuration)
         .AddScopedAllCarcassApplicationServices(debugLogger)
-        .AddApplication(debugLogger, typeof(BackendCarcass.Application.AssemblyReference))
+        .AddApplication(debugLogger, typeof(BackendCarcass.Application.AssemblyReference),
+            typeof(AppMimosiGe.Application.AssemblyReference))
+        .AddFluentValidation(debugLogger, AppMimosiGe.Application.AssemblyReference.Assembly)
         //.AddCarcassDom(debugMode)
         .AddAppMimosiGeRepositories(debugLogger)
+        .AddAppMimosiGeInfrastructure(debugLogger)
         .AddMimosiGeDb(debugLogger, builder.Configuration);
     // @formatter:on
+
+    //მიმდინარე სასწავლო წლის დასადგენად (handler-ებს ტესტებში ყალბი დრო გადაეცემა)
+    builder.Services.AddSingleton(TimeProvider.System);
 
     //ReSharper disable once using
     await using WebApplication app = builder.Build();
@@ -112,11 +122,8 @@ try
     //BackendCarcass
     app.UseBackendCarcassApiEndpoints(myAllowSpecificOrigins, debugLogger);
 
-    //app.UseModelEditorApi(debugMode);
-    //app.UseArticlesApiEndpoints(debugMode);
-    //app.UseIssuesApiEndpoints(debugMode);
-    //app.UseRootDerivationInflectionViewApi(debugMode);
-    //app.UseRootsEditorApi(debugMode);
+    //AppMimosiGe
+    app.UseAppMimosiGeApi(debugLogger);
 
     //SPA-ს კლიენტის მხარეს რაუტინგი: უცნობი მისამართისთვის index.html გაიცემა,
     //რომ ბრაუზერში გვერდის განახლებამ ან პირდაპირმა ბმულმა 404 არ დააბრუნოს

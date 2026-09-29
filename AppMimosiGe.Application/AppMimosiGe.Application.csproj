@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <ItemGroup>
+        <ProjectReference Include="..\..\AppMimosiGeShared\AppMimosiGeShared.Contracts\AppMimosiGeShared.Contracts.csproj" />
+        <ProjectReference Include="..\..\BackendCarcass\BackendCarcass.Application\BackendCarcass.Application.csproj" />
+        <ProjectReference Include="..\..\MimosiGeCore\MimosiGeCore.Domain\MimosiGeCore.Domain.csproj" />
+        <ProjectReference Include="..\..\SystemTools\SystemTools.Application.Abstractions\SystemTools.Application.Abstractions.csproj" />
+        <ProjectReference Include="..\..\SystemTools\SystemTools.Domain.Abstractions\SystemTools.Domain.Abstractions.csproj" />
+    </ItemGroup>
+</Project>

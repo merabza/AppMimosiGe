@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <ItemGroup>
+        <PackageReference Include="Serilog" />
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\..\AppMimosiGeShared\AppMimosiGeShared.Contracts\AppMimosiGeShared.Contracts.csproj" />
+        <ProjectReference Include="..\..\BackendCarcass\BackendCarcass.Api\BackendCarcass.Api.csproj" />
+        <ProjectReference Include="..\..\SystemTools\SystemTools.Application.Abstractions\SystemTools.Application.Abstractions.csproj" />
+        <ProjectReference Include="..\..\WebSystemTools\WebSystemTools.WebApi.Abstractions\WebSystemTools.WebApi.Abstractions.csproj" />
+        <ProjectReference Include="..\AppMimosiGe.Application\AppMimosiGe.Application.csproj" />
+    </ItemGroup>
+</Project>

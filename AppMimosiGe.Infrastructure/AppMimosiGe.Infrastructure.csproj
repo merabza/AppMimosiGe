@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+        <PackageReference Include="Serilog" />
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\..\MimosiGeCore\MimosiGeCore.Application.Abstractions\MimosiGeCore.Application.Abstractions.csproj" />
+        <ProjectReference Include="..\AppMimosiGe.Application\AppMimosiGe.Application.csproj" />
+    </ItemGroup>
+</Project>
