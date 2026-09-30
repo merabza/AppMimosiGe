@@ -76,8 +76,7 @@ public sealed class TeacherContractValidatorsTests
     {
         TeacherContractRequest request = ValidRequest(bankAccount: new string('1', 23),
             bankAccountCode: new string('A', 9), description: new string('ა', 256));
-        Assert.Equal(
-        [
+        Assert.Equal([
             TeacherContractErrors.BankAccountIsTooLong.Code, TeacherContractErrors.BankAccountCodeIsTooLong.Code,
             TeacherContractErrors.DescriptionIsTooLong.Code
         ], await ErrorCodes(request));
@@ -128,13 +127,28 @@ public sealed class TeacherContractValidatorsTests
         Assert.Empty(await ErrorCodes(ValidRequest(contractEndDate: ContractDate)));
     }
 
+    // only the day of the contract date counts, a time part coming with it does not
+    [Fact]
+    public async Task ContractEndDateOnTheDayOfATimedContractDate_IsAllowed()
+    {
+        var request = new TeacherContractRequest
+        {
+            ContractNumber = "T3.01",
+            ContractDate = new DateTime(2026, 9, 15, 10, 0, 0, DateTimeKind.Unspecified),
+            TeacherHumanId = 1,
+            RsCountryId = 2,
+            ContractEndDate = new DateTime(2026, 9, 15, 0, 0, 0, DateTimeKind.Unspecified)
+        };
+
+        Assert.Empty(await ErrorCodes(request));
+    }
+
     [Fact]
     public async Task MissingReferences_AreNotFoundErrors()
     {
         var repository = new Mock<ITeacherContractsRepository>();
 
-        Assert.Equal(
-        [
+        Assert.Equal([
             TeacherContractErrors.TeacherNotFound.Code, TeacherContractErrors.RsQuoteTypeNotFound.Code,
             TeacherContractErrors.RsCountryNotFound.Code, TeacherContractErrors.SalarySchemeNotFound.Code,
             TeacherContractErrors.WorkHourGroupNotFound.Code
@@ -162,6 +176,33 @@ public sealed class TeacherContractValidatorsTests
         ValidationResult result = await validator.ValidateAsync(new CreateTeacherContractCommand(ValidRequest()));
 
         Assert.Equal([TeacherContractErrors.ContractNumberAlreadyExists.Code], result.Errors.Select(e => e.ErrorCode));
+    }
+
+    // the command validators apply the field rules of the request
+    [Fact]
+    public async Task CreateValidator_InvalidRequestFields_AreReported()
+    {
+        var validator = new CreateTeacherContractCommandValidator(RepositoryWhereEverythingExists().Object);
+
+        ValidationResult result =
+            await validator.ValidateAsync(new CreateTeacherContractCommand(ValidRequest("3.01", fixedAmount: -1)));
+
+        Assert.Equal([
+            TeacherContractErrors.ContractNumberFormatIsInvalid.Code,
+            TeacherContractErrors.FixedAmountMustNotBeNegative.Code
+        ], result.Errors.Select(e => e.ErrorCode));
+    }
+
+    [Fact]
+    public async Task UpdateValidator_InvalidRequestFields_AreReported()
+    {
+        var validator = new UpdateTeacherContractCommandValidator(RepositoryWhereEverythingExists().Object);
+
+        ValidationResult result = await validator.ValidateAsync(new UpdateTeacherContractCommand(7,
+            ValidRequest(workHoursStart: new TimeOnly(18, 0), workHoursEnd: new TimeOnly(9, 0))));
+
+        Assert.Equal([TeacherContractErrors.WorkHoursStartMustBeBeforeEnd.Code],
+            result.Errors.Select(e => e.ErrorCode));
     }
 
     [Fact]

@@ -22,8 +22,7 @@ public sealed class TeacherContractRequestValidator : AbstractValidator<TeacherC
     {
         RuleFor(x => x.ContractNumber).NotEmpty().WithErrorCode(TeacherContractErrors.ContractNumberIsRequired.Code)
             .WithMessage(TeacherContractErrors.ContractNumberIsRequired.Description);
-        RuleFor(x => x.ContractNumber).Matches(ContractNumberPattern)
-            .When(x => !string.IsNullOrEmpty(x.ContractNumber))
+        RuleFor(x => x.ContractNumber).Matches(ContractNumberPattern).When(x => !string.IsNullOrEmpty(x.ContractNumber))
             .WithErrorCode(TeacherContractErrors.ContractNumberFormatIsInvalid.Code)
             .WithMessage(TeacherContractErrors.ContractNumberFormatIsInvalid.Description);
 
@@ -61,8 +60,7 @@ public sealed class TeacherContractRequestValidator : AbstractValidator<TeacherC
             .WithErrorCode(TeacherContractErrors.SalarySchemeNotFound.Code)
             .WithMessage(TeacherContractErrors.SalarySchemeNotFound.Description);
         RuleFor(x => x.WorkHourGroupId).MustAsync((id, ct) => repository.WorkHourGroupExists(id!.Value, ct))
-            .When(x => x.WorkHourGroupId is not null)
-            .WithErrorCode(TeacherContractErrors.WorkHourGroupNotFound.Code)
+            .When(x => x.WorkHourGroupId is not null).WithErrorCode(TeacherContractErrors.WorkHourGroupNotFound.Code)
             .WithMessage(TeacherContractErrors.WorkHourGroupNotFound.Description);
 
         //ორივე დრო ერთი დღისაა (1899-12-30), ამიტომ დაწყება დასრულებაზე ადრე უნდა იყოს

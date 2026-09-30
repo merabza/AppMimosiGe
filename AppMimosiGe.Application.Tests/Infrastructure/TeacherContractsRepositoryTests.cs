@@ -137,8 +137,8 @@ public sealed class TeacherContractsRepositoryTests : IDisposable
     public async Task GetRowsData_SortsByTheRequestedField(ETeacherContractSortField field, bool ascending,
         int[] expectedIds)
     {
-        TeacherContractsRowsDataResponse result =
-            await _repository.GetRowsData(Query(sort: [new TeacherContractSortField(field, ascending)]));
+        TeacherContractsRowsDataResponse result = await _repository.GetRowsData(Query(sort:
+            [new TeacherContractSortField(field, ascending)]));
 
         Assert.Equal(expectedIds, result.Rows.Select(r => r.Id));
     }
@@ -149,8 +149,8 @@ public sealed class TeacherContractsRepositoryTests : IDisposable
     [InlineData(ETeacherContractSortField.IndEnt)]
     public async Task GetRowsData_EqualValues_AreOrderedById(ETeacherContractSortField field)
     {
-        TeacherContractsRowsDataResponse result =
-            await _repository.GetRowsData(Query(sort: [new TeacherContractSortField(field, true)]));
+        TeacherContractsRowsDataResponse result = await _repository.GetRowsData(Query(sort:
+            [new TeacherContractSortField(field, true)]));
 
         Assert.Equal([1, 2, 3, 4], result.Rows.Select(r => r.Id));
     }
@@ -173,6 +173,73 @@ public sealed class TeacherContractsRepositoryTests : IDisposable
 
         Assert.Equal(3, result.Offset);
         Assert.Equal([3], result.Rows.Select(r => r.Id));
+    }
+
+    [Fact]
+    public async Task GetRowsData_OffsetRightAfterTheLastRow_ReturnsTheLastPage()
+    {
+        TeacherContractsRowsDataResponse result = await _repository.GetRowsData(Query(offset: 4, rowsCount: 2));
+
+        Assert.Equal(2, result.Offset);
+        Assert.Equal([4, 3], result.Rows.Select(r => r.Id));
+    }
+
+    // an offset inside the rows is kept even when it is not a page boundary
+    [Fact]
+    public async Task GetRowsData_OffsetInsideTheRows_IsKept()
+    {
+        TeacherContractsRowsDataResponse result = await _repository.GetRowsData(Query(offset: 1, rowsCount: 2));
+
+        Assert.Equal(1, result.Offset);
+        Assert.Equal([1, 4], result.Rows.Select(r => r.Id));
+    }
+
+    // without matching rows there is no last page to move to
+    [Fact]
+    public async Task GetRowsData_NoMatchingRows_KeepsTheOffset()
+    {
+        TeacherContractsRowsDataResponse result =
+            await _repository.GetRowsData(Query(search: "nobody", offset: 5, rowsCount: 10));
+
+        Assert.Equal(0, result.AllRowsCount);
+        Assert.Equal(5, result.Offset);
+        Assert.Empty(result.Rows);
+    }
+
+    // a descending field after the first one orders within the equal values of the first
+    [Fact]
+    public async Task GetRowsData_SecondSortFieldDescending_OrdersWithinTheFirst()
+    {
+        TeacherContractsRowsDataResponse result = await _repository.GetRowsData(Query(sort:
+        [
+            new TeacherContractSortField(ETeacherContractSortField.TeacherName, true),
+            new TeacherContractSortField(ETeacherContractSortField.ContractDate, false)
+        ]));
+
+        Assert.Equal([2, 1, 4, 3], result.Rows.Select(r => r.Id));
+    }
+
+    [Fact]
+    public async Task GetRowsData_UnknownSortField_Throws()
+    {
+        var ex = await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
+            _repository.GetRowsData(Query(sort: [new TeacherContractSortField((ETeacherContractSortField)99, true)])));
+
+        Assert.Equal("sortFields", ex.ParamName);
+        Assert.StartsWith("უცნობი დალაგების ველი", ex.Message, StringComparison.Ordinal);
+    }
+
+    // the name sort is by last name, then first name: "Ab zed" comes before "Abc ann"
+    [Fact]
+    public async Task GetRowsData_TeacherNameSort_ComparesLastNamesFirst()
+    {
+        AddAndSave(Human(5, "Abc", "ann", "03000000005"), Human(6, "Ab", "zed", "03000000006"),
+            Contract(5, "T7.01", 5, null, null), Contract(6, "T7.02", 6, null, null));
+
+        TeacherContractsRowsDataResponse result = await _repository.GetRowsData(Query(search: "T7.",
+            sort: [new TeacherContractSortField(ETeacherContractSortField.TeacherName, true)]));
+
+        Assert.Equal([6, 5], result.Rows.Select(r => r.Id));
     }
 
     [Fact]
@@ -202,9 +269,10 @@ public sealed class TeacherContractsRepositoryTests : IDisposable
 
         TeacherContractResponse? result = await _repository.GetOne(9);
 
-        Assert.Equal(new TeacherContractResponse(9, "T6.01", Today, 2, "Beta Bob", "GE00TB0000000000000000",
-            "TBCBGE22", true, true, 21, 2, 1234.5m, true, "Media", 1, 2, new TimeOnly(12, 0), new TimeOnly(18, 30),
-            Today.AddYears(1)), result);
+        Assert.Equal(
+            new TeacherContractResponse(9, "T6.01", Today, 2, "Beta Bob", "GE00TB0000000000000000", "TBCBGE22", true,
+                true, 21, 2, 1234.5m, true, "Media", 1, 2, new TimeOnly(12, 0), new TimeOnly(18, 30),
+                Today.AddYears(1)), result);
     }
 
     [Fact]
@@ -239,8 +307,7 @@ public sealed class TeacherContractsRepositoryTests : IDisposable
     [InlineData("T3.01", 2, false)]
     [InlineData("T3.01", 1, true)]
     [InlineData("T9.99", 0, false)]
-    public async Task ContractNumberExists_ChecksAllContractsExceptTheEdited(string number, int exceptId,
-        bool expected)
+    public async Task ContractNumberExists_ChecksAllContractsExceptTheEdited(string number, int exceptId, bool expected)
     {
         Assert.Equal(expected, await _repository.ContractNumberExists(number, exceptId));
     }
@@ -274,7 +341,11 @@ public sealed class TeacherContractsRepositoryTests : IDisposable
     {
         AddAndSave(new Lesson
         {
-            Id = 1, GroupId = 1, TeacherContractId = 2, SubstituteTeacherContractId = 1, SalarySchemaId = 1
+            Id = 1,
+            GroupId = 1,
+            TeacherContractId = 2,
+            SubstituteTeacherContractId = 1,
+            SalarySchemaId = 1
         });
 
         Assert.True(await _repository.IsInUse(1));

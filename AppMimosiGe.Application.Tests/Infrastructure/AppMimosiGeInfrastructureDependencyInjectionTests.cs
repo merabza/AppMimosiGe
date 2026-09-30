@@ -22,7 +22,8 @@ public sealed class AppMimosiGeInfrastructureDependencyInjectionTests
 
         // Assert
         Assert.Same(services, result);
-        ServiceDescriptor descriptor = Assert.Single(services, s => s.ServiceType == typeof(IStudentContractsRepository));
+        ServiceDescriptor descriptor =
+            Assert.Single(services, s => s.ServiceType == typeof(IStudentContractsRepository));
         Assert.Equal(typeof(StudentContractsRepository), descriptor.ImplementationType);
         Assert.Equal(ServiceLifetime.Scoped, descriptor.Lifetime);
     }
@@ -37,7 +38,8 @@ public sealed class AppMimosiGeInfrastructureDependencyInjectionTests
         services.AddAppMimosiGeInfrastructure(null);
 
         // Assert
-        ServiceDescriptor descriptor = Assert.Single(services, s => s.ServiceType == typeof(ITeacherContractsRepository));
+        ServiceDescriptor descriptor =
+            Assert.Single(services, s => s.ServiceType == typeof(ITeacherContractsRepository));
         Assert.Equal(typeof(TeacherContractsRepository), descriptor.ImplementationType);
         Assert.Equal(ServiceLifetime.Scoped, descriptor.Lifetime);
     }
@@ -52,9 +54,11 @@ public sealed class AppMimosiGeInfrastructureDependencyInjectionTests
         new ServiceCollection().AddAppMimosiGeInfrastructure(logger.Object);
 
         // Assert
-        logger.Verify(l => l.Information("{MethodName} Started", nameof(AppMimosiGeInfrastructureDependencyInjection
-            .AddAppMimosiGeInfrastructure)), Times.Once);
-        logger.Verify(l => l.Information("{MethodName} Finished", nameof(AppMimosiGeInfrastructureDependencyInjection
-            .AddAppMimosiGeInfrastructure)), Times.Once);
+        logger.Verify(
+            l => l.Information("{MethodName} Started",
+                nameof(AppMimosiGeInfrastructureDependencyInjection.AddAppMimosiGeInfrastructure)), Times.Once);
+        logger.Verify(
+            l => l.Information("{MethodName} Finished",
+                nameof(AppMimosiGeInfrastructureDependencyInjection.AddAppMimosiGeInfrastructure)), Times.Once);
     }
 }

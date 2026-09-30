@@ -20,8 +20,7 @@ public sealed class StudentContractRequestValidator : AbstractValidator<StudentC
     {
         RuleFor(x => x.ContractNumber).NotEmpty().WithErrorCode(StudentContractErrors.ContractNumberIsRequired.Code)
             .WithMessage(StudentContractErrors.ContractNumberIsRequired.Description);
-        RuleFor(x => x.ContractNumber).Matches(ContractNumberPattern)
-            .When(x => !string.IsNullOrEmpty(x.ContractNumber))
+        RuleFor(x => x.ContractNumber).Matches(ContractNumberPattern).When(x => !string.IsNullOrEmpty(x.ContractNumber))
             .WithErrorCode(StudentContractErrors.ContractNumberFormatIsInvalid.Code)
             .WithMessage(StudentContractErrors.ContractNumberFormatIsInvalid.Description);
 

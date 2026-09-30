@@ -15,6 +15,7 @@ using AppMimosiGe.WebApi.Endpoints.V1;
 using AppMimosiGeShared.Contracts.Errors;
 using AppMimosiGeShared.Contracts.V1.Requests;
 using AppMimosiGeShared.Contracts.V1.Responses;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -291,8 +292,9 @@ public sealed class TeacherContractsEndpointsTests
 
         // Assert
         List<RouteEndpoint> endpoints = EndpointsTestApp.MappedEndpoints(app);
-        Assert.Contains(endpoints, e => e.RoutePattern.RawText?.TrimStart('/') == pattern &&
-                                        e.Metadata.GetMetadata<HttpMethodMetadata>()!.HttpMethods.Contains(method));
+        Assert.Contains(endpoints,
+            e => e.RoutePattern.RawText?.TrimStart('/') == pattern &&
+                 e.Metadata.GetMetadata<HttpMethodMetadata>()!.HttpMethods.Contains(method));
     }
 
     [Fact]
@@ -307,7 +309,6 @@ public sealed class TeacherContractsEndpointsTests
         // Assert
         List<RouteEndpoint> endpoints = EndpointsTestApp.MappedEndpoints(app);
         Assert.Equal(7, endpoints.Count);
-        Assert.All(endpoints, e =>
-            Assert.NotEmpty(e.Metadata.GetOrderedMetadata<Microsoft.AspNetCore.Authorization.IAuthorizeData>()));
+        Assert.All(endpoints, e => Assert.NotEmpty(e.Metadata.GetOrderedMetadata<IAuthorizeData>()));
     }
 }

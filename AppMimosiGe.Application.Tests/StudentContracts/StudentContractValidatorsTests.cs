@@ -66,7 +66,11 @@ public sealed class StudentContractValidatorsTests
     {
         var request = new StudentContractRequest
         {
-            ContractNumber = "6.001", StudentHumanId = 1, PayerHumanId = 2, AcademicYearId = 11, Details = []
+            ContractNumber = "6.001",
+            StudentHumanId = 1,
+            PayerHumanId = 2,
+            AcademicYearId = 11,
+            Details = []
         };
         Assert.Equal([StudentContractErrors.ContractDateIsRequired.Code], await ErrorCodes(request));
     }
@@ -96,8 +100,7 @@ public sealed class StudentContractValidatorsTests
         var repository = new Mock<IStudentContractsRepository>();
         string[] codes = await ErrorCodes(ValidRequest(), repository);
 
-        Assert.Equal(
-        [
+        Assert.Equal([
             StudentContractErrors.StudentNotFound.Code, StudentContractErrors.PayerNotFound.Code,
             StudentContractErrors.AcademicYearNotFound.Code, StudentContractErrors.StudentStatusNotFound.Code,
             StudentContractErrors.CourseNotFound.Code, StudentContractErrors.GroupSizeNotFound.Code
@@ -162,14 +165,12 @@ public sealed class StudentContractValidatorsTests
     public async Task Create_DuplicateNumberInYear_Fails()
     {
         Mock<IStudentContractsRepository> repository = RepositoryWhereEverythingExists();
-        repository.Setup(r => r.ContractNumberExists(11, "6.001", 0, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
+        repository.Setup(r => r.ContractNumberExists(11, "6.001", 0, It.IsAny<CancellationToken>())).ReturnsAsync(true);
         var validator = new CreateStudentContractCommandValidator(repository.Object);
 
         ValidationResult result = await validator.ValidateAsync(new CreateStudentContractCommand(ValidRequest()));
 
-        Assert.Equal([StudentContractErrors.ContractNumberAlreadyExists.Code],
-            result.Errors.Select(e => e.ErrorCode));
+        Assert.Equal([StudentContractErrors.ContractNumberAlreadyExists.Code], result.Errors.Select(e => e.ErrorCode));
     }
 
     // the command validators run the field rules of the request too
@@ -209,8 +210,9 @@ public sealed class StudentContractValidatorsTests
 
         await validator.ValidateAsync(new CreateStudentContractCommand(ValidRequest("")));
 
-        repository.Verify(r => r.ContractNumberExists(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<int>(),
-            It.IsAny<CancellationToken>()), Times.Never);
+        repository.Verify(
+            r => r.ContractNumberExists(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<int>(),
+                It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -235,8 +237,7 @@ public sealed class StudentContractValidatorsTests
 
         ValidationResult result = await validator.ValidateAsync(new UpdateStudentContractCommand(42, ValidRequest()));
 
-        Assert.Equal([StudentContractErrors.ContractNumberAlreadyExists.Code],
-            result.Errors.Select(e => e.ErrorCode));
+        Assert.Equal([StudentContractErrors.ContractNumberAlreadyExists.Code], result.Errors.Select(e => e.ErrorCode));
     }
 
     [Fact]

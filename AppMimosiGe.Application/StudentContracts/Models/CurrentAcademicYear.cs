@@ -9,7 +9,8 @@ public static class CurrentAcademicYear
 {
     /// <summary>
     ///     მიმდინარე სასწავლო წელი: რომლის [StartDate, FinishDate) შუალედშიც არის დღევანდელი თარიღი.
-    ///     თუ ასეთი არ არის (მაგალითად, წლებს შორის შუალედი), ბოლო დაწყებული წელი, თუ არც ასეთია, ყველაზე ადრეული. Access-ში ნაგულისხმევი წელი ფორმაში hard-coded იყო (9)
+    ///     თუ ასეთი არ არის (მაგალითად, წლებს შორის შუალედი), ბოლო დაწყებული წელი, თუ არც ასეთია, ყველაზე ადრეული. Access-ში
+    ///     ნაგულისხმევი წელი ფორმაში hard-coded იყო (9)
     /// </summary>
     public static int? Find(IReadOnlyCollection<AcademicYear> academicYears, DateTime today)
     {

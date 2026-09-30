@@ -46,8 +46,7 @@ internal static class TeacherContractTestData
         repository.Setup(r => r.RsQuoteTypeExists(It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
         repository.Setup(r => r.RsCountryExists(It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
         repository.Setup(r => r.SalarySchemeExists(It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
-        repository.Setup(r => r.WorkHourGroupExists(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
+        repository.Setup(r => r.WorkHourGroupExists(It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
         repository.Setup(r =>
                 r.ContractNumberExists(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);

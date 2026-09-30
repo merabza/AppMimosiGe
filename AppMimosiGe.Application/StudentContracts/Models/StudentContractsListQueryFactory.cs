@@ -77,8 +77,8 @@ public static class StudentContractsListQueryFactory
             sortFields.Add(new StudentContractSortField(field, sortField.Ascending));
         }
 
-        return new StudentContractsListQuery(request.Offset, request.RowsCount, academicYearId, studentStatusId,
-            search, sortFields.Count == 0 ? DefaultSortFields : sortFields);
+        return new StudentContractsListQuery(request.Offset, request.RowsCount, academicYearId, studentStatusId, search,
+            sortFields.Count == 0 ? DefaultSortFields : sortFields);
     }
 
     //ცარიელი მნიშვნელობა ფილტრის მოხსნას ნიშნავს

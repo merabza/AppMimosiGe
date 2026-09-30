@@ -30,9 +30,8 @@ public static class TeacherContractsEndpoints
     {
         debugLogger?.Information("{MethodName} Started", nameof(UseTeacherContractsEndpoints));
 
-        RouteGroupBuilder group = endpoints
-            .MapGroup(Routes.ApiBase + Routes.TeacherContractsRoute.TeacherContractsBase).RequireAuthorization()
-            .AddEndpointFilter<UserMustHaveTeacherContractsRightsFilter>();
+        RouteGroupBuilder group = endpoints.MapGroup(Routes.ApiBase + Routes.TeacherContractsRoute.TeacherContractsBase)
+            .RequireAuthorization().AddEndpointFilter<UserMustHaveTeacherContractsRightsFilter>();
 
         group.MapGet(Routes.TeacherContractsRoute.RowsData, GetRowsData);
         group.MapGet(Routes.TeacherContractsRoute.FormLookups, GetFormLookups);
@@ -54,9 +53,9 @@ public static class TeacherContractsEndpoints
     {
         Result<TeacherContractsRowsDataResponse> result =
             await handler.Handle(new GetTeacherContractsRowsDataQuery(filterSortRequest), cancellationToken);
-        return result.Match<TeacherContractsRowsDataResponse,
-            Results<Ok<TeacherContractsRowsDataResponse>, ProblemHttpResult>>(success => TypedResults.Ok(success),
-            failure => (ProblemHttpResult)CustomResults.Problem(failure));
+        return result
+            .Match<TeacherContractsRowsDataResponse, Results<Ok<TeacherContractsRowsDataResponse>, ProblemHttpResult>>(
+                success => TypedResults.Ok(success), failure => (ProblemHttpResult)CustomResults.Problem(failure));
     }
 
     // GET api/v1/teachercontracts/formlookups
@@ -66,9 +65,10 @@ public static class TeacherContractsEndpoints
     {
         Result<TeacherContractFormLookupsResponse> result =
             await handler.Handle(new GetTeacherContractFormLookupsQuery(), cancellationToken);
-        return result.Match<TeacherContractFormLookupsResponse,
-            Results<Ok<TeacherContractFormLookupsResponse>, ProblemHttpResult>>(success => TypedResults.Ok(success),
-            failure => (ProblemHttpResult)CustomResults.Problem(failure));
+        return result
+            .Match<TeacherContractFormLookupsResponse,
+                Results<Ok<TeacherContractFormLookupsResponse>, ProblemHttpResult>>(success => TypedResults.Ok(success),
+                failure => (ProblemHttpResult)CustomResults.Problem(failure));
     }
 
     // GET api/v1/teachercontracts/humans?search={text}
@@ -77,7 +77,8 @@ public static class TeacherContractsEndpoints
         [FromQuery] string? search, IQueryHandler<SearchHumansQuery, List<LookupItemResponse>> handler,
         CancellationToken cancellationToken = default)
     {
-        Result<List<LookupItemResponse>> result = await handler.Handle(new SearchHumansQuery(search), cancellationToken);
+        Result<List<LookupItemResponse>>
+            result = await handler.Handle(new SearchHumansQuery(search), cancellationToken);
         return result.Match<List<LookupItemResponse>, Results<Ok<List<LookupItemResponse>>, ProblemHttpResult>>(
             success => TypedResults.Ok(success), failure => (ProblemHttpResult)CustomResults.Problem(failure));
     }
@@ -87,7 +88,8 @@ public static class TeacherContractsEndpoints
         IQueryHandler<GetTeacherContractQuery, TeacherContractResponse> handler,
         CancellationToken cancellationToken = default)
     {
-        Result<TeacherContractResponse> result = await handler.Handle(new GetTeacherContractQuery(id), cancellationToken);
+        Result<TeacherContractResponse> result =
+            await handler.Handle(new GetTeacherContractQuery(id), cancellationToken);
         return result.Match<TeacherContractResponse, Results<Ok<TeacherContractResponse>, ProblemHttpResult>>(
             success => TypedResults.Ok(success), failure => (ProblemHttpResult)CustomResults.Problem(failure));
     }

@@ -33,12 +33,12 @@ public sealed class StudentContractsRepository(IMimosiGeDbContext context) : ISt
         IOrderedQueryable<StudentContract> sorted = ApplySort(filtered, query.SortFields);
 
         List<StudentContractRowResponse> rows = await sorted.Skip(offset).Take(query.RowsCount).Select(sc =>
-            new StudentContractRowResponse(sc.ScId, sc.ContractNumber, sc.ContractDate, sc.StudentHumanId,
-                sc.StudentHuman.LastName + " " + sc.StudentHuman.FirstName, sc.PayerHumanId,
-                sc.PayerHuman.LastName + " " + sc.PayerHuman.FirstName, sc.AcademicYearId,
-                sc.AcademicYear.AcademicYearName, sc.StudentStatusId,
-                sc.StudentStatus == null ? null : sc.StudentStatus.StudentStatusName,
-                sc.DesiredMonthlyPaymentDay)).ToListAsync(cancellationToken);
+                new StudentContractRowResponse(sc.ScId, sc.ContractNumber, sc.ContractDate, sc.StudentHumanId,
+                    sc.StudentHuman.LastName + " " + sc.StudentHuman.FirstName, sc.PayerHumanId,
+                    sc.PayerHuman.LastName + " " + sc.PayerHuman.FirstName, sc.AcademicYearId,
+                    sc.AcademicYear.AcademicYearName, sc.StudentStatusId,
+                    sc.StudentStatus == null ? null : sc.StudentStatus.StudentStatusName, sc.DesiredMonthlyPaymentDay))
+            .ToListAsync(cancellationToken);
 
         return new StudentContractsRowsDataResponse(count, offset, rows);
     }
@@ -51,8 +51,8 @@ public sealed class StudentContractsRepository(IMimosiGeDbContext context) : ISt
                 sc.PayerHuman.LastName + " " + sc.PayerHuman.FirstName, sc.AcademicYearId, sc.StudentStatusId,
                 sc.DesiredMonthlyPaymentDay, sc.NextPayDate, sc.DirtyNextPayDate,
                 sc.StudentContractDetails.OrderBy(d => d.Id).Select(d =>
-                    new StudentContractDetailResponse(d.Id, d.CourseId, d.GroupSizeId, d.FourWeekHours,
-                        d.FourWeekFee, d.OneHourFee)).ToList())).SingleOrDefaultAsync(cancellationToken);
+                    new StudentContractDetailResponse(d.Id, d.CourseId, d.GroupSizeId, d.FourWeekHours, d.FourWeekFee,
+                        d.OneHourFee)).ToList())).SingleOrDefaultAsync(cancellationToken);
     }
 
     public Task<StudentContract?> GetForChange(int scId, CancellationToken cancellationToken = default)
@@ -65,8 +65,8 @@ public sealed class StudentContractsRepository(IMimosiGeDbContext context) : ISt
         CancellationToken cancellationToken = default)
     {
         return context.StudentContracts.AnyAsync(
-            sc => sc.AcademicYearId == academicYearId && sc.ContractNumber == contractNumber &&
-                  sc.ScId != exceptScId, cancellationToken);
+            sc => sc.AcademicYearId == academicYearId && sc.ContractNumber == contractNumber && sc.ScId != exceptScId,
+            cancellationToken);
     }
 
     public async Task<bool> IsInUse(int scId, CancellationToken cancellationToken = default)
@@ -200,8 +200,7 @@ public sealed class StudentContractsRepository(IMimosiGeDbContext context) : ISt
                     sc => sc.StudentStatus == null ? null : sc.StudentStatus.StudentStatusName, sortField.Ascending),
                 EStudentContractSortField.DesiredMonthlyPaymentDay => Order(query, ordered,
                     sc => sc.DesiredMonthlyPaymentDay, sortField.Ascending),
-                _ => throw new ArgumentOutOfRangeException(nameof(sortFields), sortField.Field,
-                    "უცნობი დალაგების ველი")
+                _ => throw new ArgumentOutOfRangeException(nameof(sortFields), sortField.Field, "უცნობი დალაგების ველი")
             };
         }
 

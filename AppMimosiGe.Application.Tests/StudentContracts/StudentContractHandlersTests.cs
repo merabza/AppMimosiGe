@@ -60,12 +60,11 @@ public sealed class StudentContractHandlersTests
     public async Task Create_AddsContractWithDetailsAndSaves()
     {
         StudentContract? added = null;
-        _repository.Setup(r => r.Add(It.IsAny<StudentContract>()))
-            .Callback<StudentContract>(sc =>
-            {
-                added = sc;
-                sc.ScId = 128;
-            });
+        _repository.Setup(r => r.Add(It.IsAny<StudentContract>())).Callback<StudentContract>(sc =>
+        {
+            added = sc;
+            sc.ScId = 128;
+        });
         var handler = new CreateStudentContractCommandHandler(_repository.Object, _unitOfWork.Object);
         StudentContractRequest request = ValidRequest(details:
         [
@@ -146,11 +145,9 @@ public sealed class StudentContractHandlersTests
         StudentContract existing = ExistingContract();
         _repository.Setup(r => r.GetForChange(42, It.IsAny<CancellationToken>())).ReturnsAsync(existing);
         var handler = new UpdateStudentContractCommandHandler(_repository.Object, _unitOfWork.Object);
-        StudentContractRequest request = ValidRequest("6.002", studentHumanId: 5, payerHumanId: 5,
-            studentStatusId: null, desiredMonthlyPaymentDay: null, details:
-            [
-                Detail(101, courseId: 7, fourWeekHours: 4, fourWeekFee: 30, oneHourFee: 7.5m), Detail(courseId: 8)
-            ]);
+        StudentContractRequest request = ValidRequest("6.002", 5, 5, null, null, [
+            Detail(101, 7, fourWeekHours: 4, fourWeekFee: 30, oneHourFee: 7.5m), Detail(courseId: 8)
+        ]);
 
         Result result = await handler.Handle(new UpdateStudentContractCommand(42, request), CancellationToken.None);
 
@@ -296,8 +293,7 @@ public sealed class StudentContractHandlersTests
         Assert.NotNull(passed);
         Assert.Equal(10, passed.Offset);
         Assert.Equal("ბერიძე", passed.Search);
-        Assert.Equal([new StudentContractSortField(EStudentContractSortField.ContractDate, false)],
-            passed.SortFields);
+        Assert.Equal([new StudentContractSortField(EStudentContractSortField.ContractDate, false)], passed.SortFields);
     }
 
     [Theory]
@@ -333,16 +329,19 @@ public sealed class StudentContractHandlersTests
     [Fact]
     public async Task FormLookups_ComputesCurrentYearAndSortsYearsByName()
     {
-        _repository.Setup(r => r.GetAcademicYears(It.IsAny<CancellationToken>())).ReturnsAsync(
-        [
+        _repository.Setup(r => r.GetAcademicYears(It.IsAny<CancellationToken>())).ReturnsAsync([
             new AcademicYear
             {
-                AyId = 11, AcademicYearName = "2026-2027", StartDate = new DateTime(2026, 9, 1, 0, 0, 0, DateTimeKind.Unspecified),
+                AyId = 11,
+                AcademicYearName = "2026-2027",
+                StartDate = new DateTime(2026, 9, 1, 0, 0, 0, DateTimeKind.Unspecified),
                 FinishDate = new DateTime(2027, 9, 1, 0, 0, 0, DateTimeKind.Unspecified)
             },
             new AcademicYear
             {
-                AyId = 10, AcademicYearName = "2025-2026", StartDate = new DateTime(2025, 9, 1, 0, 0, 0, DateTimeKind.Unspecified),
+                AyId = 10,
+                AcademicYearName = "2025-2026",
+                StartDate = new DateTime(2025, 9, 1, 0, 0, 0, DateTimeKind.Unspecified),
                 FinishDate = new DateTime(2026, 9, 1, 0, 0, 0, DateTimeKind.Unspecified)
             }
         ]);

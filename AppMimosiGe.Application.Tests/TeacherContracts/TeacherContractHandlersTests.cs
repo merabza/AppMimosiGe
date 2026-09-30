@@ -65,8 +65,9 @@ public sealed class TeacherContractHandlersTests
         });
         var handler = new CreateTeacherContractCommandHandler(_repository.Object, _unitOfWork.Object);
         TeacherContractRequest request = ValidRequest(workHoursStart: new TimeOnly(12, 0),
-            workHoursEnd: new TimeOnly(18, 30), contractEndDate: new DateTime(2027, 6, 30, 15, 0, 0,
-                DateTimeKind.Unspecified), fixedAmount: 850.5m, description: "  ხელფასი ");
+            workHoursEnd: new TimeOnly(18, 30),
+            contractEndDate: new DateTime(2027, 6, 30, 15, 0, 0, DateTimeKind.Unspecified), fixedAmount: 850.5m,
+            description: "  ხელფასი ");
 
         Result<int> result = await handler.Handle(new CreateTeacherContractCommand(request), CancellationToken.None);
 

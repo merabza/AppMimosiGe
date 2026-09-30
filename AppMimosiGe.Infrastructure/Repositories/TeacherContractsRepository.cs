@@ -35,8 +35,8 @@ public sealed class TeacherContractsRepository(IMimosiGeDbContext context) : ITe
         List<TeacherContractRowResponse> rows = await sorted.Skip(offset).Take(query.RowsCount).Select(tc =>
             new TeacherContractRowResponse(tc.Id, tc.ContractNumber, tc.ContractDate, tc.TeacherHumanId,
                 tc.TeacherHuman.LastName + " " + tc.TeacherHuman.FirstName,
-                tc.SalarySchemaByHours == null ? null : tc.SalarySchemaByHours.SchemaName, tc.PensionScheme,
-                tc.IndEnt, tc.FixedAmount, tc.ContractEndDate)).ToListAsync(cancellationToken);
+                tc.SalarySchemaByHours == null ? null : tc.SalarySchemaByHours.SchemaName, tc.PensionScheme, tc.IndEnt,
+                tc.FixedAmount, tc.ContractEndDate)).ToListAsync(cancellationToken);
 
         return new TeacherContractsRowsDataResponse(count, offset, rows);
     }
@@ -190,8 +190,7 @@ public sealed class TeacherContractsRepository(IMimosiGeDbContext context) : ITe
                     sortField.Ascending),
                 ETeacherContractSortField.ContractEndDate => Order(query, ordered, tc => tc.ContractEndDate,
                     sortField.Ascending),
-                _ => throw new ArgumentOutOfRangeException(nameof(sortFields), sortField.Field,
-                    "უცნობი დალაგების ველი")
+                _ => throw new ArgumentOutOfRangeException(nameof(sortFields), sortField.Field, "უცნობი დალაგების ველი")
             };
         }
 

@@ -44,10 +44,8 @@ internal static class StudentContractTestData
     {
         var repository = new Mock<IStudentContractsRepository>();
         repository.Setup(r => r.HumanExists(It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
-        repository.Setup(r => r.AcademicYearExists(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
-        repository.Setup(r => r.StudentStatusExists(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
+        repository.Setup(r => r.AcademicYearExists(It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        repository.Setup(r => r.StudentStatusExists(It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
         repository.Setup(r => r.CourseExists(It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
         repository.Setup(r => r.GroupSizeExists(It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
         repository.Setup(r => r.ContractNumberExists(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<int>(),

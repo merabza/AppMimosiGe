@@ -15,12 +15,13 @@ using AppMimosiGe.WebApi.Endpoints.V1;
 using AppMimosiGeShared.Contracts.Errors;
 using AppMimosiGeShared.Contracts.V1.Requests;
 using AppMimosiGeShared.Contracts.V1.Responses;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.DependencyInjection;
 using Moq;
+using Serilog;
 using SystemTools.Application.Abstractions.Messaging;
 using SystemTools.SharedKernel;
 using Xunit;
@@ -291,8 +292,9 @@ public sealed class StudentContractsEndpointsTests
 
         // Assert
         List<RouteEndpoint> endpoints = EndpointsTestApp.MappedEndpoints(app);
-        Assert.Contains(endpoints, e => e.RoutePattern.RawText?.TrimStart('/') == pattern &&
-                                        e.Metadata.GetMetadata<HttpMethodMetadata>()!.HttpMethods.Contains(method));
+        Assert.Contains(endpoints,
+            e => e.RoutePattern.RawText?.TrimStart('/') == pattern &&
+                 e.Metadata.GetMetadata<HttpMethodMetadata>()!.HttpMethods.Contains(method));
     }
 
     [Fact]
@@ -307,8 +309,7 @@ public sealed class StudentContractsEndpointsTests
         // Assert
         List<RouteEndpoint> endpoints = EndpointsTestApp.MappedEndpoints(app);
         Assert.Equal(7, endpoints.Count);
-        Assert.All(endpoints, e =>
-            Assert.NotEmpty(e.Metadata.GetOrderedMetadata<Microsoft.AspNetCore.Authorization.IAuthorizeData>()));
+        Assert.All(endpoints, e => Assert.NotEmpty(e.Metadata.GetOrderedMetadata<IAuthorizeData>()));
     }
 
     [Fact]
@@ -316,7 +317,7 @@ public sealed class StudentContractsEndpointsTests
     {
         // Arrange
         await using WebApplication app = EndpointsTestApp.Build();
-        var logger = new Mock<Serilog.ILogger>();
+        var logger = new Mock<ILogger>();
 
         // Act
         app.UseAppMimosiGeApi(logger.Object);

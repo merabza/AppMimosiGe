@@ -17,7 +17,8 @@ public sealed class CreateTeacherContractCommandValidator : AbstractValidator<Cr
         {
             RuleFor(x => x.Request!).SetValidator(new TeacherContractRequestValidator(repository));
 
-            RuleFor(x => x.Request!).MustAsync(async (request, ct) =>
+            RuleFor(x => x.Request!)
+                .MustAsync(async (request, ct) =>
                     !await repository.ContractNumberExists(request.ContractNumber!, 0, ct))
                 .When(x => !string.IsNullOrEmpty(x.Request!.ContractNumber))
                 .WithErrorCode(TeacherContractErrors.ContractNumberAlreadyExists.Code)

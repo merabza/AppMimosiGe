@@ -11,8 +11,8 @@ public sealed class TeacherContractsListQueryFactoryTests
 {
     private static readonly DateTime Today = new(2026, 9, 30, 0, 0, 0, DateTimeKind.Unspecified);
 
-    private static FilterSortRequest Request(ColumnFilter[]? filters = null, SortField[]? sorts = null,
-        int offset = 0, int rowsCount = 10)
+    private static FilterSortRequest Request(ColumnFilter[]? filters = null, SortField[]? sorts = null, int offset = 0,
+        int rowsCount = 10)
     {
         return new FilterSortRequest(offset, rowsCount, filters, sorts);
     }
@@ -30,8 +30,7 @@ public sealed class TeacherContractsListQueryFactoryTests
         Assert.True(result.IsSuccess);
         Assert.Null(result.Value.ActiveOn);
         Assert.Null(result.Value.Search);
-        Assert.Equal(
-        [
+        Assert.Equal([
             new TeacherContractSortField(ETeacherContractSortField.ContractNumber, true),
             new TeacherContractSortField(ETeacherContractSortField.TeacherName, true),
             new TeacherContractSortField(ETeacherContractSortField.SalarySchemeName, true)
@@ -109,6 +108,8 @@ public sealed class TeacherContractsListQueryFactoryTests
     [InlineData("id")]
     [InlineData("1")]
     [InlineData("rsCountryId")]
+    //Enum.TryParse combines comma-separated values (1 | 8 = 9), which is no sort field
+    [InlineData("1,8")]
     public void Create_UnknownSortField_Fails(string fieldName)
     {
         Result<TeacherContractsListQuery> result = TeacherContractsListQueryFactory.Create(

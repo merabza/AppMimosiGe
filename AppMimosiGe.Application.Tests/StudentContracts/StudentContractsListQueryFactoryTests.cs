@@ -8,8 +8,8 @@ namespace AppMimosiGe.Application.Tests.StudentContracts;
 
 public sealed class StudentContractsListQueryFactoryTests
 {
-    private static FilterSortRequest Request(ColumnFilter[]? filters = null, SortField[]? sorts = null,
-        int offset = 0, int rowsCount = 10)
+    private static FilterSortRequest Request(ColumnFilter[]? filters = null, SortField[]? sorts = null, int offset = 0,
+        int rowsCount = 10)
     {
         return new FilterSortRequest(offset, rowsCount, filters, sorts);
     }
@@ -23,8 +23,7 @@ public sealed class StudentContractsListQueryFactoryTests
         Assert.Null(result.Value.AcademicYearId);
         Assert.Null(result.Value.StudentStatusId);
         Assert.Null(result.Value.Search);
-        Assert.Equal(
-        [
+        Assert.Equal([
             new StudentContractSortField(EStudentContractSortField.ContractNumber, true),
             new StudentContractSortField(EStudentContractSortField.StudentName, true),
             new StudentContractSortField(EStudentContractSortField.PayerName, true)
@@ -40,8 +39,7 @@ public sealed class StudentContractsListQueryFactoryTests
     [Fact]
     public void Create_ParsesFiltersAndPage()
     {
-        Result<StudentContractsListQuery> result = StudentContractsListQueryFactory.Create(Request(
-        [
+        Result<StudentContractsListQuery> result = StudentContractsListQueryFactory.Create(Request([
             new ColumnFilter { FieldName = "academicYearId", Value = "11" },
             new ColumnFilter { FieldName = "studentStatusId", Value = "3" },
             new ColumnFilter { FieldName = "search", Value = "  6.00 " }
@@ -58,8 +56,7 @@ public sealed class StudentContractsListQueryFactoryTests
     [Fact]
     public void Create_EmptyFilterValues_MeanNoFilter()
     {
-        Result<StudentContractsListQuery> result = StudentContractsListQueryFactory.Create(Request(
-        [
+        Result<StudentContractsListQuery> result = StudentContractsListQueryFactory.Create(Request([
             new ColumnFilter { FieldName = "academicYearId", Value = "" },
             new ColumnFilter { FieldName = "studentStatusId", Value = null },
             new ColumnFilter { FieldName = "search", Value = "   " }
@@ -80,8 +77,7 @@ public sealed class StudentContractsListQueryFactoryTests
         ]));
 
         Assert.True(result.IsSuccess);
-        Assert.Equal(
-        [
+        Assert.Equal([
             new StudentContractSortField(EStudentContractSortField.ContractDate, false),
             new StudentContractSortField(EStudentContractSortField.PayerName, true)
         ], result.Value.SortFields);
@@ -96,7 +92,8 @@ public sealed class StudentContractsListQueryFactoryTests
     public void Create_InvalidFilter_Fails(string? fieldName, string value)
     {
         Result<StudentContractsListQuery> result =
-            StudentContractsListQueryFactory.Create(Request([new ColumnFilter { FieldName = fieldName, Value = value }]));
+            StudentContractsListQueryFactory.Create(
+                Request([new ColumnFilter { FieldName = fieldName, Value = value }]));
 
         Assert.True(result.IsFailure);
         Assert.Equal(StudentContractErrors.FilterSortRequestIsInvalid.Code, result.Error.Code);

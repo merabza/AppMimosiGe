@@ -23,8 +23,7 @@ public sealed class GetStudentContractFormLookupsQueryHandler(
         DateTime today = timeProvider.GetLocalNow().Date;
 
         //Access-ის ფორმის მსგავსად წლები სახელით ლაგდება
-        return new StudentContractFormLookupsResponse(CurrentAcademicYear.Find(academicYears, today),
-            [
+        return new StudentContractFormLookupsResponse(CurrentAcademicYear.Find(academicYears, today), [
                 .. academicYears.OrderBy(ay => ay.AcademicYearName, StringComparer.Ordinal)
                     .Select(ay => new LookupItemResponse(ay.AyId, ay.AcademicYearName))
             ], await repository.GetStudentStatuses(cancellationToken), await repository.GetCourses(cancellationToken),

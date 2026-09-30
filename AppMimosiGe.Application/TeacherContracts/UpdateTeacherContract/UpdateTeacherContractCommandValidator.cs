@@ -18,7 +18,8 @@ public sealed class UpdateTeacherContractCommandValidator : AbstractValidator<Up
             RuleFor(x => x.Request!).SetValidator(new TeacherContractRequestValidator(repository));
 
             //შესაცვლელი კონტრაქტი თავის თავს დუბლიკატად არ ითვლის
-            RuleFor(x => x).MustAsync(async (command, ct) =>
+            RuleFor(x => x)
+                .MustAsync(async (command, ct) =>
                     !await repository.ContractNumberExists(command.Request!.ContractNumber!, command.Id, ct))
                 .When(x => !string.IsNullOrEmpty(x.Request!.ContractNumber))
                 .WithErrorCode(TeacherContractErrors.ContractNumberAlreadyExists.Code)

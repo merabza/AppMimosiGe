@@ -38,12 +38,16 @@ public sealed class StudentContractsRepositoryTests : IDisposable
         _context.AcademicYears.AddRange(
             new AcademicYear
             {
-                AyId = 10, AcademicYearName = "2025-2026", StartDate = new DateTime(2025, 9, 1, 0, 0, 0, DateTimeKind.Unspecified),
+                AyId = 10,
+                AcademicYearName = "2025-2026",
+                StartDate = new DateTime(2025, 9, 1, 0, 0, 0, DateTimeKind.Unspecified),
                 FinishDate = new DateTime(2026, 9, 1, 0, 0, 0, DateTimeKind.Unspecified)
             },
             new AcademicYear
             {
-                AyId = 11, AcademicYearName = "2026-2027", StartDate = new DateTime(2026, 9, 1, 0, 0, 0, DateTimeKind.Unspecified),
+                AyId = 11,
+                AcademicYearName = "2026-2027",
+                StartDate = new DateTime(2026, 9, 1, 0, 0, 0, DateTimeKind.Unspecified),
                 FinishDate = new DateTime(2027, 9, 1, 0, 0, 0, DateTimeKind.Unspecified)
             });
         _context.StudentStatuses.AddRange(new StudentStatus { Id = 1, StudentStatusName = "Z-class", Rate = 312 },
@@ -54,17 +58,26 @@ public sealed class StudentContractsRepositoryTests : IDisposable
             new GroupSize { GrsId = 1, GrsSize = 1, GrsName = "Single" });
         _context.Humans.AddRange(Human(1, "Alpha", "Ann", "01000000001"), Human(2, "Beta", "Bob", "01000000002"),
             Human(3, "Gamma", "Gia", "02000000003"), Human(4, "Delta", "Dan", "02000000004"));
-        _context.StudentContracts.AddRange(Contract(1, "6.002", 11, 1, 2, 1, new DateTime(2026, 9, 10, 0, 0, 0, DateTimeKind.Unspecified)),
+        _context.StudentContracts.AddRange(
+            Contract(1, "6.002", 11, 1, 2, 1, new DateTime(2026, 9, 10, 0, 0, 0, DateTimeKind.Unspecified)),
             Contract(2, "6.001", 11, 3, 4, 2, new DateTime(2026, 9, 12, 0, 0, 0, DateTimeKind.Unspecified)),
             Contract(3, "6.003", 11, 4, 4, null, new DateTime(2026, 9, 11, 0, 0, 0, DateTimeKind.Unspecified)),
             Contract(4, "6.001", 10, 1, 2, 1, new DateTime(2025, 9, 5, 0, 0, 0, DateTimeKind.Unspecified)));
         _context.StudentContractDetails.AddRange(
             new StudentContractDetail
             {
-                Id = 11, StudentContractId = 1, CourseId = 2, GroupSizeId = 1, FourWeekHours = 12,
-                FourWeekFee = 72, OneHourFee = 6
+                Id = 11,
+                StudentContractId = 1,
+                CourseId = 2,
+                GroupSizeId = 1,
+                FourWeekHours = 12,
+                FourWeekFee = 72,
+                OneHourFee = 6
             }, new StudentContractDetail { Id = 10, StudentContractId = 1, CourseId = 1, GroupSizeId = 2 });
-        _context.Payments.Add(new Payment { Id = 1, StudentContractId = 2, PayDate = new DateTime(2026, 9, 20, 0, 0, 0, DateTimeKind.Unspecified) });
+        _context.Payments.Add(new Payment
+        {
+            Id = 1, StudentContractId = 2, PayDate = new DateTime(2026, 9, 20, 0, 0, 0, DateTimeKind.Unspecified)
+        });
         _context.SaveChanges();
     }
 
@@ -81,8 +94,8 @@ public sealed class StudentContractsRepositoryTests : IDisposable
         return new Human { HumId = id, LastName = lastName, FirstName = firstName, PersonalId = personalId };
     }
 
-    private static StudentContract Contract(int id, string number, int ayId, int studentId, int payerId,
-        int? statusId, DateTime date)
+    private static StudentContract Contract(int id, string number, int ayId, int studentId, int payerId, int? statusId,
+        DateTime date)
     {
         return new StudentContract
         {
@@ -165,8 +178,8 @@ public sealed class StudentContractsRepositoryTests : IDisposable
     [InlineData(EStudentContractSortField.DesiredMonthlyPaymentDay, true, new[] { 1, 2, 3, 4 })]
     public async Task GetRowsData_SortsByEveryField(EStudentContractSortField field, bool ascending, int[] expected)
     {
-        StudentContractsRowsDataResponse result =
-            await _repository.GetRowsData(Query(sort: [new StudentContractSortField(field, ascending)]));
+        StudentContractsRowsDataResponse result = await _repository.GetRowsData(Query(sort:
+            [new StudentContractSortField(field, ascending)]));
 
         Assert.Equal(expected, result.Rows.Select(r => r.ScId));
     }
@@ -217,7 +230,7 @@ public sealed class StudentContractsRepositoryTests : IDisposable
     [Fact]
     public async Task GetRowsData_UnknownSortField_Throws()
     {
-        ArgumentOutOfRangeException exception = await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
+        var exception = await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
             _repository.GetRowsData(Query(sort: [new StudentContractSortField((EStudentContractSortField)99, true)])));
 
         Assert.Contains("უცნობი დალაგების ველი", exception.Message, StringComparison.Ordinal);
@@ -229,10 +242,12 @@ public sealed class StudentContractsRepositoryTests : IDisposable
     [InlineData(EStudentContractSortField.PayerName)]
     public async Task GetRowsData_SortsNamesAsLastSpaceFirst(EStudentContractSortField field)
     {
-        AddAndSave(new AcademicYear
+        AddAndSave(
+            new AcademicYear
             {
-                AyId = 12, AcademicYearName = "2027-2028", StartDate = new DateTime(2027, 9, 1, 0, 0, 0,
-                    DateTimeKind.Unspecified),
+                AyId = 12,
+                AcademicYearName = "2027-2028",
+                StartDate = new DateTime(2027, 9, 1, 0, 0, 0, DateTimeKind.Unspecified),
                 FinishDate = new DateTime(2028, 9, 1, 0, 0, 0, DateTimeKind.Unspecified)
             }, Human(11, "AA", "A", "03000000011"), Human(12, "A", "Z", "03000000012"),
             Contract(21, "7.001", 12, 11, 11, null, new DateTime(2027, 9, 2, 0, 0, 0, DateTimeKind.Unspecified)),
@@ -390,7 +405,11 @@ public sealed class StudentContractsRepositoryTests : IDisposable
     {
         var added = new StudentContract
         {
-            ScId = 50, ContractNumber = "6.050", AcademicYearId = 11, StudentHumanId = 1, PayerHumanId = 1,
+            ScId = 50,
+            ContractNumber = "6.050",
+            AcademicYearId = 11,
+            StudentHumanId = 1,
+            PayerHumanId = 1,
             ContractDate = new DateTime(2026, 9, 29, 0, 0, 0, DateTimeKind.Unspecified)
         };
         _repository.Add(added);

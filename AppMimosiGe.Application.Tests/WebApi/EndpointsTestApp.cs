@@ -29,19 +29,19 @@ internal static class EndpointsTestApp
     {
         WebApplicationBuilder builder = WebApplication.CreateSlimBuilder();
         //handlers are services; without them minimal APIs would bind them from the body
-        builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetStudentContractsRowsDataQuery,
-            StudentContractsRowsDataResponse>>());
-        builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetStudentContractFormLookupsQuery,
-            StudentContractFormLookupsResponse>>());
+        builder.Services.AddSingleton(Mock
+            .Of<IQueryHandler<GetStudentContractsRowsDataQuery, StudentContractsRowsDataResponse>>());
+        builder.Services.AddSingleton(Mock
+            .Of<IQueryHandler<GetStudentContractFormLookupsQuery, StudentContractFormLookupsResponse>>());
         builder.Services.AddSingleton(Mock.Of<IQueryHandler<SearchHumansQuery, List<LookupItemResponse>>>());
         builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetStudentContractQuery, StudentContractResponse>>());
         builder.Services.AddSingleton(Mock.Of<ICommandHandler<CreateStudentContractCommand, int>>());
         builder.Services.AddSingleton(Mock.Of<ICommandHandler<UpdateStudentContractCommand>>());
         builder.Services.AddSingleton(Mock.Of<ICommandHandler<DeleteStudentContractCommand>>());
-        builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetTeacherContractsRowsDataQuery,
-            TeacherContractsRowsDataResponse>>());
-        builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetTeacherContractFormLookupsQuery,
-            TeacherContractFormLookupsResponse>>());
+        builder.Services.AddSingleton(Mock
+            .Of<IQueryHandler<GetTeacherContractsRowsDataQuery, TeacherContractsRowsDataResponse>>());
+        builder.Services.AddSingleton(Mock
+            .Of<IQueryHandler<GetTeacherContractFormLookupsQuery, TeacherContractFormLookupsResponse>>());
         builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetTeacherContractQuery, TeacherContractResponse>>());
         builder.Services.AddSingleton(Mock.Of<ICommandHandler<CreateTeacherContractCommand, int>>());
         builder.Services.AddSingleton(Mock.Of<ICommandHandler<UpdateTeacherContractCommand>>());

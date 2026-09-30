@@ -18,7 +18,8 @@ public sealed class UpdateStudentContractCommandValidator : AbstractValidator<Up
             RuleFor(x => x.Request!).SetValidator(new StudentContractRequestValidator(repository));
 
             //შესაცვლელი კონტრაქტი თავის თავს დუბლიკატად არ ითვლის
-            RuleFor(x => x).MustAsync(async (command, ct) =>
+            RuleFor(x => x)
+                .MustAsync(async (command, ct) =>
                     !await repository.ContractNumberExists(command.Request!.AcademicYearId,
                         command.Request.ContractNumber!, command.ScId, ct))
                 .When(x => !string.IsNullOrEmpty(x.Request!.ContractNumber))
