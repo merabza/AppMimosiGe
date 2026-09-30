@@ -1,4 +1,5 @@
 using AppMimosiGe.Application.StudentContracts;
+using AppMimosiGe.Application.TeacherContracts;
 using AppMimosiGe.Infrastructure.DependencyInjection;
 using AppMimosiGe.Infrastructure.Repositories;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,6 +24,21 @@ public sealed class AppMimosiGeInfrastructureDependencyInjectionTests
         Assert.Same(services, result);
         ServiceDescriptor descriptor = Assert.Single(services, s => s.ServiceType == typeof(IStudentContractsRepository));
         Assert.Equal(typeof(StudentContractsRepository), descriptor.ImplementationType);
+        Assert.Equal(ServiceLifetime.Scoped, descriptor.Lifetime);
+    }
+
+    [Fact]
+    public void AddAppMimosiGeInfrastructure_RegistersTeacherContractsRepositoryAsScoped()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+
+        // Act
+        services.AddAppMimosiGeInfrastructure(null);
+
+        // Assert
+        ServiceDescriptor descriptor = Assert.Single(services, s => s.ServiceType == typeof(ITeacherContractsRepository));
+        Assert.Equal(typeof(TeacherContractsRepository), descriptor.ImplementationType);
         Assert.Equal(ServiceLifetime.Scoped, descriptor.Lifetime);
     }
 

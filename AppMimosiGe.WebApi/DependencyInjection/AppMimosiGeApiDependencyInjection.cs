@@ -13,6 +13,7 @@ public static class AppMimosiGeApiDependencyInjection
         debugLogger?.Information("{MethodName} Started", nameof(UseAppMimosiGeApi));
 
         endpoints.UseStudentContractsEndpoints(debugLogger);
+        endpoints.UseTeacherContractsEndpoints(debugLogger);
 
         debugLogger?.Information("{MethodName} Finished", nameof(UseAppMimosiGeApi));
 

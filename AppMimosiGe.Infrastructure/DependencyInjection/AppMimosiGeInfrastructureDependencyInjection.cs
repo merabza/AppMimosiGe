@@ -1,4 +1,5 @@
 using AppMimosiGe.Application.StudentContracts;
+using AppMimosiGe.Application.TeacherContracts;
 using AppMimosiGe.Infrastructure.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
@@ -14,6 +15,7 @@ public static class AppMimosiGeInfrastructureDependencyInjection
         debugLogger?.Information("{MethodName} Started", nameof(AddAppMimosiGeInfrastructure));
 
         services.AddScoped<IStudentContractsRepository, StudentContractsRepository>();
+        services.AddScoped<ITeacherContractsRepository, TeacherContractsRepository>();
 
         debugLogger?.Information("{MethodName} Finished", nameof(AddAppMimosiGeInfrastructure));
 

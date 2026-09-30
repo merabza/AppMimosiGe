@@ -284,13 +284,13 @@ public sealed class StudentContractsEndpointsTests
     public async Task UseAppMimosiGeApi_MapsStudentContractsEndpoints(string pattern, string method)
     {
         // Arrange
-        await using WebApplication app = BuildApp();
+        await using WebApplication app = EndpointsTestApp.Build();
 
         // Act
         Assert.True(app.UseAppMimosiGeApi(null));
 
         // Assert
-        List<RouteEndpoint> endpoints = MappedEndpoints(app);
+        List<RouteEndpoint> endpoints = EndpointsTestApp.MappedEndpoints(app);
         Assert.Contains(endpoints, e => e.RoutePattern.RawText?.TrimStart('/') == pattern &&
                                         e.Metadata.GetMetadata<HttpMethodMetadata>()!.HttpMethods.Contains(method));
     }
@@ -299,13 +299,13 @@ public sealed class StudentContractsEndpointsTests
     public async Task UseStudentContractsEndpoints_MapsSevenEndpointsThatRequireAuthorization()
     {
         // Arrange
-        await using WebApplication app = BuildApp();
+        await using WebApplication app = EndpointsTestApp.Build();
 
         // Act
         Assert.True(app.UseStudentContractsEndpoints(null));
 
         // Assert
-        List<RouteEndpoint> endpoints = MappedEndpoints(app);
+        List<RouteEndpoint> endpoints = EndpointsTestApp.MappedEndpoints(app);
         Assert.Equal(7, endpoints.Count);
         Assert.All(endpoints, e =>
             Assert.NotEmpty(e.Metadata.GetOrderedMetadata<Microsoft.AspNetCore.Authorization.IAuthorizeData>()));
@@ -315,7 +315,7 @@ public sealed class StudentContractsEndpointsTests
     public async Task UseAppMimosiGeApi_WithDebugLogger_LogsEachStep()
     {
         // Arrange
-        await using WebApplication app = BuildApp();
+        await using WebApplication app = EndpointsTestApp.Build();
         var logger = new Mock<Serilog.ILogger>();
 
         // Act
@@ -325,32 +325,12 @@ public sealed class StudentContractsEndpointsTests
         foreach (string methodName in new[]
                  {
                      nameof(AppMimosiGeApiDependencyInjection.UseAppMimosiGeApi),
-                     nameof(StudentContractsEndpoints.UseStudentContractsEndpoints)
+                     nameof(StudentContractsEndpoints.UseStudentContractsEndpoints),
+                     nameof(TeacherContractsEndpoints.UseTeacherContractsEndpoints)
                  })
         {
             logger.Verify(l => l.Information("{MethodName} Started", methodName), Times.Once);
             logger.Verify(l => l.Information("{MethodName} Finished", methodName), Times.Once);
         }
-    }
-
-    private static WebApplication BuildApp()
-    {
-        WebApplicationBuilder builder = WebApplication.CreateSlimBuilder();
-        //handlers are services; without them minimal APIs would bind them from the body
-        builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetStudentContractsRowsDataQuery,
-            StudentContractsRowsDataResponse>>());
-        builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetStudentContractFormLookupsQuery,
-            StudentContractFormLookupsResponse>>());
-        builder.Services.AddSingleton(Mock.Of<IQueryHandler<SearchHumansQuery, List<LookupItemResponse>>>());
-        builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetStudentContractQuery, StudentContractResponse>>());
-        builder.Services.AddSingleton(Mock.Of<ICommandHandler<CreateStudentContractCommand, int>>());
-        builder.Services.AddSingleton(Mock.Of<ICommandHandler<UpdateStudentContractCommand>>());
-        builder.Services.AddSingleton(Mock.Of<ICommandHandler<DeleteStudentContractCommand>>());
-        return builder.Build();
-    }
-
-    private static List<RouteEndpoint> MappedEndpoints(WebApplication app)
-    {
-        return [.. ((IEndpointRouteBuilder)app).DataSources.SelectMany(d => d.Endpoints).OfType<RouteEndpoint>()];
     }
 }
