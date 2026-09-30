@@ -3,6 +3,9 @@
         <PackageReference Include="Serilog" />
     </ItemGroup>
     <ItemGroup>
+        <InternalsVisibleTo Include="AppMimosiGe.Application.Tests" />
+    </ItemGroup>
+    <ItemGroup>
         <ProjectReference Include="..\..\AppMimosiGeShared\AppMimosiGeShared.Contracts\AppMimosiGeShared.Contracts.csproj" />
         <ProjectReference Include="..\..\BackendCarcass\BackendCarcass.Api\BackendCarcass.Api.csproj" />
         <ProjectReference Include="..\..\SystemTools\SystemTools.Application.Abstractions\SystemTools.Application.Abstractions.csproj" />

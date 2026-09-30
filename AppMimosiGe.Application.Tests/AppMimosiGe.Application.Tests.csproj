@@ -6,6 +6,10 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+
+    <ItemGroup>
         <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" />
         <PackageReference Include="Moq" />
@@ -17,6 +21,7 @@
         <ProjectReference Include="..\..\MimosiGeDbPart\MimosiGeDbPart.Db\MimosiGeDbPart.Db.csproj" />
         <ProjectReference Include="..\AppMimosiGe.Application\AppMimosiGe.Application.csproj" />
         <ProjectReference Include="..\AppMimosiGe.Infrastructure\AppMimosiGe.Infrastructure.csproj" />
+        <ProjectReference Include="..\AppMimosiGe.WebApi\AppMimosiGe.WebApi.csproj" />
     </ItemGroup>
 
 </Project>

@@ -1,4 +1,3 @@
-using System.Linq;
 using AppMimosiGe.Application.StudentContracts.Models;
 using AppMimosiGeShared.Contracts.Errors;
 using BackendCarcass.Application.Crud.Models;
@@ -24,12 +23,18 @@ public sealed class StudentContractsListQueryFactoryTests
         Assert.Null(result.Value.AcademicYearId);
         Assert.Null(result.Value.StudentStatusId);
         Assert.Null(result.Value.Search);
-        Assert.Equal(StudentContractsListQueryFactory.DefaultSortFields, result.Value.SortFields);
         Assert.Equal(
         [
-            EStudentContractSortField.ContractNumber, EStudentContractSortField.StudentName,
-            EStudentContractSortField.PayerName
-        ], [.. result.Value.SortFields.Select(s => s.Field)]);
+            new StudentContractSortField(EStudentContractSortField.ContractNumber, true),
+            new StudentContractSortField(EStudentContractSortField.StudentName, true),
+            new StudentContractSortField(EStudentContractSortField.PayerName, true)
+        ], result.Value.SortFields);
+    }
+
+    [Fact]
+    public void Create_OneRowPerPage_IsAllowed()
+    {
+        Assert.True(StudentContractsListQueryFactory.Create(Request(rowsCount: 1)).IsSuccess);
     }
 
     [Fact]

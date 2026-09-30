@@ -172,6 +172,27 @@ public sealed class StudentContractValidatorsTests
             result.Errors.Select(e => e.ErrorCode));
     }
 
+    // the command validators run the field rules of the request too
+    [Fact]
+    public async Task Create_InvalidRequestFields_Fail()
+    {
+        var validator = new CreateStudentContractCommandValidator(RepositoryWhereEverythingExists().Object);
+        ValidationResult result = await validator.ValidateAsync(
+            new CreateStudentContractCommand(ValidRequest(desiredMonthlyPaymentDay: 29)));
+        Assert.Equal([StudentContractErrors.DesiredMonthlyPaymentDayIsOutOfRange.Code],
+            result.Errors.Select(e => e.ErrorCode));
+    }
+
+    [Fact]
+    public async Task Update_InvalidRequestFields_Fail()
+    {
+        var validator = new UpdateStudentContractCommandValidator(RepositoryWhereEverythingExists().Object);
+        ValidationResult result = await validator.ValidateAsync(
+            new UpdateStudentContractCommand(42, ValidRequest(desiredMonthlyPaymentDay: 29)));
+        Assert.Equal([StudentContractErrors.DesiredMonthlyPaymentDayIsOutOfRange.Code],
+            result.Errors.Select(e => e.ErrorCode));
+    }
+
     [Fact]
     public async Task Create_UniqueNumber_Passes()
     {

@@ -46,6 +46,46 @@ public sealed class CurrentAcademicYearTests
         Assert.Equal(10, CurrentAcademicYear.Find(Years, Day(2020, 1, 1)));
     }
 
+    // two years contain today: the one that started later wins, even when a still later year has already finished
+    [Fact]
+    public void Find_OverlappingYears_ReturnsTheLatestStartedYearThatContainsToday()
+    {
+        AcademicYear[] years =
+        [
+            Year(1, "long", Day(2025, 1, 1), Day(2027, 1, 1)),
+            Year(2, "inner", Day(2026, 3, 1), Day(2027, 1, 1)),
+            Year(3, "finished", Day(2026, 9, 1), Day(2026, 9, 10))
+        ];
+
+        Assert.Equal(2, CurrentAcademicYear.Find(years, Day(2026, 10, 1)));
+    }
+
+    // the finish date itself is already outside the year
+    [Fact]
+    public void Find_TodayIsTheFinishDate_YearIsNotCurrent()
+    {
+        AcademicYear[] years =
+        [
+            Year(1, "long", Day(2025, 1, 1), Day(2027, 1, 1)),
+            Year(2, "ending", Day(2026, 9, 1), Day(2026, 10, 1))
+        ];
+
+        Assert.Equal(1, CurrentAcademicYear.Find(years, Day(2026, 10, 1)));
+    }
+
+    // a year starting today counts as started even when it has no length
+    [Fact]
+    public void Find_EmptyYearStartingToday_CountsAsStarted()
+    {
+        AcademicYear[] years =
+        [
+            Year(1, "old", Day(2020, 9, 1), Day(2021, 9, 1)),
+            Year(2, "empty", Day(2026, 10, 1), Day(2026, 10, 1))
+        ];
+
+        Assert.Equal(2, CurrentAcademicYear.Find(years, Day(2026, 10, 1)));
+    }
+
     [Fact]
     public void Find_NoYears_ReturnsNull()
     {

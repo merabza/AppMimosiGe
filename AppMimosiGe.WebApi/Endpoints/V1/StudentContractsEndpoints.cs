@@ -47,7 +47,7 @@ public static class StudentContractsEndpoints
     }
 
     // GET api/v1/studentcontracts/rowsdata?filterSortRequest={base64}
-    private static async Task<Results<Ok<StudentContractsRowsDataResponse>, ProblemHttpResult>> GetRowsData(
+    internal static async Task<Results<Ok<StudentContractsRowsDataResponse>, ProblemHttpResult>> GetRowsData(
         [FromQuery] string filterSortRequest,
         IQueryHandler<GetStudentContractsRowsDataQuery, StudentContractsRowsDataResponse> handler,
         CancellationToken cancellationToken = default)
@@ -60,7 +60,7 @@ public static class StudentContractsEndpoints
     }
 
     // GET api/v1/studentcontracts/formlookups
-    private static async Task<Results<Ok<StudentContractFormLookupsResponse>, ProblemHttpResult>> GetFormLookups(
+    internal static async Task<Results<Ok<StudentContractFormLookupsResponse>, ProblemHttpResult>> GetFormLookups(
         IQueryHandler<GetStudentContractFormLookupsQuery, StudentContractFormLookupsResponse> handler,
         CancellationToken cancellationToken = default)
     {
@@ -72,7 +72,7 @@ public static class StudentContractsEndpoints
     }
 
     // GET api/v1/studentcontracts/humans?search={text}
-    private static async Task<Results<Ok<List<LookupItemResponse>>, ProblemHttpResult>> SearchHumans(
+    internal static async Task<Results<Ok<List<LookupItemResponse>>, ProblemHttpResult>> SearchHumans(
         [FromQuery] string? search, IQueryHandler<SearchHumansQuery, List<LookupItemResponse>> handler,
         CancellationToken cancellationToken = default)
     {
@@ -82,7 +82,7 @@ public static class StudentContractsEndpoints
     }
 
     // GET api/v1/studentcontracts/{scId:int}
-    private static async Task<Results<Ok<StudentContractResponse>, ProblemHttpResult>> GetOne([FromRoute] int scId,
+    internal static async Task<Results<Ok<StudentContractResponse>, ProblemHttpResult>> GetOne([FromRoute] int scId,
         IQueryHandler<GetStudentContractQuery, StudentContractResponse> handler,
         CancellationToken cancellationToken = default)
     {
@@ -92,7 +92,7 @@ public static class StudentContractsEndpoints
     }
 
     // POST api/v1/studentcontracts
-    private static async Task<Results<Ok<int>, ProblemHttpResult>> Create([FromBody] StudentContractRequest request,
+    internal static async Task<Results<Ok<int>, ProblemHttpResult>> Create([FromBody] StudentContractRequest request,
         ICommandHandler<CreateStudentContractCommand, int> handler, CancellationToken cancellationToken = default)
     {
         Result<int> result = await handler.Handle(new CreateStudentContractCommand(request), cancellationToken);
@@ -101,7 +101,7 @@ public static class StudentContractsEndpoints
     }
 
     // PUT api/v1/studentcontracts/{scId:int}
-    private static async Task<Results<Ok, ProblemHttpResult>> Update([FromRoute] int scId,
+    internal static async Task<Results<Ok, ProblemHttpResult>> Update([FromRoute] int scId,
         [FromBody] StudentContractRequest request, ICommandHandler<UpdateStudentContractCommand> handler,
         CancellationToken cancellationToken = default)
     {
@@ -111,7 +111,7 @@ public static class StudentContractsEndpoints
     }
 
     // DELETE api/v1/studentcontracts/{scId:int}
-    private static async Task<Results<Ok, ProblemHttpResult>> Delete([FromRoute] int scId,
+    internal static async Task<Results<Ok, ProblemHttpResult>> Delete([FromRoute] int scId,
         ICommandHandler<DeleteStudentContractCommand> handler, CancellationToken cancellationToken = default)
     {
         Result result = await handler.Handle(new DeleteStudentContractCommand(scId), cancellationToken);

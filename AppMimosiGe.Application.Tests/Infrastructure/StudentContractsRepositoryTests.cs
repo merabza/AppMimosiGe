@@ -133,6 +133,8 @@ public sealed class StudentContractsRepositoryTests : IDisposable
     [InlineData("Dan Delta", new[] { 2, 3 })]
     [InlineData("Alpha Ann", new[] { 4, 1 })]
     [InlineData("Bob", new[] { 4, 1 })]
+    [InlineData("Gia Gamma", new[] { 2 })]
+    [InlineData("Beta Bob", new[] { 4, 1 })]
     [InlineData("nobody", new int[0])]
     public async Task GetRowsData_SearchesNumberAndNames(string search, int[] expected)
     {
@@ -186,6 +188,60 @@ public sealed class StudentContractsRepositoryTests : IDisposable
 
         Assert.Equal(3, result.Offset);
         Assert.Equal([3], result.Rows.Select(r => r.ScId));
+    }
+
+    // 4 rows, 2 per page: the last page starts at 2, whether the offset is just past the end or far beyond it
+    [Theory]
+    [InlineData(4)]
+    [InlineData(40)]
+    public async Task GetRowsData_OffsetAtOrBeyondEnd_ReturnsTheLastFullPage(int offset)
+    {
+        StudentContractsRowsDataResponse result = await _repository.GetRowsData(Query(offset: offset, rowsCount: 2));
+
+        Assert.Equal(2, result.Offset);
+        Assert.Equal([1, 3], result.Rows.Select(r => r.ScId));
+    }
+
+    [Fact]
+    public async Task GetRowsData_SecondSortFieldDescending_IsApplied()
+    {
+        StudentContractsRowsDataResponse result = await _repository.GetRowsData(Query(sort:
+        [
+            new StudentContractSortField(EStudentContractSortField.AcademicYearName, true),
+            new StudentContractSortField(EStudentContractSortField.ContractNumber, false)
+        ]));
+
+        Assert.Equal([4, 3, 1, 2], result.Rows.Select(r => r.ScId));
+    }
+
+    [Fact]
+    public async Task GetRowsData_UnknownSortField_Throws()
+    {
+        ArgumentOutOfRangeException exception = await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
+            _repository.GetRowsData(Query(sort: [new StudentContractSortField((EStudentContractSortField)99, true)])));
+
+        Assert.Contains("უცნობი დალაგების ველი", exception.Message, StringComparison.Ordinal);
+    }
+
+    // names are sorted as "last first": the space sorts before any letter, so "A Z" comes before "AA A"
+    [Theory]
+    [InlineData(EStudentContractSortField.StudentName)]
+    [InlineData(EStudentContractSortField.PayerName)]
+    public async Task GetRowsData_SortsNamesAsLastSpaceFirst(EStudentContractSortField field)
+    {
+        AddAndSave(new AcademicYear
+            {
+                AyId = 12, AcademicYearName = "2027-2028", StartDate = new DateTime(2027, 9, 1, 0, 0, 0,
+                    DateTimeKind.Unspecified),
+                FinishDate = new DateTime(2028, 9, 1, 0, 0, 0, DateTimeKind.Unspecified)
+            }, Human(11, "AA", "A", "03000000011"), Human(12, "A", "Z", "03000000012"),
+            Contract(21, "7.001", 12, 11, 11, null, new DateTime(2027, 9, 2, 0, 0, 0, DateTimeKind.Unspecified)),
+            Contract(22, "7.002", 12, 12, 12, null, new DateTime(2027, 9, 2, 0, 0, 0, DateTimeKind.Unspecified)));
+
+        StudentContractsRowsDataResponse result =
+            await _repository.GetRowsData(Query(12, sort: [new StudentContractSortField(field, true)]));
+
+        Assert.Equal([22, 21], result.Rows.Select(r => r.ScId));
     }
 
     [Fact]
@@ -286,9 +342,31 @@ public sealed class StudentContractsRepositoryTests : IDisposable
         Assert.Equal(2, (await _repository.GetAcademicYears()).Count);
     }
 
+    [Fact]
+    public async Task GetStudentStatuses_SameRate_OrdersById()
+    {
+        AddAndSave(new StudentStatus { Id = 4, StudentStatusName = "D", Rate = 200 },
+            new StudentStatus { Id = 3, StudentStatusName = "C", Rate = 200 });
+
+        Assert.Equal([2, 3, 4, 1], (await _repository.GetStudentStatuses()).Select(x => x.Id));
+    }
+
+    // namesakes are ordered by first name, then by id
+    [Fact]
+    public async Task SearchHumans_OrdersByLastNameFirstNameAndId()
+    {
+        AddAndSave(Human(21, "Zeta", "Bo", "05000000021"), Human(22, "Zeta", "Al", "05000000022"),
+            Human(20, "Zeta", "Bo", "05000000020"));
+
+        List<LookupItemResponse> result = await _repository.SearchHumans("Zeta", 20);
+
+        Assert.Equal([22, 20, 21], result.Select(x => x.Id));
+    }
+
     [Theory]
     [InlineData("Alpha", new[] { 1 })]
     [InlineData("Ann Alpha", new[] { 1 })]
+    [InlineData("Alpha Ann", new[] { 1 })]
     [InlineData("0200", new[] { 4, 3 })]
     [InlineData("000000003", new int[0])]
     public async Task SearchHumans_ByNameOrPersonalIdPrefix(string search, int[] expected)

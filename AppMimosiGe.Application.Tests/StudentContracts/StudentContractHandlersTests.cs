@@ -123,6 +123,23 @@ public sealed class StudentContractHandlersTests
         _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    // one foreign detail id among valid ones is enough to reject the whole request
+    [Fact]
+    public async Task Update_OneForeignDetailAmongOwnDetails_FailsWithoutChanges()
+    {
+        StudentContract existing = ExistingContract();
+        _repository.Setup(r => r.GetForChange(42, It.IsAny<CancellationToken>())).ReturnsAsync(existing);
+        var handler = new UpdateStudentContractCommandHandler(_repository.Object, _unitOfWork.Object);
+
+        Result result = await handler.Handle(
+            new UpdateStudentContractCommand(42, ValidRequest(details: [Detail(100), Detail(101), Detail(999)])),
+            CancellationToken.None);
+
+        Assert.Equal(StudentContractErrors.DetailNotFound.Code, result.Error.Code);
+        Assert.Equal([1, 2], existing.StudentContractDetails.Select(d => d.CourseId));
+        _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
     [Fact]
     public async Task Update_ChangesFieldsAndSynchronizesDetails()
     {
