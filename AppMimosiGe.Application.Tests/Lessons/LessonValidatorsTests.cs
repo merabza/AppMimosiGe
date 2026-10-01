@@ -51,8 +51,9 @@ public sealed class LessonValidatorsTests
 
     private async Task<string[]> ErrorCodes(LessonRequest? request)
     {
-        ValidationResult result = await new UpdateLessonCommandValidator(_repository.Object).ValidateAsync(
-            new UpdateLessonCommand(9, request));
+        ValidationResult result =
+            await new UpdateLessonCommandValidator(_repository.Object).ValidateAsync(
+                new UpdateLessonCommand(9, request));
         return [.. result.Errors.Select(e => e.ErrorCode)];
     }
 
@@ -61,8 +62,8 @@ public sealed class LessonValidatorsTests
     {
         string longest = new('ა', 255);
 
-        Assert.Empty(await ErrorCodes(Request(3, 5, 10, longest, Student(1, 15, longest, longest, longest),
-            Student(2))));
+        Assert.Empty(
+            await ErrorCodes(Request(3, 5, 10, longest, Student(1, 15, longest, longest, longest), Student(2))));
     }
 
     // empty substitute, minutes 0 and no students are the defaults of a held lesson
@@ -118,12 +119,12 @@ public sealed class LessonValidatorsTests
     {
         string tooLong = new('ა', 256);
 
-        Assert.Equal(
-        [
-            LessonErrors.NoteIsTooLong.Code, LessonErrors.ThemeIsTooLong.Code,
-            LessonErrors.TeacherCommentIsTooLong.Code, LessonErrors.StudentCommentIsTooLong.Code
-        ], await ErrorCodes(Request(note: tooLong, students: Student(theme: tooLong, teacherComment: tooLong,
-            studentComment: tooLong))));
+        Assert.Equal([
+                LessonErrors.NoteIsTooLong.Code, LessonErrors.ThemeIsTooLong.Code,
+                LessonErrors.TeacherCommentIsTooLong.Code, LessonErrors.StudentCommentIsTooLong.Code
+            ],
+            await ErrorCodes(Request(note: tooLong,
+                students: Student(theme: tooLong, teacherComment: tooLong, studentComment: tooLong))));
     }
 
     // the length is checked as it is saved: trimmed
@@ -139,7 +140,7 @@ public sealed class LessonValidatorsTests
     public async Task DuplicatedStudentRow_IsAnError()
     {
         Assert.Equal([LessonErrors.StudentRowIsDuplicated.Code],
-            await ErrorCodes(Request(1, null, 0, null, Student(1), Student(2), Student(1))));
+            await ErrorCodes(Request(1, null, 0, null, Student(), Student(2), Student())));
     }
 
     [Fact]
@@ -157,5 +158,41 @@ public sealed class LessonValidatorsTests
     public void IsShortText_EmptyText_IsShort(string? value, bool expected)
     {
         Assert.Equal(expected, UpdateLessonCommandValidator.IsShortText(value));
+    }
+
+    [Fact]
+    public void IsShortText_255IsTheLongestText()
+    {
+        Assert.True(UpdateLessonCommandValidator.IsShortText(new string('ა', 255)));
+        Assert.False(UpdateLessonCommandValidator.IsShortText(new string('ა', 256)));
+    }
+
+    [Fact]
+    public void IsShortText_CountsTheTrimmedText()
+    {
+        Assert.True(UpdateLessonCommandValidator.IsShortText($" {new string('ა', 255)} "));
+        Assert.False(UpdateLessonCommandValidator.IsShortText($" {new string('ა', 256)} "));
+    }
+
+    [Fact]
+    public void TextMaxLength_IsTheColumnLength()
+    {
+        Assert.Equal(255, UpdateLessonCommandValidator.TextMaxLength);
+    }
+
+    // each student row is checked, not only the first one
+    [Fact]
+    public async Task SecondStudentRow_IsCheckedToo()
+    {
+        Assert.Equal([LessonErrors.StudentLateMinutesMustNotBeNegative.Code],
+            await ErrorCodes(Request(1, null, 0, null, Student(), Student(2, -5))));
+    }
+
+    [Fact]
+    public async Task ExistingSubstitute_IsLookedUpOnce()
+    {
+        await ErrorCodes(Request(substituteTeacherContractId: 5));
+
+        _repository.Verify(r => r.TeacherContractExists(5, It.IsAny<CancellationToken>()), Times.Once);
     }
 }

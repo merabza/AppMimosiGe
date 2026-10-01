@@ -165,8 +165,7 @@ public sealed class LessonsEndpointsTests
             .ReturnsAsync(Result.Failure(LessonErrors.StudentRowNotFound));
 
         // Act
-        Results<Ok, ProblemHttpResult> result =
-            await LessonsEndpoints.Update(9, new LessonRequest(), handler.Object);
+        Results<Ok, ProblemHttpResult> result = await LessonsEndpoints.Update(9, new LessonRequest(), handler.Object);
 
         // Assert
         AssertProblem(result.Result, StatusCodes.Status400BadRequest);

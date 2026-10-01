@@ -30,11 +30,13 @@ public sealed class LessonsRepository(IMimosiGeDbContext context) : ILessonsRepo
                 GrpId = l.GroupId,
                 GroupCode = l.Group.GroupCode,
                 CourseName = l.Group.Course.CourseName,
-                TeacherName = l.TeacherContract.TeacherHuman.LastName + " " + l.TeacherContract.TeacherHuman.FirstName,
-                SubstituteTeacherName = l.SubstituteTeacherContract == null
-                    ? null
-                    : l.SubstituteTeacherContract.TeacherHuman.LastName + " " +
-                      l.SubstituteTeacherContract.TeacherHuman.FirstName,
+                TeacherName =
+                    l.TeacherContract.TeacherHuman.LastName + " " + l.TeacherContract.TeacherHuman.FirstName,
+                SubstituteTeacherName =
+                    l.SubstituteTeacherContract == null
+                        ? null
+                        : l.SubstituteTeacherContract.TeacherHuman.LastName + " " +
+                          l.SubstituteTeacherContract.TeacherHuman.FirstName,
                 LessonStatusId = l.LessonStatusId,
                 LessonStatusName = l.LessonStatus.StatusName,
                 StudentsCount = l.LessonsByStudents.Count,
@@ -63,8 +65,8 @@ public sealed class LessonsRepository(IMimosiGeDbContext context) : ILessonsRepo
     public Task<LessonResponse?> GetOne(int lessonId, CancellationToken cancellationToken = default)
     {
         IQueryable<Lesson> lessons = context.Lessons.AsNoTracking();
-        return lessons.Where(l => l.Id == lessonId).Select(l => new LessonResponse(l.Id, l.GroupId,
-            l.Group.GroupCode, l.Group.Course.CourseName, l.TeacherContractId,
+        return lessons.Where(l => l.Id == lessonId).Select(l => new LessonResponse(l.Id, l.GroupId, l.Group.GroupCode,
+            l.Group.Course.CourseName, l.TeacherContractId,
             l.TeacherContract.TeacherHuman.LastName + " " + l.TeacherContract.TeacherHuman.FirstName + " / " +
             l.TeacherContract.ContractNumber, l.LessonDt, l.SalaryScheme.SchemaName, l.FourWeekHours, l.TeoMinDate,
             l.TeoMaxDate, l.LessonStatusId, l.SubstituteTeacherContractId, l.TeacherLateMinutes, l.RecoverDate, l.Note,
@@ -77,8 +79,8 @@ public sealed class LessonsRepository(IMimosiGeDbContext context) : ILessonsRepo
                 .OrderBy(s => s.StudentContract.StudentHuman.LastName + " " + s.StudentContract.StudentHuman.FirstName)
                 .ThenBy(s => s.Id).Select(s => new LessonStudentResponse(s.Id, s.StudentContractId,
                     s.StudentContract.StudentHuman.LastName + " " + s.StudentContract.StudentHuman.FirstName,
-                    s.HoursCount, s.Present, s.Theme, s.Rate, s.TeacherComment, s.StudentComment,
-                    s.StudentLateMinutes)).ToList())).SingleOrDefaultAsync(cancellationToken);
+                    s.HoursCount, s.Present, s.Theme, s.Rate, s.TeacherComment, s.StudentComment, s.StudentLateMinutes))
+                .ToList())).SingleOrDefaultAsync(cancellationToken);
     }
 
     public Task<Lesson?> GetForChange(int lessonId, CancellationToken cancellationToken = default)
@@ -99,8 +101,8 @@ public sealed class LessonsRepository(IMimosiGeDbContext context) : ILessonsRepo
 
     public Task<List<LookupItemResponse>> GetGroups(CancellationToken cancellationToken = default)
     {
-        return context.Groups.AsNoTracking().OrderByDescending(x => x.AcademicYear.StartDate)
-            .ThenBy(x => x.GroupCode).ThenBy(x => x.GrpId)
+        return context.Groups.AsNoTracking().OrderByDescending(x => x.AcademicYear.StartDate).ThenBy(x => x.GroupCode)
+            .ThenBy(x => x.GrpId)
             .Select(x => new LookupItemResponse(x.GrpId, x.GroupCode + " / " + x.AcademicYear.AcademicYearName))
             .ToListAsync(cancellationToken);
     }
@@ -199,8 +201,7 @@ public sealed class LessonsRepository(IMimosiGeDbContext context) : ILessonsRepo
     }
 
     private static IOrderedQueryable<LessonRowData> Order<TKey>(IQueryable<LessonRowData> query,
-        IOrderedQueryable<LessonRowData>? ordered, Expression<Func<LessonRowData, TKey>> keySelector,
-        bool ascending)
+        IOrderedQueryable<LessonRowData>? ordered, Expression<Func<LessonRowData, TKey>> keySelector, bool ascending)
     {
         if (ordered is null)
         {

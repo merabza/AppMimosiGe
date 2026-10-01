@@ -67,14 +67,13 @@ public sealed class LessonsRepositoryTests : IDisposable
             new TeacherContract { Id = 2, ContractNumber = "T3.01", TeacherHumanId = 1, RsCountryId = 1 });
         _context.LessonStatuses.AddRange(new LessonStatus { Id = 2, StatusName = "cancelled" },
             new LessonStatus { Id = 1, StatusName = "held" });
+        //contract 13 is in no group and on no lesson
         _context.StudentContracts.AddRange(StudentContract(10, "6.001", 3), StudentContract(11, "6.002", 4),
-            StudentContract(12, "6.003", 5));
+            StudentContract(12, "6.003", 5), StudentContract(13, "6.004", 4));
         _context.Groups.AddRange(Group(1, "1001", 11, 1), Group(2, "201", 10, 2));
-        _context.GroupsByStudents.AddRange(GroupStudent(31, 1, 10), GroupStudent(32, 1, 11),
-            GroupStudent(33, 2, 12));
+        _context.GroupsByStudents.AddRange(GroupStudent(31, 1, 10), GroupStudent(32, 1, 11), GroupStudent(33, 2, 12));
         _context.Lessons.AddRange(Lesson(100, 1, At(9, 29, 15), 1), Lesson(101, 1, At(9, 30, 15), 1),
-            Lesson(102, 1, At(10, 1, 15), 1), Lesson(103, 1, At(9, 30, 10), 2, 2),
-            Lesson(200, 2, At(9, 30, 15), 1));
+            Lesson(102, 1, At(10, 1, 15), 1), Lesson(103, 1, At(9, 30, 10), 2, 2), Lesson(200, 2, At(9, 30, 15), 1));
         _context.LessonsByStudents.AddRange(Row(1, 100, 10, true), Row(2, 100, 11, false), Row(3, 101, 11, false),
             Row(4, 101, 10, false), Row(5, 102, 10, false), Row(6, 103, 10, false));
         _context.SaveChanges();
@@ -166,16 +165,20 @@ public sealed class LessonsRepositoryTests : IDisposable
     {
         return new LessonByStudent
         {
-            Id = id, LessonId = lessonId, StudentContractId = studentContractId, Present = present, HoursCount = 1.5f
+            Id = id,
+            LessonId = lessonId,
+            StudentContractId = studentContractId,
+            Present = present,
+            HoursCount = 1.5f
         };
     }
 
-    private static LessonsListQuery Query(int? grpId = null, int? teacherContractId = null,
-        DateTime? dateFrom = null, DateTime? dateTo = null, int? lessonStatusId = null, bool unfilled = false,
+    private static LessonsListQuery Query(int? grpId = null, int? teacherContractId = null, DateTime? dateFrom = null,
+        DateTime? dateTo = null, int? lessonStatusId = null, bool unfilled = false,
         IReadOnlyList<LessonSortField>? sortFields = null, int offset = 0, int rowsCount = 100)
     {
-        return new LessonsListQuery(offset, rowsCount, Now, grpId, teacherContractId, dateFrom, dateTo,
-            lessonStatusId, unfilled, sortFields ?? LessonsListQueryFactory.DefaultSortFields);
+        return new LessonsListQuery(offset, rowsCount, Now, grpId, teacherContractId, dateFrom, dateTo, lessonStatusId,
+            unfilled, sortFields ?? LessonsListQueryFactory.DefaultSortFields);
     }
 
     private async Task<int[]> Ids(LessonsListQuery query)
@@ -206,8 +209,8 @@ public sealed class LessonsRepositoryTests : IDisposable
         Assert.Equal(new LessonRowResponse(100, At(9, 29, 15), 1, "1001", "Math", "Beta Bob", null, 1, "held", 2, 1),
             data.Rows.Single(r => r.LessonId == 100));
         Assert.Equal(
-            new LessonRowResponse(103, At(9, 30, 10), 1, "1001", "Math", "Beta Bob", "Alpha Ann", 2, "cancelled", 1,
-                0), data.Rows.Single(r => r.LessonId == 103));
+            new LessonRowResponse(103, At(9, 30, 10), 1, "1001", "Math", "Beta Bob", "Alpha Ann", 2, "cancelled", 1, 0),
+            data.Rows.Single(r => r.LessonId == 103));
         Assert.Equal(new LessonRowResponse(200, At(9, 30, 15), 2, "201", "English", "Alpha Ann", null, 1, "held", 0, 0),
             data.Rows.Single(r => r.LessonId == 200));
     }
@@ -283,6 +286,16 @@ public sealed class LessonsRepositoryTests : IDisposable
         Assert.Equal([102], data.Rows.Select(r => r.LessonId));
     }
 
+    // an offset equal to the count is past the end too
+    [Fact]
+    public async Task GetRowsData_OffsetAtTheCount_ShowsTheLastPage()
+    {
+        LessonsRowsDataResponse data = await _repository.GetRowsData(Query(offset: 5, rowsCount: 5));
+
+        Assert.Equal(0, data.Offset);
+        Assert.Equal(5, data.Rows.Count);
+    }
+
     [Fact]
     public async Task GetRowsData_NoRows_KeepsOffsetZero()
     {
@@ -291,6 +304,55 @@ public sealed class LessonsRepositoryTests : IDisposable
         Assert.Equal(0, data.AllRowsCount);
         Assert.Equal(0, data.Offset);
         Assert.Empty(data.Rows);
+    }
+
+    // with no rows there is no last page to move to: the requested offset comes back
+    [Fact]
+    public async Task GetRowsData_NoRows_KeepsTheRequestedOffset()
+    {
+        LessonsRowsDataResponse data = await _repository.GetRowsData(Query(99, offset: 20, rowsCount: 10));
+
+        Assert.Equal(0, data.AllRowsCount);
+        Assert.Equal(20, data.Offset);
+    }
+
+    // a later sort field orders within the equal values of the earlier one, descending too
+    [Fact]
+    public async Task GetRowsData_SecondSortField_OrdersWithinTheFirst()
+    {
+        await AssertIds(Query(sortFields:
+        [
+            new LessonSortField(ELessonSortField.GroupCode, true),
+            new LessonSortField(ELessonSortField.LessonDt, false)
+        ]), 102, 101, 103, 100, 200);
+    }
+
+    [Fact]
+    public async Task GetRowsData_UnknownSortField_Throws()
+    {
+        var exception = await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
+            _repository.GetRowsData(Query(sortFields: [new LessonSortField((ELessonSortField)99, true)])));
+
+        Assert.Contains("უცნობი დალაგების ველი", exception.Message, StringComparison.Ordinal);
+    }
+
+    // the last day ends before midnight: a lesson at 00:00 of the next day is not in the range
+    [Fact]
+    public async Task GetRowsData_DateTo_ExcludesMidnightOfTheNextDay()
+    {
+        AddAndSave(Lesson(104, 1, At(10, 2), 1));
+
+        await AssertIds(Query(dateFrom: At(10, 1), dateTo: At(10, 1)), 102);
+        await AssertIds(Query(dateFrom: At(10, 2), dateTo: At(10, 2)), 104);
+    }
+
+    // a lesson that starts right now has not started yet: it is not unfilled
+    [Fact]
+    public async Task GetRowsData_Unfilled_LessonStartingNow_IsNotUnfilled()
+    {
+        AddAndSave(Lesson(104, 1, Now, 1), Row(7, 104, 10, false));
+
+        await AssertIds(Query(unfilled: true), 101);
     }
 
     [Fact]
@@ -352,6 +414,20 @@ public sealed class LessonsRepositoryTests : IDisposable
         Assert.Null(await _repository.GetOne(999));
     }
 
+    // "last first" with a space between ("A Z" before "Ab A"), equal names by the row id
+    [Fact]
+    public async Task GetOne_StudentsByFullNameThenByRowId()
+    {
+        AddAndSave(Human(6, "A", "Z"), Human(7, "Ab", "A"), Human(8, "Ab", "A"), StudentContract(14, "6.014", 6),
+            StudentContract(15, "6.015", 7), StudentContract(16, "6.016", 8), Lesson(105, 1, At(10, 5, 15), 1),
+            Row(13, 105, 15, false), Row(12, 105, 16, false), Row(14, 105, 14, false));
+
+        LessonResponse? lesson = await _repository.GetOne(105);
+
+        Assert.Equal([14, 12, 13], lesson!.Students.Select(s => s.Id));
+        Assert.Equal(["A Z", "Ab A", "Ab A"], lesson.Students.Select(s => s.StudentName));
+    }
+
     [Fact]
     public async Task GetForChange_LoadsTheTrackedLessonWithItsRows()
     {
@@ -377,6 +453,19 @@ public sealed class LessonsRepositoryTests : IDisposable
     {
         Assert.Equal([new LookupItemResponse(1, "1001 / 2026-2027"), new LookupItemResponse(2, "201 / 2025-2026")],
             await _repository.GetGroups());
+    }
+
+    // within the years of one start date by code, one code of two such years by the group id
+    [Fact]
+    public async Task GetGroups_SameStartDate_ByCodeThenById()
+    {
+        AddAndSave(
+            new AcademicYear
+            {
+                AyId = 12, AcademicYearName = "2026-2027 B", StartDate = At(9, 1), FinishDate = At(9, 1).AddYears(1)
+            }, Group(5, "1001", 12, 1), Group(6, "0901", 11, 1));
+
+        Assert.Equal([6, 1, 5, 2], (await _repository.GetGroups()).Select(g => g.Id));
     }
 
     [Fact]

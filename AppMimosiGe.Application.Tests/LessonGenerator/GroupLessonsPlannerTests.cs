@@ -520,12 +520,11 @@ public sealed class GroupLessonsPlannerTests
     [Fact]
     public void PlanGroup_LessonBeforeTheGroupStart_IsCheckedAndTheLaterLessonTimesStayExact()
     {
-        GroupLessonsPlan plan = Plan(Input(students: [Student(startDate: Date(9, 14))],
-            lessons:
-            [
-                Lesson(100, SeptemberMonday(7), LessonStudent(200)),
-                Lesson(101, SeptemberMonday(21), LessonStudent(201))
-            ]));
+        GroupLessonsPlan plan = Plan(Input(students: [Student(startDate: Date(9, 14))], lessons:
+        [
+            Lesson(100, SeptemberMonday(7), LessonStudent(200)),
+            Lesson(101, SeptemberMonday(21), LessonStudent(201))
+        ]));
 
         PlannedLessonChange deleted = Assert.Single(plan.Changes, c => c.Kind == ELessonChangeKind.Delete);
         Assert.Equal(100, deleted.LessonId);

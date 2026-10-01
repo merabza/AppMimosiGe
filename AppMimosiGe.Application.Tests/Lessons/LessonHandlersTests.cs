@@ -31,13 +31,12 @@ public sealed class LessonHandlersTests
     public LessonHandlersTests()
     {
         _repository.Setup(r => r.GetStudentContractsForChange(It.IsAny<int>(), It.IsAny<int>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(() =>
-            {
-                _loadedContracts.Clear();
-                _loadedContracts.AddRange([Contract(10), Contract(11)]);
-                return _loadedContracts;
-            });
+            It.IsAny<CancellationToken>())).ReturnsAsync(() =>
+        {
+            _loadedContracts.Clear();
+            _loadedContracts.AddRange([Contract(10), Contract(11)]);
+            return _loadedContracts;
+        });
     }
 
     private static StudentContract Contract(int scId)
@@ -76,7 +75,11 @@ public sealed class LessonHandlersTests
         });
         lesson.LessonsByStudents.Add(new LessonByStudent
         {
-            Id = 22, LessonId = 9, StudentContractId = 11, GroupByStudentId = 32, HoursCount = 1.5f
+            Id = 22,
+            LessonId = 9,
+            StudentContractId = 11,
+            GroupByStudentId = 32,
+            HoursCount = 1.5f
         });
         return lesson;
     }
@@ -270,7 +273,8 @@ public sealed class LessonHandlersTests
         // Act
         Result result = await Update(new LessonRequest
         {
-            LessonStatusId = 2, Students = [new LessonStudentRequest { Id = 22, Present = true }, new() { Id = 99 }]
+            LessonStatusId = 2,
+            Students = [new LessonStudentRequest { Id = 22, Present = true }, new LessonStudentRequest { Id = 99 }]
         });
 
         // Assert
@@ -321,8 +325,9 @@ public sealed class LessonHandlersTests
         _repository.Setup(r => r.GetLessonStatuses(It.IsAny<CancellationToken>())).ReturnsAsync(statuses);
 
         // Act
-        Result<LessonFormLookupsResponse> result = await new GetLessonFormLookupsQueryHandler(_repository.Object)
-            .Handle(new GetLessonFormLookupsQuery(), CancellationToken.None);
+        Result<LessonFormLookupsResponse> result =
+            await new GetLessonFormLookupsQueryHandler(_repository.Object).Handle(new GetLessonFormLookupsQuery(),
+                CancellationToken.None);
 
         // Assert
         Assert.Same(groups, result.Value.Groups);
@@ -344,9 +349,9 @@ public sealed class LessonHandlersTests
             .Callback<LessonsListQuery, CancellationToken>((q, _) => passed = q).ReturnsAsync(rows);
 
         // Act
-        Result<LessonsRowsDataResponse> result = await new GetLessonsRowsDataQueryHandler(_repository.Object,
-                timeProvider.Object)
-            .Handle(new GetLessonsRowsDataQuery(Encode(
+        Result<LessonsRowsDataResponse> result =
+            await new GetLessonsRowsDataQueryHandler(_repository.Object, timeProvider.Object).Handle(
+                new GetLessonsRowsDataQuery(Encode(
                     """{"offset":10,"rowsCount":5,"filterFields":[{"fieldName":"grpId","value":"7"},{"fieldName":"unfilled","value":"true"}]}""")),
                 CancellationToken.None);
 
@@ -360,8 +365,10 @@ public sealed class LessonHandlersTests
         Assert.Equal(new DateTime(2026, 10, 1, 13, 30, 0, DateTimeKind.Unspecified), passed.Now);
     }
 
+    // not base64 (FormatException), not JSON (JsonException), JSON null (no request)
     [Theory]
     [InlineData("not base64!")]
+    [InlineData("bm90IGpzb24=")]
     [InlineData("bnVsbA==")]
     public async Task GetRowsData_UnreadableRequest_IsInvalid(string filterSortRequest)
     {
