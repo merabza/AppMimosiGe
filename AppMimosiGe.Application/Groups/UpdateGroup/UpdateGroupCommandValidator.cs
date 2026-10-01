@@ -11,8 +11,7 @@ namespace AppMimosiGe.Application.Groups.UpdateGroup;
 public sealed class UpdateGroupCommandValidator : AbstractValidator<UpdateGroupCommand>
 {
     public UpdateGroupCommandValidator(IGroupsRepository repository,
-        IStudentContractsRepository studentContractsRepository,
-        ITeacherContractsRepository teacherContractsRepository)
+        IStudentContractsRepository studentContractsRepository, ITeacherContractsRepository teacherContractsRepository)
     {
         RuleFor(x => x.Request).NotNull().WithErrorCode(CrudApiErrors.UploadedInformationCouldNotBeDecrypted.Code)
             .WithMessage(CrudApiErrors.UploadedInformationCouldNotBeDecrypted.Description);

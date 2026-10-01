@@ -28,8 +28,9 @@ public sealed class GroupPeriodsTests
     [InlineData(5, 6, 5, 6, true)]
     public void Overlap_UsesHalfOpenPeriods(int start1, int? end1, int start2, int? end2, bool expected)
     {
-        Assert.Equal(expected, GroupPeriods.Overlap(Day(start1), end1 is null ? null : Day(end1.Value), Day(start2),
-            end2 is null ? null : Day(end2.Value)));
+        Assert.Equal(expected,
+            GroupPeriods.Overlap(Day(start1), end1 is null ? null : Day(end1.Value), Day(start2),
+                end2 is null ? null : Day(end2.Value)));
     }
 
     // only the days count, not the time of day

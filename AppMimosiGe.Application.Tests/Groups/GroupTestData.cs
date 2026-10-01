@@ -11,10 +11,9 @@ namespace AppMimosiGe.Application.Tests.Groups;
 
 internal static class GroupTestData
 {
-    public static readonly DateTime StartDate = new(2026, 9, 15, 0, 0, 0, DateTimeKind.Unspecified);
-
     //the default salary scheme of every teacher contract in RepositoryWhereEverythingExists
     public const int DefaultSalarySchemeId = 9;
+    public static readonly DateTime StartDate = new(2026, 9, 15, 0, 0, 0, DateTimeKind.Unspecified);
 
     public static GroupRequest ValidRequest(string? groupCode = "1001", DateTime? voidDate = null,
         List<GroupTeacherRequest>? teachers = null, List<GroupStudentRequest>? students = null,
@@ -106,16 +105,14 @@ internal static class GroupTestData
         repository.Setup(r => r.AcademicYearExists(It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
         repository.Setup(r => r.CourseExists(It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
         repository.Setup(r => r.GroupSizeExists(It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
-        repository.Setup(r => r.StudentStatusExists(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
+        repository.Setup(r => r.StudentStatusExists(It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
         return repository;
     }
 
     public static Mock<ITeacherContractsRepository> TeacherContractsRepositoryWhereEverythingExists()
     {
         var repository = new Mock<ITeacherContractsRepository>();
-        repository.Setup(r => r.SalarySchemeExists(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
+        repository.Setup(r => r.SalarySchemeExists(It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
         return repository;
     }
 }

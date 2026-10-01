@@ -27,7 +27,8 @@ public static class GroupsListQueryFactory
     public const int MaxRowsCount = 1000;
 
     //Access-ის cmbFind-ის დალაგება: ჯგუფით ძებნისას კოდი, მასწავლებლით და მოსწავლით ძებნისას გვარ-სახელი
-    private static readonly IReadOnlyList<GroupSortField> DefaultGroupSortFields = [new(EGroupSortField.GroupCode, true)];
+    private static readonly IReadOnlyList<GroupSortField> DefaultGroupSortFields =
+        [new(EGroupSortField.GroupCode, true)];
 
     private static readonly IReadOnlyList<GroupSortField> DefaultTeacherSortFields =
     [

@@ -132,8 +132,7 @@ public sealed class GroupValidatorsTests
     [Fact]
     public async Task TeacherWithoutSchemeWhoseContractHasNone_IsSchemeRequiredError()
     {
-        _repository.Setup(r => r.GetDefaultSalarySchemeId(5, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((int?)null);
+        _repository.Setup(r => r.GetDefaultSalarySchemeId(5, It.IsAny<CancellationToken>())).ReturnsAsync((int?)null);
 
         Assert.Equal([GroupErrors.SalarySchemeIsRequired.Code],
             await ErrorCodes(ValidRequest(teachers: [Teacher(salarySchemaId: null)])));
@@ -143,8 +142,7 @@ public sealed class GroupValidatorsTests
     [Fact]
     public async Task TeacherWithSchemeWhoseContractHasNone_IsAllowed()
     {
-        _repository.Setup(r => r.GetDefaultSalarySchemeId(5, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((int?)null);
+        _repository.Setup(r => r.GetDefaultSalarySchemeId(5, It.IsAny<CancellationToken>())).ReturnsAsync((int?)null);
 
         Assert.Empty(await ErrorCodes(ValidRequest(teachers: [Teacher(salarySchemaId: 8)])));
     }
@@ -157,7 +155,11 @@ public sealed class GroupValidatorsTests
             [
                 new GroupStudentRequest
                 {
-                    StudentContractId = 20, FourWeekHours = 8, FourWeekFee = 48, OneHourFee = 6, HoursCoefficient = 1
+                    StudentContractId = 20,
+                    FourWeekHours = 8,
+                    FourWeekFee = 48,
+                    OneHourFee = 6,
+                    HoursCoefficient = 1
                 }
             ], dayTimePlaces:
             [
@@ -175,8 +177,8 @@ public sealed class GroupValidatorsTests
     {
         DateTime endDate = StartDate.AddDays(days);
 
-        Assert.Equal(Enumerable.Repeat(GroupErrors.EndDateMustBeAfterStartDate.Code, 3), await ErrorCodes(
-            ValidRequest(teachers: [Teacher(endDate: endDate)], students: [Student(endDate: endDate)],
+        Assert.Equal(Enumerable.Repeat(GroupErrors.EndDateMustBeAfterStartDate.Code, 3),
+            await ErrorCodes(ValidRequest(teachers: [Teacher(endDate: endDate)], students: [Student(endDate: endDate)],
                 dayTimePlaces: [DayTimePlace(endDate: endDate)])));
     }
 
@@ -275,8 +277,7 @@ public sealed class GroupValidatorsTests
     {
         _repository.Setup(r => r.GroupCodeExists(11, "1001", 0, It.IsAny<CancellationToken>())).ReturnsAsync(true);
 
-        ValidationResult result =
-            await CreateValidator().ValidateAsync(new CreateGroupCommand(ValidRequest(" 1001 ")));
+        ValidationResult result = await CreateValidator().ValidateAsync(new CreateGroupCommand(ValidRequest(" 1001 ")));
 
         Assert.Equal([GroupErrors.GroupCodeAlreadyExists.Code], result.Errors.Select(e => e.ErrorCode));
     }
@@ -332,7 +333,7 @@ public sealed class GroupValidatorsTests
         await UpdateValidator().ValidateAsync(new UpdateGroupCommand(7, ValidRequest(" ")));
 
         _repository.Verify(
-            r => r.GroupCodeExists(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<int>(),
-                It.IsAny<CancellationToken>()), Times.Never);
+            r => r.GroupCodeExists(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 }

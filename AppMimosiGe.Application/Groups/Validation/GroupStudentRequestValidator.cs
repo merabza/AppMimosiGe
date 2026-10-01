@@ -22,8 +22,7 @@ public sealed class GroupStudentRequestValidator : AbstractValidator<GroupStuden
             .WithMessage(GroupErrors.FeeMustBePositive.Description);
         RuleFor(x => x.OneHourFee).GreaterThan(0).WithErrorCode(GroupErrors.FeeMustBePositive.Code)
             .WithMessage(GroupErrors.FeeMustBePositive.Description);
-        RuleFor(x => x.HoursCoefficient).GreaterThan(0)
-            .WithErrorCode(GroupErrors.HoursCoefficientMustBePositive.Code)
+        RuleFor(x => x.HoursCoefficient).GreaterThan(0).WithErrorCode(GroupErrors.HoursCoefficientMustBePositive.Code)
             .WithMessage(GroupErrors.HoursCoefficientMustBePositive.Description);
 
         RuleFor(x => x.StartDate).NotEmpty().WithErrorCode(GroupErrors.StartDateIsRequired.Code)

@@ -20,6 +20,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 using Moq;
+using Serilog;
 using SystemTools.Application.Abstractions.Messaging;
 using SystemTools.SharedKernel;
 using Xunit;
@@ -302,5 +303,22 @@ public sealed class GroupsEndpointsTests
         List<RouteEndpoint> endpoints = EndpointsTestApp.MappedEndpoints(app);
         Assert.Equal(7, endpoints.Count);
         Assert.All(endpoints, e => Assert.NotEmpty(e.Metadata.GetOrderedMetadata<IAuthorizeData>()));
+    }
+
+    [Fact]
+    public async Task UseGroupsEndpoints_WithDebugLogger_LogsStartAndFinish()
+    {
+        // Arrange
+        await using WebApplication app = EndpointsTestApp.Build();
+        var logger = new Mock<ILogger>();
+
+        // Act
+        app.UseGroupsEndpoints(logger.Object);
+
+        // Assert
+        logger.Verify(l => l.Information("{MethodName} Started", nameof(GroupsEndpoints.UseGroupsEndpoints)),
+            Times.Once);
+        logger.Verify(l => l.Information("{MethodName} Finished", nameof(GroupsEndpoints.UseGroupsEndpoints)),
+            Times.Once);
     }
 }

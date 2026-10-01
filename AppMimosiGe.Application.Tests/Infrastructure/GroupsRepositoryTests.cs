@@ -43,13 +43,16 @@ public sealed class GroupsRepositoryTests : IDisposable
         _context.AcademicYears.AddRange(
             new AcademicYear
             {
-                AyId = 10, AcademicYearName = "2025-2026", StartDate = new DateTime(2025, 9, 1, 0, 0, 0,
-                    DateTimeKind.Unspecified),
+                AyId = 10,
+                AcademicYearName = "2025-2026",
+                StartDate = new DateTime(2025, 9, 1, 0, 0, 0, DateTimeKind.Unspecified),
                 FinishDate = Date(9, 1)
             },
             new AcademicYear
             {
-                AyId = 11, AcademicYearName = "2026-2027", StartDate = Date(9, 1),
+                AyId = 11,
+                AcademicYearName = "2026-2027",
+                StartDate = Date(9, 1),
                 FinishDate = new DateTime(2027, 9, 1, 0, 0, 0, DateTimeKind.Unspecified)
             });
         _context.Courses.AddRange(new Course { CrsId = 1, CourseName = "Math" },
@@ -67,19 +70,32 @@ public sealed class GroupsRepositoryTests : IDisposable
         _context.TeacherContracts.AddRange(
             new TeacherContract
             {
-                Id = 1, ContractNumber = "T3.01", TeacherHumanId = 1, RsCountryId = 1, SalarySchemaByHoursId = 1
+                Id = 1,
+                ContractNumber = "T3.01",
+                TeacherHumanId = 1,
+                RsCountryId = 1,
+                SalarySchemaByHoursId = 1
             }, new TeacherContract { Id = 2, ContractNumber = "T3.02", TeacherHumanId = 2, RsCountryId = 1 });
         _context.StudentContracts.AddRange(StudentContract(10, "6.001", 3, 11), StudentContract(11, "6.002", 4, 11),
             StudentContract(12, "5.001", 5, 10));
         _context.StudentContractDetails.AddRange(
             new StudentContractDetail
             {
-                Id = 2, StudentContractId = 10, CourseId = 2, GroupSizeId = 3, FourWeekHours = 8, FourWeekFee = 80,
+                Id = 2,
+                StudentContractId = 10,
+                CourseId = 2,
+                GroupSizeId = 3,
+                FourWeekHours = 8,
+                FourWeekFee = 80,
                 OneHourFee = 10
-            },
-            new StudentContractDetail
+            }, new StudentContractDetail
             {
-                Id = 1, StudentContractId = 10, CourseId = 1, GroupSizeId = 2, FourWeekHours = 12, FourWeekFee = 72,
+                Id = 1,
+                StudentContractId = 10,
+                CourseId = 1,
+                GroupSizeId = 2,
+                FourWeekHours = 12,
+                FourWeekFee = 72,
                 OneHourFee = 6
             });
         _context.WeekDays.AddRange(new WeekDay { Id = 1, Name = "Monday", ShortName = "1-Mo", WeekDayNumber = 1 },
@@ -92,20 +108,29 @@ public sealed class GroupsRepositoryTests : IDisposable
         _context.GroupsByTeachers.AddRange(Teacher(11, 1, 1, Date(9, 1), Date(9, 20)),
             Teacher(12, 1, 2, Date(9, 20), null), Teacher(13, 2, 1, Date(9, 1), null),
             Teacher(14, 3, 2, Date(10, 5), null));
-        _context.GroupsByStudents.AddRange(Student(21, 1, 10, Date(9, 1), null),
-            Student(22, 1, 11, Date(9, 1), Today), Student(23, 1, 11, Date(10, 1), null),
-            Student(24, 2, 10, Date(9, 1), null),
+        _context.GroupsByStudents.AddRange(Student(21, 1, 10, Date(9, 1), null), Student(22, 1, 11, Date(9, 1), Today),
+            Student(23, 1, 11, Date(10, 1), null), Student(24, 2, 10, Date(9, 1), null),
             Student(25, 3, 12, new DateTime(2025, 9, 1, 0, 0, 0, DateTimeKind.Unspecified), null));
         _context.GroupDayTimePlaces.AddRange(
             new GroupDayTimePlace
             {
-                GdtpId = 31, GroupId = 1, WeekDayId = 3, LessonStartTimeId = 2, HoursCount = 1.5f, RoomId = 1,
+                GdtpId = 31,
+                GroupId = 1,
+                WeekDayId = 3,
+                LessonStartTimeId = 2,
+                HoursCount = 1.5f,
+                RoomId = 1,
                 StartDate = Date(9, 1)
-            },
-            new GroupDayTimePlace
+            }, new GroupDayTimePlace
             {
-                GdtpId = 32, GroupId = 1, WeekDayId = 1, LessonStartTimeId = 1, HoursCount = 2, RoomId = 2,
-                StartDate = Date(8, 1), EndDate = Date(9, 1)
+                GdtpId = 32,
+                GroupId = 1,
+                WeekDayId = 1,
+                LessonStartTimeId = 1,
+                HoursCount = 2,
+                RoomId = 2,
+                StartDate = Date(8, 1),
+                EndDate = Date(9, 1)
             });
         _context.SaveChanges();
     }
@@ -121,10 +146,7 @@ public sealed class GroupsRepositoryTests : IDisposable
 
     private static Human Human(int id, string lastName, string firstName)
     {
-        return new Human
-        {
-            HumId = id, LastName = lastName, FirstName = firstName, PersonalId = $"0100000000{id}"
-        };
+        return new Human { HumId = id, LastName = lastName, FirstName = firstName, PersonalId = $"0100000000{id}" };
     }
 
     private static StudentContract StudentContract(int id, string number, int studentId, int academicYearId)
@@ -186,8 +208,8 @@ public sealed class GroupsRepositoryTests : IDisposable
 
     private static GroupsListQuery Query(EGroupFindMethod findMethod = EGroupFindMethod.Group,
         int? academicYearId = null, EGroupState? state = null, int? courseId = null, int? groupSizeId = null,
-        int? studentStatusId = null, string? search = null, IReadOnlyList<GroupSortField>? sort = null,
-        int offset = 0, int rowsCount = 10)
+        int? studentStatusId = null, string? search = null, IReadOnlyList<GroupSortField>? sort = null, int offset = 0,
+        int rowsCount = 10)
     {
         return new GroupsListQuery(offset, rowsCount, Today, findMethod, academicYearId, state, courseId, groupSizeId,
             studentStatusId, search, sort ?? GroupsListQueryFactory.DefaultSortFields(findMethod));
@@ -207,14 +229,36 @@ public sealed class GroupsRepositoryTests : IDisposable
         Assert.Equal(3, result.AllRowsCount);
         Assert.Equal([1, 3, 2], result.Rows.Select(r => r.RowId));
         Assert.Equal(
-            new GroupRowResponse(1, 1, "1001", "2026-2027", "Math", "4-Four", "Tenth", null, false, "Beta Bob", 1,
-                null, null, null), result.Rows[0]);
+            new GroupRowResponse(1, 1, "1001", "2026-2027", "Math", "4-Four", "Tenth", null, false, "Beta Bob", 1, null,
+                null, null), result.Rows[0]);
         Assert.Null(result.Rows[1].TeacherName);
         Assert.Equal(1, result.Rows[1].ActiveStudentsCount);
         Assert.Equal("Alpha Ann", result.Rows[2].TeacherName);
         Assert.Equal("1-Solo", result.Rows[2].GroupSizeName);
         Assert.Equal(Today, result.Rows[2].VoidDate);
         Assert.True(result.Rows[2].DirtyLessons);
+    }
+
+    // a row that starts today counts and one that ends today does not; of two current teachers (possible in the
+    // Access data) the later started one is shown
+    [Fact]
+    public async Task GetRowsData_GroupMode_TodaysTeacherAndStudentsAtThePeriodBoundaries()
+    {
+        // Arrange
+        AddAndSave(Group(4, "401", 11, 1, 2, 1, null, false), Group(5, "402", 11, 1, 2, 1, null, false),
+            Group(6, "403", 11, 1, 2, 1, null, false), Group(7, "404", 11, 1, 2, 1, null, false),
+            Teacher(41, 4, 1, Date(9, 1), Today), Teacher(51, 5, 1, Today, null),
+            Teacher(61, 6, 1, Date(9, 1), Date(9, 10)), Teacher(71, 7, 2, Date(9, 15), null),
+            Teacher(72, 7, 1, Date(9, 1), null), Student(41, 4, 10, Today, null),
+            Student(42, 4, 11, Date(9, 1), Date(9, 10)), Student(43, 4, 10, Date(9, 1), Today));
+
+        // Act
+        GroupsRowsDataResponse result = await _repository.GetRowsData(Query(search: "40"));
+
+        // Assert
+        Assert.Equal([4, 5, 6, 7], result.Rows.Select(r => r.GrpId));
+        Assert.Equal([null, "Alpha Ann", null, "Beta Bob"], result.Rows.Select(r => r.TeacherName));
+        Assert.Equal([1, 0, 0, 0], result.Rows.Select(r => r.ActiveStudentsCount));
     }
 
     // a group voided today is not active any more; one voided in the future still is
@@ -257,8 +301,7 @@ public sealed class GroupsRepositoryTests : IDisposable
     [InlineData("nobody", new int[0])]
     public async Task GetRowsData_TeacherMode_SearchesTheTeacherName(string search, int[] expectedIds)
     {
-        GroupsRowsDataResponse result = await _repository.GetRowsData(Query(EGroupFindMethod.Teacher,
-            search: search));
+        GroupsRowsDataResponse result = await _repository.GetRowsData(Query(EGroupFindMethod.Teacher, search: search));
 
         Assert.Equal(expectedIds, result.Rows.Select(r => r.RowId));
     }
@@ -287,12 +330,12 @@ public sealed class GroupsRepositoryTests : IDisposable
 
     [Theory]
     [InlineData("Gamma", new[] { 21, 24 })]
+    [InlineData("Gamma Gia", new[] { 21, 24 })]
     [InlineData("Gia Gamma", new[] { 21, 24 })]
     [InlineData("Alpha", new int[0])]
     public async Task GetRowsData_StudentMode_SearchesTheStudentName(string search, int[] expectedIds)
     {
-        GroupsRowsDataResponse result = await _repository.GetRowsData(Query(EGroupFindMethod.Student,
-            search: search));
+        GroupsRowsDataResponse result = await _repository.GetRowsData(Query(EGroupFindMethod.Student, search: search));
 
         Assert.Equal(expectedIds, result.Rows.Select(r => r.RowId));
     }
@@ -314,6 +357,19 @@ public sealed class GroupsRepositoryTests : IDisposable
         GroupsRowsDataResponse result = await _repository.GetRowsData(Query(sort: SortBy(field, ascending)));
 
         Assert.Equal(expectedIds, result.Rows.Select(r => r.RowId));
+    }
+
+    // the next sort fields order the rows that the first one leaves equal
+    [Fact]
+    public async Task GetRowsData_SecondSortFieldDescending_OrdersTheEqualRows()
+    {
+        GroupsRowsDataResponse result = await _repository.GetRowsData(Query(sort:
+        [
+            new GroupSortField(EGroupSortField.CourseName, true),
+            new GroupSortField(EGroupSortField.AcademicYearName, false)
+        ]));
+
+        Assert.Equal([2, 1, 3], result.Rows.Select(r => r.RowId));
     }
 
     [Theory]
@@ -341,10 +397,12 @@ public sealed class GroupsRepositoryTests : IDisposable
     }
 
     // after a filter change the page may no longer exist, then the last page is shown
-    [Fact]
-    public async Task GetRowsData_OffsetBeyondTheEnd_ReturnsTheLastPage()
+    [Theory]
+    [InlineData(10)]
+    [InlineData(3)]
+    public async Task GetRowsData_OffsetBeyondTheEnd_ReturnsTheLastPage(int offset)
     {
-        GroupsRowsDataResponse result = await _repository.GetRowsData(Query(offset: 10, rowsCount: 2));
+        GroupsRowsDataResponse result = await _repository.GetRowsData(Query(offset: offset, rowsCount: 2));
 
         Assert.Equal(2, result.Offset);
         Assert.Equal([2], result.Rows.Select(r => r.RowId));
@@ -367,6 +425,7 @@ public sealed class GroupsRepositoryTests : IDisposable
             _repository.GetRowsData(Query(sort: SortBy((EGroupSortField)99))));
 
         Assert.Equal("sortFields", ex.ParamName);
+        Assert.StartsWith("უცნობი დალაგების ველი", ex.Message, StringComparison.Ordinal);
     }
 
     // teachers and the schedule by their start, students by name, start and end (the Access subforms)

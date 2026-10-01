@@ -18,8 +18,8 @@ public static class GroupsRepositoryExtensions
         IEnumerable<GroupTeacherRequest> teachers, CancellationToken cancellationToken)
     {
         var defaultSalarySchemes = new Dictionary<int, int>();
-        foreach (int teacherContractId in teachers.Where(x => x.SalarySchemaId is null)
-                     .Select(x => x.TeacherContractId).Distinct())
+        foreach (int teacherContractId in teachers.Where(x => x.SalarySchemaId is null).Select(x => x.TeacherContractId)
+                     .Distinct())
         {
             //ვალიდატორმა უკვე შეამოწმა, რომ კონტრაქტს ძირითადი სქემა აქვს
             defaultSalarySchemes[teacherContractId] =

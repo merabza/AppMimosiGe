@@ -34,8 +34,7 @@ public sealed class GroupsRepository(IMimosiGeDbContext context) : IGroupsReposi
             .ToListAsync(cancellationToken);
 
         //ზომა "ადგილები-დასახელება", როგორც Access-ის ჩამოსაშლელ სიაში
-        return new GroupsRowsDataResponse(count, offset,
-        [
+        return new GroupsRowsDataResponse(count, offset, [
             .. page.Select(r => new GroupRowResponse(r.RowId, r.GrpId, r.GroupCode, r.AcademicYearName, r.CourseName,
                 $"{r.GroupSize}-{r.GroupSizeName}", r.StudentStatusName, r.VoidDate, r.DirtyLessons, r.TeacherName,
                 r.ActiveStudentsCount, r.StudentName, r.StartDate, r.EndDate))
@@ -46,20 +45,19 @@ public sealed class GroupsRepository(IMimosiGeDbContext context) : IGroupsReposi
     {
         return context.Groups.AsNoTracking().Where(g => g.GrpId == grpId).Select(g => new GroupResponse(g.GrpId,
             g.AcademicYearId, g.GroupCode, g.CourseId, g.GroupSizeId, g.StudentStatusId, g.VoidDate, g.DirtyLessons,
-            g.GroupsByTeachers.OrderBy(t => t.StartDate).ThenBy(t => t.Id)
-                .Select(t => new GroupTeacherResponse(t.Id, t.TeacherContractId, t.SalarySchemaId, t.StartDate,
-                    t.EndDate)).ToList(),
+            g.GroupsByTeachers.OrderBy(t => t.StartDate).ThenBy(t => t.Id).Select(t =>
+                new GroupTeacherResponse(t.Id, t.TeacherContractId, t.SalarySchemaId, t.StartDate, t.EndDate)).ToList(),
             g.GroupsByStudents
                 .OrderBy(s => s.StudentContract.StudentHuman.LastName + " " + s.StudentContract.StudentHuman.FirstName +
-                              " / " + s.StudentContract.ContractNumber).ThenBy(s => s.StartDate)
-                .ThenBy(s => s.EndDate).ThenBy(s => s.GbsId).Select(s => new GroupStudentResponse(s.GbsId,
-                    s.StudentContractId,
+                              " / " + s.StudentContract.ContractNumber).ThenBy(s => s.StartDate).ThenBy(s => s.EndDate)
+                .ThenBy(s => s.GbsId)
+                .Select(s => new GroupStudentResponse(s.GbsId, s.StudentContractId,
                     s.StudentContract.StudentHuman.LastName + " " + s.StudentContract.StudentHuman.FirstName + " / " +
-                    s.StudentContract.ContractNumber, s.FourWeekHours, s.FourWeekFee, s.OneHourFee,
-                    s.HoursCoefficient, s.StartDate, s.EndDate, s.Note)).ToList(),
-            g.GroupDayTimePlaces.OrderBy(d => d.StartDate).ThenBy(d => d.GdtpId)
-                .Select(d => new GroupDayTimePlaceResponse(d.GdtpId, d.WeekDayId, d.LessonStartTimeId, d.HoursCount,
-                    d.RoomId, d.StartDate, d.EndDate)).ToList())).SingleOrDefaultAsync(cancellationToken);
+                    s.StudentContract.ContractNumber, s.FourWeekHours, s.FourWeekFee, s.OneHourFee, s.HoursCoefficient,
+                    s.StartDate, s.EndDate, s.Note)).ToList(),
+            g.GroupDayTimePlaces.OrderBy(d => d.StartDate).ThenBy(d => d.GdtpId).Select(d =>
+                new GroupDayTimePlaceResponse(d.GdtpId, d.WeekDayId, d.LessonStartTimeId, d.HoursCount, d.RoomId,
+                    d.StartDate, d.EndDate)).ToList())).SingleOrDefaultAsync(cancellationToken);
     }
 
     public Task<Group?> GetForChange(int grpId, CancellationToken cancellationToken = default)
@@ -338,8 +336,7 @@ public sealed class GroupsRepository(IMimosiGeDbContext context) : IGroupsReposi
             ordered = sortField.Field switch
             {
                 EGroupSortField.GroupCode => Order(query, ordered, r => r.GroupCode, sortField.Ascending),
-                EGroupSortField.AcademicYearName => Order(query, ordered, r => r.AcademicYearName,
-                    sortField.Ascending),
+                EGroupSortField.AcademicYearName => Order(query, ordered, r => r.AcademicYearName, sortField.Ascending),
                 EGroupSortField.CourseName => Order(query, ordered, r => r.CourseName, sortField.Ascending),
                 EGroupSortField.GroupSizeName => Order(query, ordered, r => r.GroupSize, sortField.Ascending),
                 EGroupSortField.StudentStatusName => Order(query, ordered, r => r.StudentStatusRate,

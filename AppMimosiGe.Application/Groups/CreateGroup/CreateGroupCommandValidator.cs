@@ -11,8 +11,7 @@ namespace AppMimosiGe.Application.Groups.CreateGroup;
 public sealed class CreateGroupCommandValidator : AbstractValidator<CreateGroupCommand>
 {
     public CreateGroupCommandValidator(IGroupsRepository repository,
-        IStudentContractsRepository studentContractsRepository,
-        ITeacherContractsRepository teacherContractsRepository)
+        IStudentContractsRepository studentContractsRepository, ITeacherContractsRepository teacherContractsRepository)
     {
         RuleFor(x => x.Request).NotNull().WithErrorCode(CrudApiErrors.UploadedInformationCouldNotBeDecrypted.Code)
             .WithMessage(CrudApiErrors.UploadedInformationCouldNotBeDecrypted.Description);

@@ -32,10 +32,8 @@ public sealed class GroupRequestValidator : AbstractValidator<GroupRequest>
         RuleFor(x => x.CourseId).MustAsync((id, ct) => studentContractsRepository.CourseExists(id, ct))
             .WithErrorCode(GroupErrors.CourseNotFound.Code).WithMessage(GroupErrors.CourseNotFound.Description);
         RuleFor(x => x.GroupSizeId).MustAsync((id, ct) => studentContractsRepository.GroupSizeExists(id, ct))
-            .WithErrorCode(GroupErrors.GroupSizeNotFound.Code)
-            .WithMessage(GroupErrors.GroupSizeNotFound.Description);
-        RuleFor(x => x.StudentStatusId)
-            .MustAsync((id, ct) => studentContractsRepository.StudentStatusExists(id, ct))
+            .WithErrorCode(GroupErrors.GroupSizeNotFound.Code).WithMessage(GroupErrors.GroupSizeNotFound.Description);
+        RuleFor(x => x.StudentStatusId).MustAsync((id, ct) => studentContractsRepository.StudentStatusExists(id, ct))
             .WithErrorCode(GroupErrors.StudentStatusNotFound.Code)
             .WithMessage(GroupErrors.StudentStatusNotFound.Description);
 
@@ -52,8 +50,7 @@ public sealed class GroupRequestValidator : AbstractValidator<GroupRequest>
         RuleFor(x => x.Teachers).Must(teachers => !GroupPeriods.AnyTeacherPeriodsOverlap(teachers))
             .When(x => x.Teachers is not null).WithErrorCode(GroupErrors.TeacherPeriodsOverlap.Code)
             .WithMessage(GroupErrors.TeacherPeriodsOverlap.Description);
-        RuleFor(x => x.DayTimePlaces)
-            .Must(dayTimePlaces => !GroupPeriods.AnyDayTimePlacePeriodsOverlap(dayTimePlaces))
+        RuleFor(x => x.DayTimePlaces).Must(dayTimePlaces => !GroupPeriods.AnyDayTimePlacePeriodsOverlap(dayTimePlaces))
             .When(x => x.DayTimePlaces is not null).WithErrorCode(GroupErrors.DayTimePlacePeriodsOverlap.Code)
             .WithMessage(GroupErrors.DayTimePlacePeriodsOverlap.Description);
     }

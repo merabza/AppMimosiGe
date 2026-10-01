@@ -129,6 +129,17 @@ public sealed class GroupsListQueryFactoryTests
         Assert.Equal(GroupErrors.FilterSortRequestIsInvalid.Code, result.Error.Code);
     }
 
+    [Theory]
+    [InlineData(1)]
+    [InlineData(1000)]
+    public void Create_PageSizeAtTheLimits_IsAccepted(int rowsCount)
+    {
+        Result<GroupsListQuery> result = GroupsListQueryFactory.Create(Request(rowsCount: rowsCount), Today);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(rowsCount, result.Value.RowsCount);
+    }
+
     // Access sorted the teacher and student find lists by the person's name
     [Theory]
     [InlineData("teacher", EGroupSortField.TeacherName)]

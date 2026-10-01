@@ -69,7 +69,11 @@ public sealed class GroupHandlersTests
         };
         group.GroupsByTeachers.Add(new GroupByTeacher
         {
-            Id = 100, GroupId = 42, TeacherContractId = 5, SalarySchemaId = 8, StartDate = StartDate
+            Id = 100,
+            GroupId = 42,
+            TeacherContractId = 5,
+            SalarySchemaId = 8,
+            StartDate = StartDate
         });
         group.GroupsByStudents.Add(new GroupByStudent
         {
@@ -81,7 +85,12 @@ public sealed class GroupHandlersTests
         });
         group.GroupDayTimePlaces.Add(new GroupDayTimePlace
         {
-            GdtpId = 300, GroupId = 42, WeekDayId = 1, LessonStartTimeId = 17, RoomId = 2, StartDate = StartDate
+            GdtpId = 300,
+            GroupId = 42,
+            WeekDayId = 1,
+            LessonStartTimeId = 17,
+            RoomId = 2,
+            StartDate = StartDate
         });
         return group;
     }
@@ -122,8 +131,7 @@ public sealed class GroupHandlersTests
             g.GrpId = 52;
         });
         var handler = new CreateGroupCommandHandler(_repository.Object, _unitOfWork.Object);
-        GroupRequest request = ValidRequest(" 1011 ", OtherDate.AddHours(10),
-            [Teacher(endDate: OtherDate.AddHours(3))],
+        GroupRequest request = ValidRequest(" 1011 ", OtherDate.AddHours(10), [Teacher(endDate: OtherDate.AddHours(3))],
             [Student(studentContractId: 20, note: "  შენიშვნა "), Student(studentContractId: 21, note: " ")],
             [DayTimePlace(weekDayId: 3, hoursCount: 2), DayTimePlace(weekDayId: 5)]);
 
@@ -171,8 +179,7 @@ public sealed class GroupHandlersTests
         GroupRequest request = ValidRequest(teachers:
         [
             Teacher(teacherContractId: 5, salarySchemaId: null, endDate: OtherDate),
-            Teacher(teacherContractId: 6, salarySchemaId: null, startDate: OtherDate,
-                endDate: OtherDate.AddMonths(1)),
+            Teacher(teacherContractId: 6, salarySchemaId: null, startDate: OtherDate, endDate: OtherDate.AddMonths(1)),
             Teacher(teacherContractId: 7, salarySchemaId: 3, startDate: OtherDate.AddMonths(1))
         ]);
 
@@ -220,9 +227,9 @@ public sealed class GroupHandlersTests
             CancellationToken.None);
 
         Assert.True(result.IsSuccess);
-        _repository.Verify(r =>
-            r.GetStudentContractsForChange(It.IsAny<IReadOnlyCollection<int>>(),
-                It.IsAny<CancellationToken>()), Times.Never);
+        _repository.Verify(
+            r => r.GetStudentContractsForChange(It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<CancellationToken>()),
+            Times.Never);
         VerifySaved(Times.Once());
     }
 
@@ -270,10 +277,9 @@ public sealed class GroupHandlersTests
         //teacher 100 gets an end, a second teacher follows; student 200 moves to contract 22, student 201 leaves,
         //contract 23 joins; the schedule row 300 is replaced by a new one
         GroupRequest request = ValidRequest("1002", teachers:
-            [
-                Teacher(100, endDate: OtherDate), Teacher(teacherContractId: 6, salarySchemaId: 4, startDate: OtherDate)
-            ], students: [Student(200, 22, fourWeekHours: 8, fourWeekFee: 60, oneHourFee: 7.5m), Student(0, 23)],
-            dayTimePlaces: [DayTimePlace(weekDayId: 4)]);
+        [
+            Teacher(100, endDate: OtherDate), Teacher(teacherContractId: 6, salarySchemaId: 4, startDate: OtherDate)
+        ], students: [Student(200, 22, 8, 60, 7.5m), Student(0, 23)], dayTimePlaces: [DayTimePlace(weekDayId: 4)]);
 
         Result result = await handler.Handle(new UpdateGroupCommand(42, request), CancellationToken.None);
 
@@ -312,8 +318,9 @@ public sealed class GroupHandlersTests
         Assert.True(result.IsSuccess);
         Assert.True(group.DirtyLessons);
         AssertLoadedContractsAreDirty(20, 21);
-        _repository.Verify(r => r.AnyStudentRowIsInUse(It.IsAny<IReadOnlyCollection<int>>(),
-            It.IsAny<CancellationToken>()), Times.Never);
+        _repository.Verify(
+            r => r.AnyStudentRowIsInUse(It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]
@@ -322,8 +329,9 @@ public sealed class GroupHandlersTests
         Group group = ExistingGroup();
         WithExistingGroup(group);
         _repository.Setup(r => r.AnyStudentRowIsInUse(
-            It.Is<IReadOnlyCollection<int>>(ids => ids.Count == 1 && ids.Contains(201)),
-            It.IsAny<CancellationToken>())).ReturnsAsync(true);
+                It.Is<IReadOnlyCollection<int>>(ids => ids.Count == 1 && ids.Contains(201)),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
         var handler = new UpdateGroupCommandHandler(_repository.Object, _unitOfWork.Object);
         GroupRequest request = ValidRequest("1099", teachers: [Teacher(100)], students: [Student(200)],
             dayTimePlaces: [DayTimePlace(300)]);
@@ -470,7 +478,8 @@ public sealed class GroupHandlersTests
         _repository.Setup(r => r.GetLessonStartTimes(It.IsAny<CancellationToken>())).ReturnsAsync(times);
         _repository.Setup(r => r.GetRooms(It.IsAny<CancellationToken>())).ReturnsAsync(rooms);
         var handler = new GetGroupFormLookupsQueryHandler(_repository.Object, studentContracts.Object,
-            teacherContractsRepository.Object, TimeProviderAt(new DateTimeOffset(2026, 9, 30, 10, 0, 0, TimeSpan.Zero)));
+            teacherContractsRepository.Object,
+            TimeProviderAt(new DateTimeOffset(2026, 9, 30, 10, 0, 0, TimeSpan.Zero)));
 
         Result<GroupFormLookupsResponse> result =
             await handler.Handle(new GetGroupFormLookupsQuery(), CancellationToken.None);
@@ -523,8 +532,7 @@ public sealed class GroupHandlersTests
             await handler.Handle(new GetGroupsRowsDataQuery(Encode(json)), CancellationToken.None);
 
         Assert.True(result.IsFailure);
-        _repository.Verify(r => r.GetRowsData(It.IsAny<GroupsListQuery>(), It.IsAny<CancellationToken>()),
-            Times.Never);
+        _repository.Verify(r => r.GetRowsData(It.IsAny<GroupsListQuery>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
