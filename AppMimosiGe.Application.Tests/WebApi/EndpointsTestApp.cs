@@ -15,6 +15,13 @@ using AppMimosiGe.Application.Lessons.GetLesson;
 using AppMimosiGe.Application.Lessons.GetLessonFormLookups;
 using AppMimosiGe.Application.Lessons.GetLessonsRowsData;
 using AppMimosiGe.Application.Lessons.UpdateLesson;
+using AppMimosiGe.Application.Payments.CreatePayment;
+using AppMimosiGe.Application.Payments.DeletePayment;
+using AppMimosiGe.Application.Payments.GetPayment;
+using AppMimosiGe.Application.Payments.GetPaymentFormLookups;
+using AppMimosiGe.Application.Payments.GetPaymentsRowsData;
+using AppMimosiGe.Application.Payments.GetPaymentStudentContracts;
+using AppMimosiGe.Application.Payments.UpdatePayment;
 using AppMimosiGe.Application.StudentContracts.CreateStudentContract;
 using AppMimosiGe.Application.StudentContracts.DeleteStudentContract;
 using AppMimosiGe.Application.StudentContracts.GetStudentContract;
@@ -81,6 +88,15 @@ internal static class EndpointsTestApp
         builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetLessonFormLookupsQuery, LessonFormLookupsResponse>>());
         builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetLessonQuery, LessonResponse>>());
         builder.Services.AddSingleton(Mock.Of<ICommandHandler<UpdateLessonCommand>>());
+        builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetPaymentsRowsDataQuery, PaymentsRowsDataResponse>>());
+        builder.Services.AddSingleton(Mock
+            .Of<IQueryHandler<GetPaymentFormLookupsQuery, PaymentFormLookupsResponse>>());
+        builder.Services.AddSingleton(Mock
+            .Of<IQueryHandler<GetPaymentStudentContractsQuery, List<LookupItemResponse>>>());
+        builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetPaymentQuery, PaymentResponse>>());
+        builder.Services.AddSingleton(Mock.Of<ICommandHandler<CreatePaymentCommand, int>>());
+        builder.Services.AddSingleton(Mock.Of<ICommandHandler<UpdatePaymentCommand>>());
+        builder.Services.AddSingleton(Mock.Of<ICommandHandler<DeletePaymentCommand>>());
         return builder.Build();
     }
 

@@ -1,9 +1,12 @@
 using AppMimosiGe.Application.Groups;
 using AppMimosiGe.Application.LessonGenerator;
 using AppMimosiGe.Application.Lessons;
+using AppMimosiGe.Application.Payments;
+using AppMimosiGe.Application.Rights;
 using AppMimosiGe.Application.StudentContracts;
 using AppMimosiGe.Application.TeacherContracts;
 using AppMimosiGe.Infrastructure.Repositories;
+using AppMimosiGe.Infrastructure.Rights;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 
@@ -22,6 +25,8 @@ public static class AppMimosiGeInfrastructureDependencyInjection
         services.AddScoped<IGroupsRepository, GroupsRepository>();
         services.AddScoped<ILessonGeneratorRepository, LessonGeneratorRepository>();
         services.AddScoped<ILessonsRepository, LessonsRepository>();
+        services.AddScoped<IPaymentsRepository, PaymentsRepository>();
+        services.AddScoped<IUserClaimRights, UserClaimRights>();
 
         debugLogger?.Information("{MethodName} Finished", nameof(AddAppMimosiGeInfrastructure));
 
