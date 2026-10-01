@@ -4,6 +4,7 @@
         <PackageReference Include="Serilog" />
     </ItemGroup>
     <ItemGroup>
+        <ProjectReference Include="..\..\BackendCarcass\BackendCarcass.Application\BackendCarcass.Application.csproj" />
         <ProjectReference Include="..\..\MimosiGeCore\MimosiGeCore.Application.Abstractions\MimosiGeCore.Application.Abstractions.csproj" />
         <ProjectReference Include="..\AppMimosiGe.Application\AppMimosiGe.Application.csproj" />
     </ItemGroup>

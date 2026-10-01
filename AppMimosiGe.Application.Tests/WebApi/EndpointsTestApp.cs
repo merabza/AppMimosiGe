@@ -89,10 +89,9 @@ internal static class EndpointsTestApp
         builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetLessonQuery, LessonResponse>>());
         builder.Services.AddSingleton(Mock.Of<ICommandHandler<UpdateLessonCommand>>());
         builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetPaymentsRowsDataQuery, PaymentsRowsDataResponse>>());
-        builder.Services.AddSingleton(Mock
-            .Of<IQueryHandler<GetPaymentFormLookupsQuery, PaymentFormLookupsResponse>>());
-        builder.Services.AddSingleton(Mock
-            .Of<IQueryHandler<GetPaymentStudentContractsQuery, List<LookupItemResponse>>>());
+        builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetPaymentFormLookupsQuery, PaymentFormLookupsResponse>>());
+        builder.Services.AddSingleton(
+            Mock.Of<IQueryHandler<GetPaymentStudentContractsQuery, List<LookupItemResponse>>>());
         builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetPaymentQuery, PaymentResponse>>());
         builder.Services.AddSingleton(Mock.Of<ICommandHandler<CreatePaymentCommand, int>>());
         builder.Services.AddSingleton(Mock.Of<ICommandHandler<UpdatePaymentCommand>>());

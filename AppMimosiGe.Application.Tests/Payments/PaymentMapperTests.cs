@@ -17,15 +17,16 @@ public sealed class PaymentMapperTests
         var payment = new Payment { Id = 5, Document = "old", Checked = false };
 
         // Act
-        PaymentMapper.ApplyFields(payment, new PaymentRequest
-        {
-            StudentContractId = 12,
-            PayDate = new DateTime(2026, 9, 15, 23, 59, 59, DateTimeKind.Unspecified),
-            Amount = 99.99m,
-            Document = null,
-            BankAccountId = 8,
-            Checked = true
-        });
+        PaymentMapper.ApplyFields(payment,
+            new PaymentRequest
+            {
+                StudentContractId = 12,
+                PayDate = new DateTime(2026, 9, 15, 23, 59, 59, DateTimeKind.Unspecified),
+                Amount = 99.99m,
+                Document = null,
+                BankAccountId = 8,
+                Checked = true
+            });
 
         // Assert
         Assert.Equal(5, payment.Id);

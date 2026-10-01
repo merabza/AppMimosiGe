@@ -38,8 +38,9 @@ public sealed class PaymentsRepository(IMimosiGeDbContext context) : IPaymentsRe
             Id = p.Id,
             StudentContractId = p.StudentContractId,
             //Access-ის ფორმის ჩამოსაშლელი სიის სახელი: გვარი სახელი ნომერი
-            StudentName = p.StudentContract.StudentHuman.LastName + " " + p.StudentContract.StudentHuman.FirstName +
-                          " " + p.StudentContract.ContractNumber,
+            StudentName =
+                p.StudentContract.StudentHuman.LastName + " " + p.StudentContract.StudentHuman.FirstName + " " +
+                p.StudentContract.ContractNumber,
             PayDate = p.PayDate,
             Amount = p.Amount,
             Document = p.Document,

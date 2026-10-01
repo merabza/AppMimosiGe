@@ -31,7 +31,9 @@ public sealed class UpdatePaymentCommandHandler(
         if ((payment.Checked || request.Checked) &&
             !await claimRights.HasClaim(PaymentClaims.CheckPayments, cancellationToken))
         {
-            return Result.Failure(payment.Checked ? PaymentErrors.PaymentIsChecked : PaymentErrors.CheckedRequiresRight);
+            return Result.Failure(payment.Checked
+                ? PaymentErrors.PaymentIsChecked
+                : PaymentErrors.CheckedRequiresRight);
         }
 
         //კონტრაქტის შეცვლისას ძველი კონტრაქტის ბალანსიც იცვლება

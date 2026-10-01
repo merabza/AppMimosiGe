@@ -34,8 +34,8 @@ public sealed class PaymentHandlersTests
 
     //the contracts the handler loaded to mark dirty, and the ids it asked for
     private readonly List<StudentContract> _loadedContracts = [];
-    private readonly List<int> _requestedContractIds = [];
     private readonly Mock<IPaymentsRepository> _repository = new();
+    private readonly List<int> _requestedContractIds = [];
     private readonly Mock<IUnitOfWork> _unitOfWork = new();
 
     public PaymentHandlersTests()
@@ -423,8 +423,7 @@ public sealed class PaymentHandlersTests
 
         // Act
         Result<PaymentResponse> result =
-            await new GetPaymentQueryHandler(_repository.Object).Handle(new GetPaymentQuery(5),
-                CancellationToken.None);
+            await new GetPaymentQueryHandler(_repository.Object).Handle(new GetPaymentQuery(5), CancellationToken.None);
 
         // Assert
         Assert.Same(payment, result.Value);
@@ -435,8 +434,7 @@ public sealed class PaymentHandlersTests
     {
         // Act
         Result<PaymentResponse> result =
-            await new GetPaymentQueryHandler(_repository.Object).Handle(new GetPaymentQuery(5),
-                CancellationToken.None);
+            await new GetPaymentQueryHandler(_repository.Object).Handle(new GetPaymentQuery(5), CancellationToken.None);
 
         // Assert
         AssertError(result, PaymentErrors.PaymentNotFound);
@@ -508,10 +506,10 @@ public sealed class PaymentHandlersTests
             .Callback<PaymentsListQuery, CancellationToken>((q, _) => passed = q).ReturnsAsync(rows);
 
         // Act
-        Result<PaymentsRowsDataResponse> result =
-            await new GetPaymentsRowsDataQueryHandler(_repository.Object).Handle(new GetPaymentsRowsDataQuery(Encode(
+        Result<PaymentsRowsDataResponse> result = await new GetPaymentsRowsDataQueryHandler(_repository.Object).Handle(
+            new GetPaymentsRowsDataQuery(Encode(
                 """{"offset":10,"rowsCount":5,"filterFields":[{"fieldName":"bankAccountId","value":"4"},{"fieldName":"dateFrom","value":"2026-09-01"}]}""")),
-                CancellationToken.None);
+            CancellationToken.None);
 
         // Assert
         Assert.Same(rows, result.Value);
@@ -542,10 +540,10 @@ public sealed class PaymentHandlersTests
     public async Task GetRowsData_InvalidFilter_IsInvalidAndNotLoaded()
     {
         // Act
-        Result<PaymentsRowsDataResponse> result =
-            await new GetPaymentsRowsDataQueryHandler(_repository.Object).Handle(new GetPaymentsRowsDataQuery(Encode(
-                """{"offset":0,"rowsCount":5,"filterFields":[{"fieldName":"bankAccountId","value":"x"}]}""")),
-                CancellationToken.None);
+        Result<PaymentsRowsDataResponse> result = await new GetPaymentsRowsDataQueryHandler(_repository.Object).Handle(
+            new GetPaymentsRowsDataQuery(
+                Encode("""{"offset":0,"rowsCount":5,"filterFields":[{"fieldName":"bankAccountId","value":"x"}]}""")),
+            CancellationToken.None);
 
         // Assert
         AssertError(result, PaymentErrors.FilterSortRequestIsInvalid);

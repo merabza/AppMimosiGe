@@ -43,8 +43,7 @@ public sealed class PaymentsListQueryFactoryTests
         Assert.Null(query.BankAccountId);
         Assert.Null(query.DateFrom);
         Assert.Null(query.DateTo);
-        Assert.Equal(
-        [
+        Assert.Equal([
             new PaymentSortField(EPaymentSortField.PayDate, true),
             new PaymentSortField(EPaymentSortField.StudentName, true)
         ], query.SortFields);
@@ -89,7 +88,9 @@ public sealed class PaymentsListQueryFactoryTests
     public void Create_SameDayRange_IsValid()
     {
         Result<PaymentsListQuery> result =
-            PaymentsListQueryFactory.Create(Request([Filter("dateFrom", "2026-09-15"), Filter("dateTo", "2026-09-15")]));
+            PaymentsListQueryFactory.Create(Request([
+                Filter("dateFrom", "2026-09-15"), Filter("dateTo", "2026-09-15")
+            ]));
 
         Assert.True(result.IsSuccess);
         Assert.Equal(result.Value.DateFrom, result.Value.DateTo);
@@ -110,8 +111,9 @@ public sealed class PaymentsListQueryFactoryTests
     [Fact]
     public void Create_DateFromAfterDateTo_IsInvalid()
     {
-        AssertInvalid(
-            PaymentsListQueryFactory.Create(Request([Filter("dateFrom", "2026-09-16"), Filter("dateTo", "2026-09-15")])));
+        AssertInvalid(PaymentsListQueryFactory.Create(Request([
+            Filter("dateFrom", "2026-09-16"), Filter("dateTo", "2026-09-15")
+        ])));
     }
 
     [Fact]
@@ -124,8 +126,10 @@ public sealed class PaymentsListQueryFactoryTests
 
         Assert.True(result.IsSuccess);
         Assert.Equal([
-            new PaymentSortField(EPaymentSortField.Amount, false), new PaymentSortField(EPaymentSortField.BankName, true),
-            new PaymentSortField(EPaymentSortField.Document, false), new PaymentSortField(EPaymentSortField.Checked, true),
+            new PaymentSortField(EPaymentSortField.Amount, false),
+            new PaymentSortField(EPaymentSortField.BankName, true),
+            new PaymentSortField(EPaymentSortField.Document, false),
+            new PaymentSortField(EPaymentSortField.Checked, true),
             new PaymentSortField(EPaymentSortField.StudentName, true)
         ], result.Value.SortFields);
     }

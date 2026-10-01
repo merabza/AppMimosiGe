@@ -63,6 +63,13 @@ public sealed class PaymentsRepositoryTests : IDisposable
         _context.SaveChanges();
     }
 
+    private void AddAndSave(params object[] entities)
+    {
+        _context.AddRange(entities);
+        _context.SaveChanges();
+        _context.ChangeTracker.Clear();
+    }
+
     private static Human Human(int id, string lastName, string firstName)
     {
         return new Human { HumId = id, LastName = lastName, FirstName = firstName, PersonalId = $"0100000000{id}" };
@@ -196,6 +203,54 @@ public sealed class PaymentsRepositoryTests : IDisposable
         Assert.Equal([5], data.Rows.Select(r => r.Id));
     }
 
+    // an offset right at the end is no page either
+    [Fact]
+    public async Task GetRowsData_OffsetAtTheEnd_ShowsTheLastPage()
+    {
+        PaymentsRowsDataResponse data = await _repository.GetRowsData(Query(offset: 5, rowsCount: 5));
+
+        Assert.Equal(0, data.Offset);
+        Assert.Equal([4, 1, 2, 3, 5], data.Rows.Select(r => r.Id));
+    }
+
+    // with no rows there is no last page to move to
+    [Fact]
+    public async Task GetRowsData_NothingFound_KeepsTheOffset()
+    {
+        PaymentsRowsDataResponse data = await _repository.GetRowsData(Query(13, offset: 10, rowsCount: 5));
+
+        Assert.Equal(10, data.Offset);
+        Assert.Empty(data.Rows);
+    }
+
+    // "until 02.09" ends before the payments of 03.09 00:00
+    [Fact]
+    public async Task GetRowsData_DateTo_ExcludesTheNextDaysMidnight()
+    {
+        await AssertIds(Query(dateTo: At(9, 2)), 4);
+    }
+
+    // a second sort field breaks the ties of the first, in its own direction
+    [Fact]
+    public async Task GetRowsData_SortsBySeveralFields()
+    {
+        await AssertIds(Query(sortFields:
+        [
+            new PaymentSortField(EPaymentSortField.PayDate, true),
+            new PaymentSortField(EPaymentSortField.StudentName, false)
+        ]), 4, 2, 1, 3, 5);
+    }
+
+    [Fact]
+    public async Task GetRowsData_UnknownSortField_Throws()
+    {
+        var exception = await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
+            _repository.GetRowsData(Query(sortFields: [new PaymentSortField((EPaymentSortField)99, true)])));
+
+        Assert.Equal("sortFields", exception.ParamName);
+        Assert.Contains("უცნობი დალაგების ველი", exception.Message, StringComparison.Ordinal);
+    }
+
     [Fact]
     public async Task GetRowsData_NothingFound_HasZeroSum()
     {
@@ -264,17 +319,43 @@ public sealed class PaymentsRepositoryTests : IDisposable
     [Fact]
     public async Task GetBankAccounts_AreSortedByName()
     {
-        Assert.Equal([new LookupItemResponse(4, "Alpha Bank"), new LookupItemResponse(8, "Last Year"),
-            new LookupItemResponse(1, "Zeta Bank")], await _repository.GetBankAccounts());
+        Assert.Equal([
+            new LookupItemResponse(4, "Alpha Bank"), new LookupItemResponse(8, "Last Year"),
+            new LookupItemResponse(1, "Zeta Bank")
+        ], await _repository.GetBankAccounts());
+    }
+
+    // the name is not unique (only the code is): equal names keep the ID order
+    [Fact]
+    public async Task GetBankAccounts_WithEqualNames_AreSortedById()
+    {
+        AddAndSave(BankAccount(2, "Zeta Bank"));
+
+        List<LookupItemResponse> bankAccounts = await _repository.GetBankAccounts();
+
+        Assert.Equal([1, 2], bankAccounts.Where(b => b.Name == "Zeta Bank").Select(b => b.Id));
     }
 
     [Fact]
     public async Task GetStudentContracts_ListsTheYearsContractsByName()
     {
-        Assert.Equal([new LookupItemResponse(10, "Alpha Ann 6.001"), new LookupItemResponse(11, "Beta Bob 6.002"),
-            new LookupItemResponse(13, "Gamma Gia 6.003")], await _repository.GetStudentContracts(11));
+        Assert.Equal([
+            new LookupItemResponse(10, "Alpha Ann 6.001"), new LookupItemResponse(11, "Beta Bob 6.002"),
+            new LookupItemResponse(13, "Gamma Gia 6.003")
+        ], await _repository.GetStudentContracts(11));
         Assert.Equal([new LookupItemResponse(12, "Gamma Gia 6.001")], await _repository.GetStudentContracts(10));
         Assert.Empty(await _repository.GetStudentContracts(99));
+    }
+
+    // equal names (a number repeated by mistake) keep the ID order, so the list is stable
+    [Fact]
+    public async Task GetStudentContracts_WithEqualNames_AreSortedById()
+    {
+        AddAndSave(StudentContract(14, "6.001", 1, 11));
+
+        List<LookupItemResponse> contracts = await _repository.GetStudentContracts(11);
+
+        Assert.Equal([10, 14], contracts.Where(c => c.Name == "Alpha Ann 6.001").Select(c => c.Id));
     }
 
     [Fact]

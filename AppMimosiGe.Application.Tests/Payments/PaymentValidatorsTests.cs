@@ -12,6 +12,7 @@ using BackendCarcassShared.Contracts.Errors;
 using FluentValidation.Results;
 using Moq;
 using Xunit;
+using Range = Moq.Range;
 
 namespace AppMimosiGe.Application.Tests.Payments;
 
@@ -24,8 +25,8 @@ public sealed class PaymentValidatorsTests
     public PaymentValidatorsTests()
     {
         _repository.Setup(r => r.StudentContractExists(10, It.IsAny<CancellationToken>())).ReturnsAsync(true);
-        _repository.Setup(r => r.BankAccountExists(It.IsInRange(1, 9, Moq.Range.Inclusive),
-            It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        _repository.Setup(r => r.BankAccountExists(It.IsInRange(1, 9, Range.Inclusive), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
     }
 
     private static PaymentRequest Request(int studentContractId = 10, DateTime? payDate = null, decimal amount = 150m,
@@ -88,7 +89,8 @@ public sealed class PaymentValidatorsTests
     [Fact]
     public async Task EmptyPayDate_IsRequired()
     {
-        Assert.Equal([PaymentErrors.PayDateIsRequired.Code], await CreateErrorCodes(Request(payDate: DateTime.MinValue)));
+        Assert.Equal([PaymentErrors.PayDateIsRequired.Code],
+            await CreateErrorCodes(Request(payDate: DateTime.MinValue)));
     }
 
     [Fact]

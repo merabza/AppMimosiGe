@@ -48,8 +48,7 @@ public static class PaymentsEndpoints
 
     // GET api/v1/payments/rowsdata?filterSortRequest={base64}
     internal static async Task<Results<Ok<PaymentsRowsDataResponse>, ProblemHttpResult>> GetRowsData(
-        [FromQuery] string filterSortRequest,
-        IQueryHandler<GetPaymentsRowsDataQuery, PaymentsRowsDataResponse> handler,
+        [FromQuery] string filterSortRequest, IQueryHandler<GetPaymentsRowsDataQuery, PaymentsRowsDataResponse> handler,
         CancellationToken cancellationToken = default)
     {
         Result<PaymentsRowsDataResponse> result =

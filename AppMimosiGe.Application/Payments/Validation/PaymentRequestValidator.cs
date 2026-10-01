@@ -32,8 +32,8 @@ public sealed class PaymentRequestValidator : AbstractValidator<PaymentRequest>
             .WithMessage(PaymentErrors.AmountHasTooManyDecimals.Description);
 
         //სიგრძე მოწმდება ისე, როგორც ინახება: trim-ის შემდეგ
-        RuleFor(x => x.Document).Must(document => (PaymentMapper.NormalizeText(document)?.Length ?? 0) <=
-                                                  DocumentMaxLength)
+        RuleFor(x => x.Document)
+            .Must(document => (PaymentMapper.NormalizeText(document)?.Length ?? 0) <= DocumentMaxLength)
             .WithErrorCode(PaymentErrors.DocumentIsTooLong.Code)
             .WithMessage(PaymentErrors.DocumentIsTooLong.Description);
 

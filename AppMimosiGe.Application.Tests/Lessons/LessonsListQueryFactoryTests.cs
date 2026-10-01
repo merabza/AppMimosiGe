@@ -47,8 +47,7 @@ public sealed class LessonsListQueryFactoryTests
         Assert.Null(query.DateTo);
         Assert.Null(query.LessonStatusId);
         Assert.False(query.Unfilled);
-        Assert.Equal(
-        [
+        Assert.Equal([
             new LessonSortField(ELessonSortField.LessonDt, true), new LessonSortField(ELessonSortField.GroupCode, true)
         ], query.SortFields);
     }

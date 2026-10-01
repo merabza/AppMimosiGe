@@ -41,8 +41,7 @@ public sealed class PaymentsEndpointsTests
         return handler;
     }
 
-    private static Mock<ICommandHandler<TCommand>> CommandHandler<TCommand>(Result result)
-        where TCommand : ICommand
+    private static Mock<ICommandHandler<TCommand>> CommandHandler<TCommand>(Result result) where TCommand : ICommand
     {
         var handler = new Mock<ICommandHandler<TCommand>>();
         handler.Setup(h => h.Handle(It.IsAny<TCommand>(), It.IsAny<CancellationToken>())).ReturnsAsync(result);
@@ -221,8 +220,7 @@ public sealed class PaymentsEndpointsTests
     {
         // Arrange
         var request = new PaymentRequest { StudentContractId = 10 };
-        Mock<ICommandHandler<UpdatePaymentCommand>> handler =
-            CommandHandler<UpdatePaymentCommand>(Result.Success());
+        Mock<ICommandHandler<UpdatePaymentCommand>> handler = CommandHandler<UpdatePaymentCommand>(Result.Success());
 
         // Act
         Results<Ok, ProblemHttpResult> result = await PaymentsEndpoints.Update(5, request, handler.Object);
