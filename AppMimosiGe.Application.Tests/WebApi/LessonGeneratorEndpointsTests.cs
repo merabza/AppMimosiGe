@@ -26,8 +26,8 @@ namespace AppMimosiGe.Application.Tests.WebApi;
 
 public sealed class LessonGeneratorEndpointsTests
 {
-    private static readonly LessonsGenerationResponse Generation =
-        new(false, new DateTime(2027, 11, 30, 0, 0, 0, DateTimeKind.Unspecified), 0, []);
+    private static readonly LessonsGenerationResponse Generation = new(false,
+        new DateTime(2027, 11, 30, 0, 0, 0, DateTimeKind.Unspecified), 0, []);
 
     private static Mock<ICommandHandler<TCommand, TResponse>> CommandHandler<TCommand, TResponse>(
         Result<TResponse> result) where TCommand : ICommand<TResponse>
@@ -73,8 +73,8 @@ public sealed class LessonGeneratorEndpointsTests
     public async Task GenerateGroupLastLesson_Success_ReturnsOkAndPassesTheGroup()
     {
         // Arrange
-        var lastLesson = new GroupLastLessonResponse(100,
-            new DateTime(2026, 9, 28, 15, 0, 0, DateTimeKind.Unspecified), Generation);
+        var lastLesson = new GroupLastLessonResponse(100, new DateTime(2026, 9, 28, 15, 0, 0, DateTimeKind.Unspecified),
+            Generation);
         Mock<ICommandHandler<GenerateGroupLastLessonCommand, GroupLastLessonResponse>> handler =
             CommandHandler<GenerateGroupLastLessonCommand, GroupLastLessonResponse>(lastLesson);
 
@@ -84,8 +84,7 @@ public sealed class LessonGeneratorEndpointsTests
 
         // Assert
         Assert.Same(lastLesson, Assert.IsType<Ok<GroupLastLessonResponse>>(result.Result).Value);
-        handler.Verify(h => h.Handle(new GenerateGroupLastLessonCommand(7), It.IsAny<CancellationToken>()),
-            Times.Once);
+        handler.Verify(h => h.Handle(new GenerateGroupLastLessonCommand(7), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -167,8 +166,7 @@ public sealed class LessonGeneratorEndpointsTests
 
         // Assert
         Assert.Same(rows, Assert.IsType<Ok<List<LessonGeneratorLogRowResponse>>>(result.Result).Value);
-        handler.Verify(h => h.Handle(new GetLessonGeneratorLogQuery(grpId), It.IsAny<CancellationToken>()),
-            Times.Once);
+        handler.Verify(h => h.Handle(new GetLessonGeneratorLogQuery(grpId), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -230,6 +228,26 @@ public sealed class LessonGeneratorEndpointsTests
 
         // Act
         app.UseLessonGeneratorEndpoints(logger.Object);
+
+        // Assert
+        logger.Verify(
+            l => l.Information("{MethodName} Started", nameof(LessonGeneratorEndpoints.UseLessonGeneratorEndpoints)),
+            Times.Once);
+        logger.Verify(
+            l => l.Information("{MethodName} Finished", nameof(LessonGeneratorEndpoints.UseLessonGeneratorEndpoints)),
+            Times.Once);
+    }
+
+    // UseAppMimosiGeApi hands its debug logger on to the lesson generator endpoints
+    [Fact]
+    public async Task UseAppMimosiGeApi_WithDebugLogger_LogsTheLessonGeneratorStep()
+    {
+        // Arrange
+        await using WebApplication app = EndpointsTestApp.Build();
+        var logger = new Mock<ILogger>();
+
+        // Act
+        app.UseAppMimosiGeApi(logger.Object);
 
         // Assert
         logger.Verify(

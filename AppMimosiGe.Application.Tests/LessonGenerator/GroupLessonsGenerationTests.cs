@@ -101,8 +101,7 @@ public sealed class GroupLessonsGenerationTests
         GenerationHorizon horizon = await GroupLessonsGeneration.PrepareOperationMonths(_repository.Object,
             _unitOfWork.Object, Now, false, CancellationToken.None);
 
-        Assert.Equal(new GenerationHorizon(new DateTime(2027, 11, 30, 0, 0, 0, DateTimeKind.Unspecified), 0),
-            horizon);
+        Assert.Equal(new GenerationHorizon(new DateTime(2027, 11, 30, 0, 0, 0, DateTimeKind.Unspecified), 0), horizon);
         _repository.Verify(r => r.MarkAllDirty(It.IsAny<CancellationToken>()), Times.Never);
         _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -123,8 +122,7 @@ public sealed class GroupLessonsGenerationTests
     public async Task Run_DryRun_LoadsWithoutTrackingAndWritesNothing()
     {
         // Arrange
-        _repository.Setup(r => r.GetGroupForGeneration(42, false, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Group());
+        _repository.Setup(r => r.GetGroupForGeneration(42, false, It.IsAny<CancellationToken>())).ReturnsAsync(Group());
 
         // Act
         GroupGenerationResult? result = await GroupLessonsGeneration.Run(_repository.Object, _unitOfWork.Object, 42,
@@ -168,9 +166,10 @@ public sealed class GroupLessonsGenerationTests
         Assert.Equal([500, 501, 502, 503], result.Response.Changes.Select(c => c.LessonId!.Value));
         Assert.False(group.DirtyLessons);
         Assert.Equal(1, result.Response.DirtyStudentContractsCount);
-        _repository.Verify(r => r.GetStudentContractsForChange(
-            It.Is<IReadOnlyCollection<int>>(ids => ids.Count == 1 && ids.Contains(10)),
-            It.IsAny<CancellationToken>()), Times.Once);
+        _repository.Verify(
+            r => r.GetStudentContractsForChange(
+                It.Is<IReadOnlyCollection<int>>(ids => ids.Count == 1 && ids.Contains(10)),
+                It.IsAny<CancellationToken>()), Times.Once);
         _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
         Assert.Null(result.LastLesson);
         Assert.Null(result.LastLessonId);
@@ -180,12 +179,10 @@ public sealed class GroupLessonsGenerationTests
     public async Task Run_LastLessonCreated_ReturnsItsSavedId()
     {
         // Arrange
-        _repository.Setup(r => r.GetGroupForGeneration(42, true, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Group());
+        _repository.Setup(r => r.GetGroupForGeneration(42, true, It.IsAny<CancellationToken>())).ReturnsAsync(Group());
         Lesson? added = null;
         _repository.Setup(r => r.AddLesson(It.IsAny<Lesson>())).Callback<Lesson>(lesson => added = lesson);
-        _unitOfWork.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
-            .Callback(() => added!.Id = 777);
+        _unitOfWork.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).Callback(() => added!.Id = 777);
 
         // Act
         GroupGenerationResult? result = await GroupLessonsGeneration.Run(_repository.Object, _unitOfWork.Object, 42,
@@ -247,7 +244,6 @@ public sealed class GroupLessonsGenerationTests
             true, Now, input => GroupLessonsPlanner.PlanGroup(input, SeptemberEnd), CancellationToken.None);
 
         Assert.NotNull(result);
-        Assert.Equal([new LessonGeneratorErrorResponse(6, "no teacher", Date(9, 14), null)],
-            result.Response.Errors);
+        Assert.Equal([new LessonGeneratorErrorResponse(6, "no teacher", Date(9, 14), null)], result.Response.Errors);
     }
 }

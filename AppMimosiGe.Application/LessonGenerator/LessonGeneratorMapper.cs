@@ -29,22 +29,17 @@ public static class LessonGeneratorMapper
     //ჯგუფი უნდა იყოს ჩატვირთული GetGroupForGeneration-ით (განრიგი დაწყების დროით, გაკვეთილები მოსწავლეებით)
     public static GroupLessonsInput ToInput(Group group)
     {
-        return new GroupLessonsInput(group.VoidDate,
-        [
+        return new GroupLessonsInput(group.VoidDate, [
             .. group.GroupsByTeachers.OrderBy(t => t.Id).Select(t =>
                 new GeneratorTeacherRow(t.TeacherContractId, t.SalarySchemaId, t.StartDate, t.EndDate))
-        ],
-        [
+        ], [
             .. group.GroupsByStudents.Select(s => new GeneratorStudentRow(s.GbsId, s.StudentContractId,
                 s.HoursCoefficient, s.FourWeekHours, s.StartDate, s.EndDate))
-        ],
-        [
+        ], [
             .. group.GroupDayTimePlaces.OrderBy(d => d.GdtpId).Select(d => new GeneratorDayTimePlaceRow(d.WeekDayId,
                 d.LessonStartTime.LstTime, d.HoursCount, d.StartDate, d.EndDate))
-        ],
-        [
-            .. group.Lessons.Select(l => new ExistingLesson(l.Id, ToValues(l),
-            [
+        ], [
+            .. group.Lessons.Select(l => new ExistingLesson(l.Id, ToValues(l), [
                 .. l.LessonsByStudents.Select(s => new ExistingLessonStudent(s.Id, s.StudentContractId,
                     s.GroupByStudentId, s.HoursCount, HasEnteredData(s)))
             ]))
@@ -164,8 +159,8 @@ public static class LessonGeneratorMapper
 
     private static LessonValues ToValues(Lesson lesson)
     {
-        return new LessonValues(lesson.LessonDt, lesson.TeacherContractId, lesson.SalarySchemaId,
-            lesson.FourWeekHours, lesson.TeoMinDate, lesson.TeoMaxDate);
+        return new LessonValues(lesson.LessonDt, lesson.TeacherContractId, lesson.SalarySchemaId, lesson.FourWeekHours,
+            lesson.TeoMinDate, lesson.TeoMaxDate);
     }
 
     /// <summary>
@@ -183,8 +178,7 @@ public static class LessonGeneratorMapper
             updatedLessonsStudents.Count(s => s.Kind == EStudentRowChangeKind.Add),
             updatedLessonsStudents.Count(s => s.Kind == EStudentRowChangeKind.Update),
             updatedLessonsStudents.Count(s => s.Kind == EStudentRowChangeKind.Delete),
-            plan.DirtyStudentContractIds.Count,
-            [
+            plan.DirtyStudentContractIds.Count, [
                 .. plan.Logs.Select(log => new LessonGeneratorErrorResponse(log.ErrorCode,
                     errorTexts.GetValueOrDefault(log.ErrorCode, string.Empty), log.LessonDate, log.LessonId))
             ], [.. plan.Changes.Select(change => ToChangeResponse(change, createdLessons))]);

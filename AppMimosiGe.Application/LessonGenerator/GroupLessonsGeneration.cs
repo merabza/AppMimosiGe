@@ -39,8 +39,8 @@ public static class GroupLessonsGeneration
     ///     ერთი ჯგუფის გენერაცია ერთ ტრანზაქციაში: ჯგუფის მონაცემები და გაკვეთილები ერთად იტვირთება, გეგმა ითვლება და
     ///     ყველა ცვლილება ერთი SaveChanges-ით იწერება. dry-run-ში მხოლოდ გეგმა ბრუნდება. null: ჯგუფი არ არსებობს
     /// </summary>
-    public static async Task<GroupGenerationResult?> Run(ILessonGeneratorRepository repository,
-        IUnitOfWork unitOfWork, int grpId, bool dryRun, DateTime now, Func<GroupLessonsInput, GroupLessonsPlan> planner,
+    public static async Task<GroupGenerationResult?> Run(ILessonGeneratorRepository repository, IUnitOfWork unitOfWork,
+        int grpId, bool dryRun, DateTime now, Func<GroupLessonsInput, GroupLessonsPlan> planner,
         CancellationToken cancellationToken)
     {
         Group? group = await repository.GetGroupForGeneration(grpId, !dryRun, cancellationToken);

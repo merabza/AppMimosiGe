@@ -11,6 +11,7 @@ internal static class LessonGeneratorTestData
 {
     public const int Monday = 1;
     public const int Wednesday = 3;
+    public const int Thursday = 4;
     public const int Sunday = 7;
 
     public static readonly DateTime SeptemberEnd = Date(9, 30);

@@ -75,10 +75,9 @@ public sealed class LessonGeneratorRepository(IMimosiGeDbContext context) : ILes
             logs = logs.Where(x => x.GroupId == grpId);
         }
 
-        return logs.OrderBy(x => x.Group.GroupCode).ThenBy(x => x.GroupId).ThenBy(x => x.LessonDate)
-            .ThenBy(x => x.Id).Select(x => new LessonGeneratorLogRowResponse(x.Id, x.CreatedDate, x.GroupId,
-                x.Group.GroupCode, x.ErrorLogTextId, x.ErrorLogText.Text, x.LessonDate, x.LessonId))
-            .ToListAsync(cancellationToken);
+        return logs.OrderBy(x => x.Group.GroupCode).ThenBy(x => x.GroupId).ThenBy(x => x.LessonDate).ThenBy(x => x.Id)
+            .Select(x => new LessonGeneratorLogRowResponse(x.Id, x.CreatedDate, x.GroupId, x.Group.GroupCode,
+                x.ErrorLogTextId, x.ErrorLogText.Text, x.LessonDate, x.LessonId)).ToListAsync(cancellationToken);
     }
 
     public void AddLesson(Lesson lesson)

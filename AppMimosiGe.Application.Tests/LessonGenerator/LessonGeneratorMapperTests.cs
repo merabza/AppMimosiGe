@@ -28,7 +28,11 @@ public sealed class LessonGeneratorMapperTests
         });
         group.GroupsByTeachers.Add(new GroupByTeacher
         {
-            Id = 11, TeacherContractId = 5, SalarySchemaId = 8, StartDate = Date(9, 1), EndDate = Date(9, 16)
+            Id = 11,
+            TeacherContractId = 5,
+            SalarySchemaId = 8,
+            StartDate = Date(9, 1),
+            EndDate = Date(9, 16)
         });
         group.GroupsByStudents.Add(new GroupByStudent
         {
@@ -69,7 +73,11 @@ public sealed class LessonGeneratorMapperTests
         };
         lesson.LessonsByStudents.Add(new LessonByStudent
         {
-            Id = 200, LessonId = 100, StudentContractId = 10, GroupByStudentId = 1, HoursCount = 0.75f
+            Id = 200,
+            LessonId = 100,
+            StudentContractId = 10,
+            GroupByStudentId = 1,
+            HoursCount = 0.75f
         });
         lesson.LessonsByStudents.Add(new LessonByStudent
         {
@@ -103,8 +111,7 @@ public sealed class LessonGeneratorMapperTests
         Assert.Equal(Date(12, 1), input.VoidDate);
         Assert.Equal([Teacher(5, 8, Date(9, 1), Date(9, 16)), Teacher(6, 9, Date(9, 16))], input.Teachers);
         Assert.Equal([Student(1, 10, Date(9, 1), Date(10, 1), 12f, 0.5f)], input.Students);
-        Assert.Equal(
-        [
+        Assert.Equal([
             Schedule(Monday, 15, 0, 1.5f, Date(9, 1), Date(9, 15)), Schedule(Wednesday, 17, 30, 2f, Date(9, 1))
         ], input.DayTimePlaces);
     }
@@ -116,8 +123,7 @@ public sealed class LessonGeneratorMapperTests
 
         Assert.Equal(100, lesson.Id);
         Assert.Equal(Values(Date(9, 7, 15)), lesson.Values);
-        Assert.Equal(
-        [
+        Assert.Equal([
             new ExistingLessonStudent(200, 10, 1, 0.75f, false), new ExistingLessonStudent(201, 11, null, 1.5f, true)
         ], lesson.Students);
     }
@@ -179,8 +185,8 @@ public sealed class LessonGeneratorMapperTests
             (added.GroupId, added.LessonDt, added.TeacherContractId, added.SalarySchemaId, added.FourWeekHours,
                 added.TeoMinDate, added.TeoMaxDate, added.LessonStatusId));
         LessonByStudent student = Assert.Single(added.LessonsByStudents);
-        Assert.Equal((10, (int?)1, 1f, false), (student.StudentContractId, student.GroupByStudentId,
-            student.HoursCount, student.Present));
+        Assert.Equal((10, (int?)1, 1f, false),
+            (student.StudentContractId, student.GroupByStudentId, student.HoursCount, student.Present));
     }
 
     [Fact]
@@ -190,8 +196,7 @@ public sealed class LessonGeneratorMapperTests
         Group group = Group();
         Lesson lesson = group.Lessons.Single();
         GroupLessonsPlan plan = PlanOf([
-            new PlannedLessonChange(ELessonChangeKind.Update, 100, Values(Date(9, 7, 16), 6), Values(Date(9, 7, 15)),
-            [
+            new PlannedLessonChange(ELessonChangeKind.Update, 100, Values(Date(9, 7, 16), 6), Values(Date(9, 7, 15)), [
                 new PlannedStudentRow(EStudentRowChangeKind.Update, 200, 10, 1, 1f),
                 new PlannedStudentRow(EStudentRowChangeKind.Delete, 201, 11, null, 1.5f),
                 new PlannedStudentRow(EStudentRowChangeKind.Add, null, 12, 3, 2f)
@@ -225,6 +230,45 @@ public sealed class LessonGeneratorMapperTests
         _repository.Verify(r => r.RemoveLesson(It.Is<Lesson>(l => l.Id == 100)), Times.Once);
     }
 
+    // the planner only makes the known kinds: anything else is a programming error, not a silent no-op
+    [Fact]
+    public void ApplyPlan_UnknownLessonChangeKind_Throws()
+    {
+        GroupLessonsPlan plan = PlanOf([
+            new PlannedLessonChange((ELessonChangeKind)99, 100, Values(Date(9, 7, 15)), null, [])
+        ]);
+
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            LessonGeneratorMapper.ApplyPlan(Group(), plan, [], _repository.Object, Now));
+        Assert.Equal("Unknown lesson change kind 99", exception.Message);
+    }
+
+    [Fact]
+    public void ApplyPlan_UnknownStudentRowChangeKind_Throws()
+    {
+        GroupLessonsPlan plan = PlanOf([
+            new PlannedLessonChange(ELessonChangeKind.Update, 100, Values(Date(9, 7, 15)), null,
+                [new PlannedStudentRow((EStudentRowChangeKind)99, 200, 10, 1, 1f)])
+        ]);
+
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            LessonGeneratorMapper.ApplyPlan(Group(), plan, [], _repository.Object, Now));
+        Assert.Equal("Unknown student row change kind 99", exception.Message);
+    }
+
+    [Fact]
+    public void ToResponse_UnknownLessonChangeKind_Throws()
+    {
+        GroupLessonsPlan plan = new([
+            new PlannedLessonChange((ELessonChangeKind)99, 100, Values(Date(9, 7, 15)), null, [])
+        ], [], [], true, null);
+
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            LessonGeneratorMapper.ToResponse(Group(), plan, new Dictionary<int, string>(),
+                new Dictionary<DateTime, Lesson>()));
+        Assert.Equal("Unknown lesson change kind 99", exception.Message);
+    }
+
     [Fact]
     public void ApplyPlan_ReplacesTheGroupLogWithThePlanLog()
     {
@@ -251,8 +295,8 @@ public sealed class LessonGeneratorMapperTests
     {
         Group group = Group();
 
-        LessonGeneratorMapper.ApplyPlan(group, PlanOf([], clearDirtyLessons: clearDirtyLessons), [],
-            _repository.Object, Now);
+        LessonGeneratorMapper.ApplyPlan(group, PlanOf([], clearDirtyLessons: clearDirtyLessons), [], _repository.Object,
+            Now);
 
         Assert.Equal(expectedDirtyLessons, group.DirtyLessons);
     }
@@ -278,18 +322,20 @@ public sealed class LessonGeneratorMapperTests
     {
         // Arrange
         GroupLessonsPlan plan = new([
-            new PlannedLessonChange(ELessonChangeKind.Create, null, Values(Date(9, 9, 17, 30)), null,
-                [new PlannedStudentRow(EStudentRowChangeKind.Add, null, 10, 1, 1f)]),
-            new PlannedLessonChange(ELessonChangeKind.Update, 100, Values(Date(9, 7, 16)), Values(Date(9, 7, 15)),
-                [new PlannedStudentRow(EStudentRowChangeKind.Add, null, 12, 3, 2f)]),
-            new PlannedLessonChange(ELessonChangeKind.Update, 101, Values(Date(9, 14, 15)), null,
-            [
-                new PlannedStudentRow(EStudentRowChangeKind.Update, 202, 10, 1, 1f),
-                new PlannedStudentRow(EStudentRowChangeKind.Delete, 203, 11, null, 1f)
-            ]),
-            new PlannedLessonChange(ELessonChangeKind.Delete, 102, Values(Date(9, 15, 15)), null,
-                [new PlannedStudentRow(EStudentRowChangeKind.Delete, 204, 10, 1, 1f)])
-        ], [new PlannedLogEntry(6, Date(9, 21), null), new PlannedLogEntry(99, Date(9, 22), 7)], [10, 11, 12], true,
+                new PlannedLessonChange(ELessonChangeKind.Create, null, Values(Date(9, 9, 17, 30)), null,
+                    [new PlannedStudentRow(EStudentRowChangeKind.Add, null, 10, 1, 1f)]),
+                new PlannedLessonChange(ELessonChangeKind.Update, 100, Values(Date(9, 7, 16)), Values(Date(9, 7, 15)),
+                    [new PlannedStudentRow(EStudentRowChangeKind.Add, null, 12, 3, 2f)]),
+                new PlannedLessonChange(ELessonChangeKind.Update, 101, Values(Date(9, 14, 15)), null, [
+                    new PlannedStudentRow(EStudentRowChangeKind.Update, 202, 10, 1, 1f),
+                    new PlannedStudentRow(EStudentRowChangeKind.Delete, 203, 11, null, 1f)
+                ]),
+                new PlannedLessonChange(ELessonChangeKind.Delete, 102, Values(Date(9, 15, 15)), null,
+                    [new PlannedStudentRow(EStudentRowChangeKind.Delete, 204, 10, 1, 1f)]),
+                //a second lesson whose fields change: two updated lessons against one with only student changes
+                new PlannedLessonChange(ELessonChangeKind.Update, 103, Values(Date(9, 21, 16)), Values(Date(9, 21, 15)),
+                    [])
+            ], [new PlannedLogEntry(6, Date(9, 21), null), new PlannedLogEntry(99, Date(9, 22), 7)], [10, 11, 12], true,
             null);
 
         // Act
@@ -297,17 +343,38 @@ public sealed class LessonGeneratorMapperTests
             new Dictionary<int, string> { [6] = "no teacher" }, new Dictionary<DateTime, Lesson>());
 
         // Assert
-        Assert.Equal((42, "1001", 1, 1, 1, 1, 1, 1, 3),
+        Assert.Equal((42, "1001", 1, 2, 1, 1, 1, 1, 3),
             (response.GrpId, response.GroupCode, response.CreatedLessonsCount, response.UpdatedLessonsCount,
                 response.DeletedLessonsCount, response.AddedStudentsCount, response.UpdatedStudentsCount,
                 response.DeletedStudentsCount, response.DirtyStudentContractsCount));
-        Assert.Equal(
-        [
+        Assert.Equal([
             new LessonGeneratorErrorResponse(6, "no teacher", Date(9, 21), null),
             new LessonGeneratorErrorResponse(99, "", Date(9, 22), 7)
         ], response.Errors);
-        Assert.Equal(["create", "update", "update", "delete"], response.Changes.Select(c => c.Action));
-        Assert.Equal([null, 100, 101, 102], response.Changes.Select(c => c.LessonId));
+        Assert.Equal(["create", "update", "update", "delete", "update"], response.Changes.Select(c => c.Action));
+        Assert.Equal([null, 100, 101, 102, 103], response.Changes.Select(c => c.LessonId));
+    }
+
+    [Fact]
+    public void ToResponse_UpdatedLesson_CountsItsStudentRowsByKind()
+    {
+        GroupLessonsPlan plan = new([
+            new PlannedLessonChange(ELessonChangeKind.Update, 100, Values(Date(9, 7, 15)), null, [
+                new PlannedStudentRow(EStudentRowChangeKind.Add, null, 12, 3, 2f),
+                new PlannedStudentRow(EStudentRowChangeKind.Update, 200, 10, 1, 1f),
+                new PlannedStudentRow(EStudentRowChangeKind.Update, 201, 11, 2, 1f),
+                new PlannedStudentRow(EStudentRowChangeKind.Delete, 202, 13, null, 1f),
+                new PlannedStudentRow(EStudentRowChangeKind.Delete, 203, 14, null, 1f),
+                new PlannedStudentRow(EStudentRowChangeKind.Delete, 204, 15, null, 1f),
+                new PlannedStudentRow(EStudentRowChangeKind.Delete, 205, 16, null, 1f)
+            ])
+        ], [], [], true, null);
+
+        LessonChangeResponse change = Assert.Single(LessonGeneratorMapper.ToResponse(Group(), plan,
+            new Dictionary<int, string>(), new Dictionary<DateTime, Lesson>()).Changes);
+
+        //1, 2 and 4 rows: no count equals the count of the other kinds
+        Assert.Equal((1, 2, 4), (change.AddedStudentsCount, change.UpdatedStudentsCount, change.DeletedStudentsCount));
     }
 
     [Fact]
@@ -316,8 +383,8 @@ public sealed class LessonGeneratorMapperTests
         GroupLessonsPlan plan = new([
             new PlannedLessonChange(ELessonChangeKind.Update, 100,
                 new LessonValues(Date(9, 7, 16), 6, 9, 8f, Date(9, 1), Date(9, 29)), Values(Date(9, 7, 15)), []),
-            new PlannedLessonChange(ELessonChangeKind.Update, 101, Values(Date(9, 14, 15), 6),
-                Values(Date(9, 14, 15)), [])
+            new PlannedLessonChange(ELessonChangeKind.Update, 101, Values(Date(9, 14, 15), 6), Values(Date(9, 14, 15)),
+                [])
         ], [], [], true, null);
 
         GroupLessonsGenerationResponse response = LessonGeneratorMapper.ToResponse(Group(), plan,
@@ -325,22 +392,25 @@ public sealed class LessonGeneratorMapperTests
 
         LessonChangeResponse moved = response.Changes[0];
         Assert.Equal(Date(9, 7, 15), moved.PreviousLessonDt);
-        Assert.Equal(
-            ["lessonDt", "teacherContractId", "salarySchemaId", "fourWeekHours", "teoMinDate", "teoMaxDate"],
+        Assert.Equal(["lessonDt", "teacherContractId", "salarySchemaId", "fourWeekHours", "teoMinDate", "teoMaxDate"],
             moved.ChangedFields);
         LessonChangeResponse sameTime = response.Changes[1];
         Assert.Null(sameTime.PreviousLessonDt);
         Assert.Equal(["teacherContractId"], sameTime.ChangedFields);
     }
 
+    //the rows of a new or a deleted lesson never count, whatever their kind
     [Fact]
     public void ToResponse_CreatedAndDeletedLessons_CountNoStudentRowsAndNoFields()
     {
+        PlannedStudentRow[] rowsOfEveryKind =
+        [
+            new(EStudentRowChangeKind.Add, null, 10, 1, 1f), new(EStudentRowChangeKind.Update, 204, 11, 2, 1f),
+            new(EStudentRowChangeKind.Delete, 205, 12, 3, 1f)
+        ];
         GroupLessonsPlan plan = new([
-            new PlannedLessonChange(ELessonChangeKind.Create, null, Values(Date(9, 9, 17, 30)), null,
-                [new PlannedStudentRow(EStudentRowChangeKind.Add, null, 10, 1, 1f)]),
-            new PlannedLessonChange(ELessonChangeKind.Delete, 102, Values(Date(9, 15, 15)), null,
-                [new PlannedStudentRow(EStudentRowChangeKind.Delete, 204, 10, 1, 1f)])
+            new PlannedLessonChange(ELessonChangeKind.Create, null, Values(Date(9, 9, 17, 30)), null, rowsOfEveryKind),
+            new PlannedLessonChange(ELessonChangeKind.Delete, 102, Values(Date(9, 15, 15)), null, rowsOfEveryKind)
         ], [], [], true, null);
 
         GroupLessonsGenerationResponse response = LessonGeneratorMapper.ToResponse(Group(), plan,

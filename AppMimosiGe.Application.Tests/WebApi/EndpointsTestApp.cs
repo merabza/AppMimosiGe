@@ -65,12 +65,12 @@ internal static class EndpointsTestApp
         builder.Services.AddSingleton(Mock.Of<ICommandHandler<CreateGroupCommand, int>>());
         builder.Services.AddSingleton(Mock.Of<ICommandHandler<UpdateGroupCommand>>());
         builder.Services.AddSingleton(Mock.Of<ICommandHandler<DeleteGroupCommand>>());
-        builder.Services.AddSingleton(Mock
-            .Of<ICommandHandler<GenerateGroupLessonsCommand, LessonsGenerationResponse>>());
-        builder.Services.AddSingleton(Mock
-            .Of<ICommandHandler<GenerateGroupLastLessonCommand, GroupLastLessonResponse>>());
-        builder.Services.AddSingleton(Mock
-            .Of<ICommandHandler<GenerateGroupsLessonsCommand, LessonsGenerationResponse>>());
+        builder.Services.AddSingleton(
+            Mock.Of<ICommandHandler<GenerateGroupLessonsCommand, LessonsGenerationResponse>>());
+        builder.Services.AddSingleton(
+            Mock.Of<ICommandHandler<GenerateGroupLastLessonCommand, GroupLastLessonResponse>>());
+        builder.Services.AddSingleton(
+            Mock.Of<ICommandHandler<GenerateGroupsLessonsCommand, LessonsGenerationResponse>>());
         builder.Services.AddSingleton(Mock
             .Of<IQueryHandler<GetLessonGeneratorLogQuery, List<LessonGeneratorLogRowResponse>>>());
         return builder.Build();

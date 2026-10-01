@@ -28,9 +28,8 @@ public static class LessonGeneratorEndpoints
     {
         debugLogger?.Information("{MethodName} Started", nameof(UseLessonGeneratorEndpoints));
 
-        RouteGroupBuilder group = endpoints
-            .MapGroup(Routes.ApiBase + Routes.LessonGeneratorRoute.LessonGeneratorBase).RequireAuthorization()
-            .AddEndpointFilter<UserMustHaveGroupsRightsFilter>();
+        RouteGroupBuilder group = endpoints.MapGroup(Routes.ApiBase + Routes.LessonGeneratorRoute.LessonGeneratorBase)
+            .RequireAuthorization().AddEndpointFilter<UserMustHaveGroupsRightsFilter>();
 
         group.MapPost(Routes.LessonGeneratorRoute.GroupLessons, GenerateGroupLessons);
         group.MapPost(Routes.LessonGeneratorRoute.GroupLastLesson, GenerateGroupLastLesson);
@@ -66,8 +65,8 @@ public static class LessonGeneratorEndpoints
 
     // POST api/v1/lessongenerator/dirtygroups?dryRun={bool}
     internal static async Task<Results<Ok<LessonsGenerationResponse>, ProblemHttpResult>> GenerateDirtyGroupsLessons(
-        ICommandHandler<GenerateGroupsLessonsCommand, LessonsGenerationResponse> handler, [FromQuery] bool dryRun = false,
-        CancellationToken cancellationToken = default)
+        ICommandHandler<GenerateGroupsLessonsCommand, LessonsGenerationResponse> handler,
+        [FromQuery] bool dryRun = false, CancellationToken cancellationToken = default)
     {
         Result<LessonsGenerationResponse> result =
             await handler.Handle(new GenerateGroupsLessonsCommand(true, dryRun), cancellationToken);
@@ -76,8 +75,8 @@ public static class LessonGeneratorEndpoints
 
     // POST api/v1/lessongenerator/allgroups?dryRun={bool}
     internal static async Task<Results<Ok<LessonsGenerationResponse>, ProblemHttpResult>> GenerateAllGroupsLessons(
-        ICommandHandler<GenerateGroupsLessonsCommand, LessonsGenerationResponse> handler, [FromQuery] bool dryRun = false,
-        CancellationToken cancellationToken = default)
+        ICommandHandler<GenerateGroupsLessonsCommand, LessonsGenerationResponse> handler,
+        [FromQuery] bool dryRun = false, CancellationToken cancellationToken = default)
     {
         Result<LessonsGenerationResponse> result =
             await handler.Handle(new GenerateGroupsLessonsCommand(false, dryRun), cancellationToken);

@@ -47,7 +47,11 @@ public sealed class LessonGeneratorRepositoryTests : IDisposable
         _context.LessonStartTimes.Add(new LessonStartTime { LstId = 1, LstTime = new TimeOnly(15, 0) });
         _context.GroupsByTeachers.Add(new GroupByTeacher
         {
-            Id = 11, GroupId = 1, TeacherContractId = 5, SalarySchemaId = 8, StartDate = Date(9, 1)
+            Id = 11,
+            GroupId = 1,
+            TeacherContractId = 5,
+            SalarySchemaId = 8,
+            StartDate = Date(9, 1)
         });
         _context.GroupsByStudents.Add(new GroupByStudent
         {
@@ -231,8 +235,22 @@ public sealed class LessonGeneratorRepositoryTests : IDisposable
         List<LessonGeneratorLogRowResponse> log = await _repository.GetLog(null);
 
         Assert.Equal([3, 4, 2, 1], log.Select(l => l.Id));
-        Assert.Equal(new LessonGeneratorLogRowResponse(2, Date(9, 30), 1, "1001", 14, "extra student",
-            Date(9, 7, 15), 100), log[2]);
+        Assert.Equal(
+            new LessonGeneratorLogRowResponse(2, Date(9, 30), 1, "1001", 14, "extra student", Date(9, 7, 15), 100),
+            log[2]);
+    }
+
+    //groups of different years can share a code, and one lesson can have several entries (error 14)
+    [Fact]
+    public async Task GetLog_SameGroupCodeAndDate_OrdersByGroupThenByEntry()
+    {
+        _context.Groups.Add(Group(4, "1001", false));
+        _context.LessonsCheckCreateErrorLogs.AddRange(Log(6, 4, 6, Date(9, 14), null), Log(5, 1, 6, Date(9, 14), null));
+        SaveAndForget();
+
+        List<LessonGeneratorLogRowResponse> log = await _repository.GetLog(null);
+
+        Assert.Equal([3, 4, 2, 1, 5, 6], log.Select(l => l.Id));
     }
 
     [Fact]

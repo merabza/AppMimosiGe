@@ -111,8 +111,7 @@ public static class GroupLessonsPlanner
             _minValidDate = Min(input.VoidDate ?? dayAfterEndDate, dayAfterEndDate);
             _minValidDate = Min(_minValidDate, MaxEndDate(input.Teachers.Select(t => t.EndDate), dayAfterEndDate));
             _minValidDate = Min(_minValidDate, MaxEndDate(input.Students.Select(s => s.EndDate), dayAfterEndDate));
-            _minValidDate = Min(_minValidDate,
-                MaxEndDate(input.DayTimePlaces.Select(d => d.EndDate), dayAfterEndDate));
+            _minValidDate = Min(_minValidDate, MaxEndDate(input.DayTimePlaces.Select(d => d.EndDate), dayAfterEndDate));
         }
 
         public bool IsValid { get; }
@@ -250,8 +249,7 @@ public static class GroupLessonsPlanner
             (DateTime teoMinDate, DateTime teoMaxDate) = CountTeoDates(day);
             var values = new LessonValues(lessonDt, teachers[0].TeacherContractId, teachers[0].SalarySchemaId,
                 students.Max(s => s.FourWeekHours), teoMinDate, teoMaxDate);
-            return new MustLesson(values,
-            [
+            return new MustLesson(values, [
                 .. students.Select(s =>
                     new MustStudent(s.GbsId, s.StudentContractId, s.HoursCoefficient * dayTimePlace.HoursCount))
             ]);
@@ -293,8 +291,7 @@ public static class GroupLessonsPlanner
                 return;
             }
 
-            _changes.Add(new PlannedLessonChange(ELessonChangeKind.Delete, lesson.Id, lesson.Values, null,
-            [
+            _changes.Add(new PlannedLessonChange(ELessonChangeKind.Delete, lesson.Id, lesson.Values, null, [
                 .. lesson.Students.Select(s => new PlannedStudentRow(EStudentRowChangeKind.Delete, s.Id,
                     s.StudentContractId, s.GroupByStudentId, s.HoursCount))
             ]));
@@ -305,8 +302,7 @@ public static class GroupLessonsPlanner
 
         private void CreateLesson(MustLesson mustLesson)
         {
-            _changes.Add(new PlannedLessonChange(ELessonChangeKind.Create, null, mustLesson.Values, null,
-            [
+            _changes.Add(new PlannedLessonChange(ELessonChangeKind.Create, null, mustLesson.Values, null, [
                 .. mustLesson.Students.Select(s => new PlannedStudentRow(EStudentRowChangeKind.Add, null,
                     s.StudentContractId, s.GbsId, s.HoursCount))
             ]));
@@ -329,8 +325,8 @@ public static class GroupLessonsPlanner
             }
 
             _dirtyStudentContractIds.UnionWith(studentRows.Select(r => r.StudentContractId));
-            _changes.Add(new PlannedLessonChange(ELessonChangeKind.Update, lesson.Id, mustLesson.Values,
-                previousValues, studentRows));
+            _changes.Add(new PlannedLessonChange(ELessonChangeKind.Update, lesson.Id, mustLesson.Values, previousValues,
+                studentRows));
         }
 
         //Access-ის UpdateStudents: ორივე სია StudentContractId-ით დალაგებულია და ერთად გაივლება. ერთნაირი კონტრაქტის
@@ -338,7 +334,8 @@ public static class GroupLessonsPlanner
         //ზედმეტი იშლება ან, შეტანილი მონაცემით, რჩება (შეცდომა 14)
         private List<PlannedStudentRow> MergeStudents(ExistingLesson lesson, MustLesson mustLesson)
         {
-            List<ExistingLessonStudent> current = [.. lesson.Students.OrderBy(s => s.StudentContractId).ThenBy(s => s.Id)];
+            List<ExistingLessonStudent> current =
+                [.. lesson.Students.OrderBy(s => s.StudentContractId).ThenBy(s => s.Id)];
             IReadOnlyList<MustStudent> must = mustLesson.Students;
             List<PlannedStudentRow> rows = [];
             int mustIndex = 0;
@@ -347,7 +344,8 @@ public static class GroupLessonsPlanner
             {
                 bool hasMust = mustIndex < must.Count;
                 bool hasCurrent = currentIndex < current.Count;
-                if (hasMust && hasCurrent && must[mustIndex].StudentContractId == current[currentIndex].StudentContractId)
+                if (hasMust && hasCurrent &&
+                    must[mustIndex].StudentContractId == current[currentIndex].StudentContractId)
                 {
                     MustStudent mustStudent = must[mustIndex];
                     ExistingLessonStudent currentStudent = current[currentIndex];
@@ -427,7 +425,8 @@ public static class GroupLessonsPlanner
         //GetEndDateNotMoreThen: დასრულება, მაგრამ არა ჰორიზონტის შემდეგი დღის შემდეგ; დაუსრულებელი = ჰორიზონტის შემდეგი დღე
         private static DateTime MaxEndDate(IEnumerable<DateTime?> endDates, DateTime dayAfterEndDate)
         {
-            return endDates.Max(endDate => endDate is null || endDate > dayAfterEndDate ? dayAfterEndDate : endDate.Value);
+            return endDates.Max(endDate =>
+                endDate is null || endDate > dayAfterEndDate ? dayAfterEndDate : endDate.Value);
         }
 
         private static DateTime Min(DateTime first, DateTime second)

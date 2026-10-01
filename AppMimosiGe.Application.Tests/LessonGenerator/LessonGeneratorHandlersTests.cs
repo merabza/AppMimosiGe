@@ -94,8 +94,8 @@ public sealed class LessonGeneratorHandlersTests
         // Assert
         Assert.True(result.IsSuccess);
         //1 October + 2 months: October, November and December are added after September
-        Assert.Equal((false, Date(12, 31), 3), (result.Value.DryRun, result.Value.HorizonEnd,
-            result.Value.AddedOperationMonthsCount));
+        Assert.Equal((false, Date(12, 31), 3),
+            (result.Value.DryRun, result.Value.HorizonEnd, result.Value.AddedOperationMonthsCount));
         GroupLessonsGenerationResponse group = Assert.Single(result.Value.Groups);
         //the Mondays of September to December
         Assert.Equal(17, group.CreatedLessonsCount);
@@ -156,6 +156,9 @@ public sealed class LessonGeneratorHandlersTests
         Assert.Equal((900, Date(9, 28, 15)), (result.Value.LessonId, result.Value.LessonDt));
         Assert.False(result.Value.Generation.DryRun);
         Assert.Equal(1, Assert.Single(result.Value.Generation.Groups).CreatedLessonsCount);
+        //the last lesson is no dry run: the missing months are saved first
+        _repository.Verify(r => r.AddOperationMonths(It.IsAny<IEnumerable<DateTime>>()), Times.Once);
+        _repository.Verify(r => r.MarkAllDirty(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -205,7 +208,7 @@ public sealed class LessonGeneratorHandlersTests
             .ReturnsAsync(new DateTime(2026, 12, 1, 0, 0, 0, DateTimeKind.Unspecified));
         _repository.Setup(r => r.GetGroupIds(onlyDirty, It.IsAny<CancellationToken>())).ReturnsAsync([41, 42]);
         (Mock<IServiceScopeFactory> scopeFactory, List<Mock<IUnitOfWork>> groupUnitsOfWork) =
-            Scopes(Group(41), Group(42));
+            Scopes(Group(41), Group());
         var handler = new GenerateGroupsLessonsCommandHandler(_repository.Object, _unitOfWork.Object,
             scopeFactory.Object, _timeProvider.Object);
 
@@ -215,8 +218,7 @@ public sealed class LessonGeneratorHandlersTests
 
         // Assert
         Assert.Equal([41, 42], result.Value.Groups.Select(g => g.GrpId));
-        Assert.All(groupUnitsOfWork,
-            u => u.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once));
+        Assert.All(groupUnitsOfWork, u => u.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once));
         _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
         Assert.Equal((Date(12, 31), 0), (result.Value.HorizonEnd, result.Value.AddedOperationMonthsCount));
     }
@@ -238,6 +240,23 @@ public sealed class LessonGeneratorHandlersTests
         _repository.Verify(r => r.GetGroupIds(true, It.IsAny<CancellationToken>()), Times.Never);
         groupUnitsOfWork[0].Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
         _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    //without a new month the dry run of the dirty groups checks only them
+    [Fact]
+    public async Task GenerateGroupsLessons_DryRunWithoutMissingMonths_ChecksOnlyTheDirtyGroups()
+    {
+        _repository.Setup(r => r.GetLastOperationMonth(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new DateTime(2026, 12, 1, 0, 0, 0, DateTimeKind.Unspecified));
+        _repository.Setup(r => r.GetGroupIds(true, It.IsAny<CancellationToken>())).ReturnsAsync([42]);
+        var handler = new GenerateGroupsLessonsCommandHandler(_repository.Object, _unitOfWork.Object,
+            Scopes(Group()).ScopeFactory.Object, _timeProvider.Object);
+
+        Result<LessonsGenerationResponse> result =
+            await handler.Handle(new GenerateGroupsLessonsCommand(true, true), CancellationToken.None);
+
+        Assert.Equal([42], result.Value.Groups.Select(g => g.GrpId));
+        _repository.Verify(r => r.GetGroupIds(false, It.IsAny<CancellationToken>()), Times.Never);
     }
 
     //the months were added and saved, so the dirty groups are read after that

@@ -33,15 +33,14 @@ public sealed class GroupLessonsPlannerTests
         // Arrange
         GroupLessonsInput input = Input(schedule:
         [
-            Schedule(Monday, 15, hoursCount: 1.5f), Schedule(Wednesday, 17, hoursCount: 2f)
+            Schedule(), Schedule(Wednesday, 17, hoursCount: 2f)
         ]);
 
         // Act
         GroupLessonsPlan plan = Plan(input);
 
         // Assert
-        Assert.Equal(
-        [
+        Assert.Equal([
             Date(9, 2, 17), Date(9, 7, 15), Date(9, 9, 17), Date(9, 14, 15), Date(9, 16, 17), Date(9, 21, 15),
             Date(9, 23, 17), Date(9, 28, 15), Date(9, 30, 17)
         ], CreatedLessonTimes(plan));
@@ -62,8 +61,7 @@ public sealed class GroupLessonsPlannerTests
     {
         GroupLessonsPlan plan = Plan(Input(schedule: [Schedule(startDate: Date(9, 15))]), Date(10, 31));
 
-        Assert.Equal(
-        [
+        Assert.Equal([
             Date(9, 21, 15), Date(9, 28, 15), Date(10, 5, 15), Date(10, 12, 15), Date(10, 19, 15),
             Date(10, 26, 15)
         ], CreatedLessonTimes(plan));
@@ -95,8 +93,7 @@ public sealed class GroupLessonsPlannerTests
     [Fact]
     public void PlanGroup_TeacherChangesInTheMiddleOfTheMonth_EachLessonGetsTheTeacherOfItsDay()
     {
-        GroupLessonsPlan plan = Plan(Input(
-        [
+        GroupLessonsPlan plan = Plan(Input([
             Teacher(5, 8, Date(9, 1), Date(9, 16)), Teacher(6, 9, Date(9, 16))
         ]));
 
@@ -108,8 +105,7 @@ public sealed class GroupLessonsPlannerTests
     [Fact]
     public void PlanGroup_TwoTeachersOnTheSameDay_LogsError5AndUsesTheFirstTeacher()
     {
-        GroupLessonsPlan plan = Plan(Input(
-        [
+        GroupLessonsPlan plan = Plan(Input([
             Teacher(5, 8, Date(9, 1)), Teacher(6, 9, Date(9, 10), Date(9, 20))
         ]));
 
@@ -121,8 +117,7 @@ public sealed class GroupLessonsPlannerTests
     [Fact]
     public void PlanGroup_DayWithoutTeacher_LogsError6AndCreatesNoLesson()
     {
-        GroupLessonsPlan plan = Plan(Input(
-        [
+        GroupLessonsPlan plan = Plan(Input([
             Teacher(5, 8, Date(9, 1), Date(9, 10)), Teacher(6, 9, Date(9, 20))
         ]));
 
@@ -134,8 +129,7 @@ public sealed class GroupLessonsPlannerTests
     [Fact]
     public void PlanGroup_DayWithoutTeacherAndWithoutStudents_LogsNothing()
     {
-        GroupLessonsPlan plan = Plan(Input(
-            [Teacher(5, 8, Date(9, 1), Date(9, 10)), Teacher(6, 9, Date(9, 20))],
+        GroupLessonsPlan plan = Plan(Input([Teacher(5, 8, Date(9, 1), Date(9, 10)), Teacher(6, 9, Date(9, 20))],
             [Student(startDate: Date(9, 1), endDate: Date(9, 10)), Student(2, 11, Date(9, 20))]));
 
         Assert.Empty(plan.Logs);
@@ -163,7 +157,7 @@ public sealed class GroupLessonsPlannerTests
     {
         GroupLessonsPlan plan = Plan(Input(students:
         [
-            Student(1, 10, hoursCoefficient: 0.5f), Student(2, 11, hoursCoefficient: 1.5f)
+            Student(hoursCoefficient: 0.5f), Student(2, 11, hoursCoefficient: 1.5f)
         ], schedule: [Schedule(hoursCount: 2f)]));
 
         Assert.Equal([(10, 1, 1f), (11, 2, 3f)], Rows(CreatedOn(plan, Date(9, 7))));
@@ -174,7 +168,7 @@ public sealed class GroupLessonsPlannerTests
     {
         GroupLessonsPlan plan = Plan(Input(students:
         [
-            Student(1, 10, fourWeekHours: 8f), Student(2, 11, Date(9, 10), Date(9, 20), 12f)
+            Student(), Student(2, 11, Date(9, 10), Date(9, 20), 12f)
         ]));
 
         Assert.Equal([8f, 12f, 8f, 8f], Created(plan).Select(c => c.Values.FourWeekHours));
@@ -214,7 +208,7 @@ public sealed class GroupLessonsPlannerTests
     {
         GroupLessonsPlan plan = Plan(Input(schedule:
         [
-            Schedule(Monday, 15, endDate: Date(9, 15)), Schedule(Monday, 16, 30, startDate: Date(9, 15))
+            Schedule(endDate: Date(9, 15)), Schedule(Monday, 16, 30, startDate: Date(9, 15))
         ]));
 
         Assert.Equal([Date(9, 7, 15), Date(9, 14, 15), Date(9, 21, 16, 30), Date(9, 28, 16, 30)],
@@ -230,7 +224,7 @@ public sealed class GroupLessonsPlannerTests
     {
         GroupLessonsPlan plan = Plan(Input(schedule:
         [
-            Schedule(Monday, 15), Schedule(Monday, 16, 30, startDate: Date(9, 10), endDate: Date(9, 20))
+            Schedule(), Schedule(Monday, 16, 30, startDate: Date(9, 10), endDate: Date(9, 20))
         ]));
 
         Assert.Equal([new PlannedLogEntry(LessonGeneratorErrorCodes.TwoDayTimePlacesOnDay, Date(9, 14), null)],
@@ -241,6 +235,28 @@ public sealed class GroupLessonsPlannerTests
             (CreatedOn(plan, Date(9, 14)).Values.TeoMinDate, CreatedOn(plan, Date(9, 14)).Values.TeoMaxDate));
     }
 
+    //the last day of the month is searched down to the 1st: a schedule whose only day in October is the 1st
+    [Fact]
+    public void PlanGroup_ScheduleWhoseOnlyDayInTheMonthIsTheFirst_TeoDatesAreThatLesson()
+    {
+        GroupLessonsPlan plan = Plan(Input(schedule: [Schedule(Thursday, endDate: Date(10, 2))]), Date(10, 31));
+
+        PlannedLessonChange lesson = CreatedOn(plan, Date(10, 1));
+        Assert.Equal((Date(10, 1, 15), Date(10, 1, 15)), (lesson.Values.TeoMinDate, lesson.Values.TeoMaxDate));
+    }
+
+    // --- periods
+
+    //a period ends before its end day: a teacher ending on a lesson day no longer teaches that day
+    [Fact]
+    public void PlanGroup_RowEndingOnALessonDay_NoLongerCountsThatDay()
+    {
+        GroupLessonsPlan plan = Plan(Input([Teacher(5, 8, Date(9, 1), Date(9, 14)), Teacher(6, 9, Date(9, 14))]));
+
+        Assert.Equal(6, CreatedOn(plan, Date(9, 14)).Values.TeacherContractId);
+        Assert.Empty(plan.Logs);
+    }
+
     // --- void date and the horizon
 
     [Fact]
@@ -249,6 +265,15 @@ public sealed class GroupLessonsPlannerTests
         GroupLessonsPlan plan = Plan(Input(voidDate: Date(9, 21)));
 
         Assert.Equal([Date(9, 7, 15), Date(9, 14, 15)], CreatedLessonTimes(plan));
+    }
+
+    //Access compares the lesson time with the void date: a lesson at exactly that moment still takes place
+    [Fact]
+    public void PlanGroup_LessonExactlyAtTheVoidTime_StillTakesPlace()
+    {
+        GroupLessonsPlan plan = Plan(Input(voidDate: Date(9, 21, 15)));
+
+        Assert.Equal([Date(9, 7, 15), Date(9, 14, 15), Date(9, 21, 15)], CreatedLessonTimes(plan));
     }
 
     //the earliest of the latest ends stops the lessons before the teachers and students are checked: no error 6
@@ -273,18 +298,20 @@ public sealed class GroupLessonsPlannerTests
         Assert.Equal([Date(9, 7, 15), Date(9, 14, 15), Date(9, 21, 15), Date(9, 28, 15)], CreatedLessonTimes(plan));
     }
 
+    //the check runs up to the latest existing lesson, not up to the earliest one
     [Fact]
     public void PlanGroup_ExistingLessonAfterTheHorizon_IsCheckedAndDeleted()
     {
         GroupLessonsPlan plan = Plan(Input(lessons:
         [
+            Lesson(99, SeptemberMonday(7), LessonStudent(199)),
             Lesson(100, new LessonValues(Date(10, 5, 15), 5, 8, 8f, Date(10, 5, 15), Date(10, 26, 15)),
                 LessonStudent(200))
         ]));
 
         PlannedLessonChange deleted = Assert.Single(plan.Changes, c => c.Kind == ELessonChangeKind.Delete);
         Assert.Equal(100, deleted.LessonId);
-        Assert.Equal(4, Created(plan).Count);
+        Assert.Equal(3, Created(plan).Count);
     }
 
     // --- lessons that must not exist
@@ -293,7 +320,8 @@ public sealed class GroupLessonsPlannerTests
     public void PlanGroup_ExtraLessonWithoutEnteredData_IsDeletedWithItsStudents()
     {
         var tuesday = new LessonValues(Date(9, 8, 15), 5, 8, 8f, Date(9, 7, 15), Date(9, 28, 15));
-        GroupLessonsPlan plan = Plan(Input(lessons: [Lesson(100, tuesday, LessonStudent(200), LessonStudent(201, 11))]));
+        GroupLessonsPlan plan = Plan(Input(lessons:
+            [Lesson(100, tuesday, LessonStudent(200), LessonStudent(201, 11))]));
 
         PlannedLessonChange deleted = Assert.Single(plan.Changes, c => c.Kind == ELessonChangeKind.Delete);
         Assert.Equal(100, deleted.LessonId);
@@ -308,8 +336,8 @@ public sealed class GroupLessonsPlannerTests
     {
         GroupLessonsPlan plan = Plan(Input(lessons:
         [
-            Lesson(100, new LessonValues(Date(9, 8, 15), 5, 8, 8f, Date(9, 7, 15), Date(9, 28, 15)),
-                LessonStudent(200), LessonStudent(201, 11, hasEnteredData: true))
+            Lesson(100, new LessonValues(Date(9, 8, 15), 5, 8, 8f, Date(9, 7, 15), Date(9, 28, 15)), LessonStudent(200),
+                LessonStudent(201, 11, hasEnteredData: true))
         ]));
 
         Assert.DoesNotContain(plan.Changes, c => c.Kind == ELessonChangeKind.Delete);
@@ -353,8 +381,7 @@ public sealed class GroupLessonsPlannerTests
     public void PlanGroup_ExistingLessonWithEnteredDataAndAnotherTeacher_IsStillUpdated()
     {
         LessonValues previous = SeptemberMonday(7) with { TeacherContractId = 99, SalarySchemaId = 98 };
-        GroupLessonsPlan plan = Plan(Input(lessons:
-            [Lesson(100, previous, LessonStudent(200, hasEnteredData: true))]));
+        GroupLessonsPlan plan = Plan(Input(lessons: [Lesson(100, previous, LessonStudent(200, hasEnteredData: true))]));
 
         PlannedLessonChange updated = Assert.Single(plan.Changes, c => c.Kind == ELessonChangeKind.Update);
         Assert.Equal(previous, updated.PreviousValues);
@@ -401,8 +428,7 @@ public sealed class GroupLessonsPlannerTests
             Lesson(103, SeptemberMonday(28), LessonStudent(203))
         ]));
 
-        Assert.Equal(
-        [
+        Assert.Equal([
             new PlannedStudentRow(EStudentRowChangeKind.Update, 200, 10, 1, 1.5f),
             new PlannedStudentRow(EStudentRowChangeKind.Update, 201, 10, 1, 1.5f),
             new PlannedStudentRow(EStudentRowChangeKind.Update, 202, 10, 1, 1.5f)
@@ -441,12 +467,10 @@ public sealed class GroupLessonsPlannerTests
     {
         GroupLessonsPlan plan = Plan(Input(lessons:
         [
-            Lesson(100, SeptemberMonday(7, 14), LessonStudent(200),
-                LessonStudent(201, 99, null, hasEnteredData: true))
+            Lesson(100, SeptemberMonday(7, 14), LessonStudent(200), LessonStudent(201, 99, null, hasEnteredData: true))
         ]));
 
-        Assert.Equal(
-            [new PlannedLogEntry(LessonGeneratorErrorCodes.ExtraStudentHasEnteredData, Date(9, 7, 15), 100)],
+        Assert.Equal([new PlannedLogEntry(LessonGeneratorErrorCodes.ExtraStudentHasEnteredData, Date(9, 7, 15), 100)],
             plan.Logs);
     }
 
@@ -461,10 +485,11 @@ public sealed class GroupLessonsPlannerTests
         Assert.Equal([new PlannedStudentRow(EStudentRowChangeKind.Delete, 201, 10, 1, 1.5f)], updated.Students);
     }
 
+    //the other lesson is the earlier one: the lesson of the right time is found, not simply the first
     [Fact]
     public void PlanGroup_TwoLessonsOnOneDay_UsesTheOneWithTheRightTimeAndLeavesTheOther()
     {
-        LessonValues other = SeptemberMonday(7, 18);
+        LessonValues other = SeptemberMonday(7, 12);
         GroupLessonsPlan plan = Plan(Input(lessons:
         [
             Lesson(100, other, LessonStudent(200)), Lesson(101, SeptemberMonday(7), LessonStudent(201))
@@ -490,16 +515,21 @@ public sealed class GroupLessonsPlannerTests
 
     // --- the start date
 
-    //D61: Access kept the lesson time in the start date and added it to every day of the loop
+    //D61: Access kept the lesson time in the start date and added it to every day of the loop. The check starts
+    //at the earliest existing lesson, not at the latest one
     [Fact]
     public void PlanGroup_LessonBeforeTheGroupStart_IsCheckedAndTheLaterLessonTimesStayExact()
     {
         GroupLessonsPlan plan = Plan(Input(students: [Student(startDate: Date(9, 14))],
-            lessons: [Lesson(100, SeptemberMonday(7), LessonStudent(200))]));
+            lessons:
+            [
+                Lesson(100, SeptemberMonday(7), LessonStudent(200)),
+                Lesson(101, SeptemberMonday(21), LessonStudent(201))
+            ]));
 
         PlannedLessonChange deleted = Assert.Single(plan.Changes, c => c.Kind == ELessonChangeKind.Delete);
         Assert.Equal(100, deleted.LessonId);
-        Assert.Equal([Date(9, 14, 15), Date(9, 21, 15), Date(9, 28, 15)], CreatedLessonTimes(plan));
+        Assert.Equal([Date(9, 14, 15), Date(9, 28, 15)], CreatedLessonTimes(plan));
     }
 
     //the group starts on the 8th (its teacher): the 7th is not checked, so no error 6 is logged for it
@@ -507,7 +537,7 @@ public sealed class GroupLessonsPlannerTests
     public void PlanGroup_StartDate_IsTheLatestOfTheFirstStartsOfTeachersStudentsAndSchedule()
     {
         GroupLessonsPlan plan = Plan(Input([Teacher(startDate: Date(9, 8))], [Student(startDate: Date(9, 1))],
-            [Schedule(Monday, startDate: Date(9, 1)), Schedule(Wednesday, 17, startDate: Date(9, 10))]));
+            [Schedule(startDate: Date(9, 1)), Schedule(Wednesday, 17, startDate: Date(9, 10))]));
 
         Assert.Equal(Date(9, 14, 15), CreatedLessonTimes(plan)[0]);
         Assert.Empty(plan.Logs);
@@ -542,7 +572,7 @@ public sealed class GroupLessonsPlannerTests
     {
         GroupLessonsPlan plan = Plan(Input(students:
         [
-            Student(1, 12), Student(2, 10, endDate: Date(9, 2)), Student(3, 11, Date(10, 5))
+            Student(1, 12), Student(2, endDate: Date(9, 2)), Student(3, 11, Date(10, 5))
         ]));
 
         Assert.Equal([10, 11, 12], plan.DirtyStudentContractIds);
@@ -625,6 +655,17 @@ public sealed class GroupLessonsPlannerTests
             plan.Changes.Select(c => (c.Kind, c.LessonId!.Value)));
     }
 
+    //the search goes back to the start day itself
+    [Fact]
+    public void PlanLastLesson_OnlyLessonDayIsTheStartDay_FindsIt()
+    {
+        GroupLessonsPlan plan = GroupLessonsPlanner.PlanLastLesson(
+            Input([Teacher(startDate: Date(9, 7))], [Student(startDate: Date(9, 7))],
+                [Schedule(startDate: Date(9, 7))]), SeptemberEnd, Date(9, 10));
+
+        Assert.Equal(new PlannedLastLesson(null, Date(9, 7, 15)), plan.LastLesson);
+    }
+
     [Fact]
     public void PlanLastLesson_TodayBeforeTheGroupStart_ReturnsNothing()
     {
@@ -632,6 +673,7 @@ public sealed class GroupLessonsPlannerTests
 
         Assert.Null(plan.LastLesson);
         Assert.Empty(plan.Changes);
+        Assert.False(plan.ClearDirtyLessons);
     }
 
     [Fact]
@@ -641,5 +683,6 @@ public sealed class GroupLessonsPlannerTests
 
         Assert.Null(plan.LastLesson);
         Assert.Equal([new PlannedLogEntry(LessonGeneratorErrorCodes.NoTeachers, null, null)], plan.Logs);
+        Assert.False(plan.ClearDirtyLessons);
     }
 }

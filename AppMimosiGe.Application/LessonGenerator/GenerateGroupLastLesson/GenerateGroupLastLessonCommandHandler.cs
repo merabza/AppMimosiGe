@@ -22,9 +22,8 @@ public sealed class GenerateGroupLastLessonCommandHandler(
         DateTime now = timeProvider.GetLocalNow().DateTime;
         GenerationHorizon horizon =
             await GroupLessonsGeneration.PrepareOperationMonths(repository, unitOfWork, now, false, cancellationToken);
-        GroupGenerationResult? result = await GroupLessonsGeneration.Run(repository, unitOfWork, command.GrpId,
-            false, now, input => GroupLessonsPlanner.PlanLastLesson(input, horizon.HorizonEnd, now.Date),
-            cancellationToken);
+        GroupGenerationResult? result = await GroupLessonsGeneration.Run(repository, unitOfWork, command.GrpId, false,
+            now, input => GroupLessonsPlanner.PlanLastLesson(input, horizon.HorizonEnd, now.Date), cancellationToken);
         if (result is null)
         {
             return GroupErrors.GroupNotFound;

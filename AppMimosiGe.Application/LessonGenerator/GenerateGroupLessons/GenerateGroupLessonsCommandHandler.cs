@@ -23,8 +23,7 @@ public sealed class GenerateGroupLessonsCommandHandler(
         GenerationHorizon horizon = await GroupLessonsGeneration.PrepareOperationMonths(repository, unitOfWork, now,
             command.DryRun, cancellationToken);
         GroupGenerationResult? result = await GroupLessonsGeneration.Run(repository, unitOfWork, command.GrpId,
-            command.DryRun, now, input => GroupLessonsPlanner.PlanGroup(input, horizon.HorizonEnd),
-            cancellationToken);
+            command.DryRun, now, input => GroupLessonsPlanner.PlanGroup(input, horizon.HorizonEnd), cancellationToken);
         if (result is null)
         {
             return GroupErrors.GroupNotFound;
