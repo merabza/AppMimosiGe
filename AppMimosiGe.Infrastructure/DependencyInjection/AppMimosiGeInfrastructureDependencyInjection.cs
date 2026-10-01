@@ -1,3 +1,4 @@
+using AppMimosiGe.Application.Balances;
 using AppMimosiGe.Application.Groups;
 using AppMimosiGe.Application.LessonGenerator;
 using AppMimosiGe.Application.Lessons;
@@ -26,6 +27,7 @@ public static class AppMimosiGeInfrastructureDependencyInjection
         services.AddScoped<ILessonGeneratorRepository, LessonGeneratorRepository>();
         services.AddScoped<ILessonsRepository, LessonsRepository>();
         services.AddScoped<IPaymentsRepository, PaymentsRepository>();
+        services.AddScoped<IBalancesRepository, BalancesRepository>();
         services.AddScoped<IUserClaimRights, UserClaimRights>();
 
         debugLogger?.Information("{MethodName} Finished", nameof(AddAppMimosiGeInfrastructure));

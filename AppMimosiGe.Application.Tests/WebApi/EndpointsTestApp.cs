@@ -1,5 +1,10 @@
 using System.Collections.Generic;
 using System.Linq;
+using AppMimosiGe.Application.Balances.GetBalancesFormLookups;
+using AppMimosiGe.Application.Balances.GetDeposits;
+using AppMimosiGe.Application.Balances.GetStatement;
+using AppMimosiGe.Application.Balances.GetStatementStudentContracts;
+using AppMimosiGe.Application.Balances.RecountBalances;
 using AppMimosiGe.Application.Groups.CreateGroup;
 using AppMimosiGe.Application.Groups.DeleteGroup;
 using AppMimosiGe.Application.Groups.GetGroup;
@@ -96,6 +101,14 @@ internal static class EndpointsTestApp
         builder.Services.AddSingleton(Mock.Of<ICommandHandler<CreatePaymentCommand, int>>());
         builder.Services.AddSingleton(Mock.Of<ICommandHandler<UpdatePaymentCommand>>());
         builder.Services.AddSingleton(Mock.Of<ICommandHandler<DeletePaymentCommand>>());
+        builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetStatementQuery, StatementRowsDataResponse>>());
+        builder.Services.AddSingleton(
+            Mock.Of<IQueryHandler<GetBalancesFormLookupsQuery, BalancesFormLookupsResponse>>());
+        builder.Services.AddSingleton(
+            Mock.Of<IQueryHandler<GetStatementStudentContractsQuery, List<LookupItemResponse>>>());
+        builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetDepositsQuery, DepositsResponse>>());
+        builder.Services.AddSingleton(
+            Mock.Of<ICommandHandler<RecountBalancesCommand, BalancesRecountResponse>>());
         return builder.Build();
     }
 

@@ -18,6 +18,8 @@ public static class AppMimosiGeApiDependencyInjection
         endpoints.UseLessonGeneratorEndpoints(debugLogger);
         endpoints.UseLessonsEndpoints(debugLogger);
         endpoints.UsePaymentsEndpoints(debugLogger);
+        endpoints.UseChargesAndPaymentsEndpoints(debugLogger);
+        endpoints.UseDepositsEndpoints(debugLogger);
 
         debugLogger?.Information("{MethodName} Finished", nameof(UseAppMimosiGeApi));
 
