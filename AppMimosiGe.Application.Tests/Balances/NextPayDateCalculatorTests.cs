@@ -101,6 +101,22 @@ public sealed class NextPayDateCalculatorTests
         Assert.Equal(At(9, 10, 15), nextPayDate);
     }
 
+    //a debt paid off exactly is no debt
+    [Fact]
+    public void Calculate_DebtPaidOffExactly_IsNull()
+    {
+        Assert.Null(NextPayDate([Charge(1, At(9, 3, 15)), Charge(2, At(9, 10, 15)), Payment(3, At(9, 12), 20m)]));
+    }
+
+    //every payment of the last pay day counts: the search does not stop at the first of them
+    [Fact]
+    public void Calculate_TwoPaymentsOnTheLastPayDay_BothCount()
+    {
+        Assert.Null(NextPayDate([
+            Charge(1, At(9, 3, 15)), Charge(2, At(9, 10, 15)), Payment(3, At(9, 12), 5m), Payment(4, At(9, 12), 20m)
+        ]));
+    }
+
     //the lesson of the last pay day is later than the pay date (midnight), so it stops the search
     [Fact]
     public void Calculate_LessonOnTheLastPayDay_IsAfterThePayDate()

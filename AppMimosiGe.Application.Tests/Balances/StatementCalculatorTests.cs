@@ -68,6 +68,18 @@ public sealed class StatementCalculatorTests
         Assert.Equal(102m, statement.EndBalance);
     }
 
+    //"date to" counts until midnight: a payment of the next day is left out
+    [Fact]
+    public void Build_PaymentOfTheDayAfterDateTo_IsLeftOut()
+    {
+        // Act
+        Statement statement = StatementCalculator.Build([.. Operations, Payment(3, At(10, 2), 50m)], null, At(10, 1));
+
+        // Assert
+        Assert.Equal([1, 10, 2, 11, 12, 13], statement.Rows.Select(r => r.Operation.Id));
+        Assert.Equal(95.6667m, statement.EndBalance);
+    }
+
     [Fact]
     public void Build_BothDates_StartPlusTheRowsIsTheEndBalance()
     {

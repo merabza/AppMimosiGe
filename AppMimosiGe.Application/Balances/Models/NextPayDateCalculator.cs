@@ -26,13 +26,16 @@ public static class NextPayDateCalculator
         foreach (BalanceOperation operation in operations)
         {
             amount = decimal.Round(amount + operation.Amount, CurrencyDecimals, MidpointRounding.ToEven);
-            if (!counted && amount < 0m)
+            //VBA-ს ორი If: უარყოფითი ნაშთის პირველი თარიღი ინიშნება, არაუარყოფითი ნაშთი მას აუქმებს
+            if (amount < 0m)
             {
-                nextPayDate = operation.OperationDate;
-                counted = true;
+                if (!counted)
+                {
+                    nextPayDate = operation.OperationDate;
+                    counted = true;
+                }
             }
-
-            if (counted && amount >= 0m)
+            else
             {
                 counted = false;
             }

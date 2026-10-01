@@ -154,6 +154,24 @@ public sealed class BalanceHandlersTests
         Assert.Equal(33, Assert.Single(result.Value.Rows).Id);
     }
 
+    //an offset equal to the count is past the end too: of 4 rows by 2 the last page starts at 2
+    [Fact]
+    public async Task GetStatement_OffsetAtTheCount_ShowsTheLastFullPage()
+    {
+        // Arrange
+        SetUpContractFive(AllContracts);
+        _repository.Setup(r =>
+                r.GetStudentContractNames(It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+
+        // Act
+        Result<StatementRowsDataResponse> result = await GetStatement("""{"offset":4,"rowsCount":2}""");
+
+        // Assert
+        Assert.Equal(2, result.Value.Offset);
+        Assert.Equal([32, 33], result.Value.Rows.Select(r => r.Id));
+    }
+
     [Fact]
     public async Task GetStatement_NoOperations_IsAnEmptyFirstPage()
     {
@@ -391,15 +409,15 @@ public sealed class BalanceHandlersTests
     [InlineData(false)]
     public async Task Recount_GeneratesTheLessonsThenRecountsTheNextPayDates(bool onlyDirty)
     {
-        // Arrange: groups 1 (no change), 2..7 (one kind of change each), 8 (only errors)
+        // Arrange: groups 1 (no change), 2..7 (one kind of change each, 7 with an error too), 8 (only errors)
         var generator = new Mock<ICommandHandler<GenerateGroupsLessonsCommand, LessonsGenerationResponse>>();
         var studentContract = new StudentContract { ScId = 5, ContractNumber = "6.005", DirtyNextPayDate = true };
         var calls = new List<string>();
         generator.Setup(g => g.Handle(It.IsAny<GenerateGroupsLessonsCommand>(), It.IsAny<CancellationToken>()))
             .Callback(() => calls.Add("lessons")).ReturnsAsync(new LessonsGenerationResponse(false, At(11, 30), 0, [
                 GroupResult(1), GroupResult(2, 1), GroupResult(3, updated: 1), GroupResult(4, deleted: 1),
-                GroupResult(5, added: 1), GroupResult(6, updatedStudents: 1), GroupResult(7, deletedStudents: 1),
-                GroupResult(8, errors: 2)
+                GroupResult(5, added: 1), GroupResult(6, updatedStudents: 1),
+                GroupResult(7, deletedStudents: 1, errors: 1), GroupResult(8, errors: 2)
             ]));
         _repository.Setup(r => r.GetStudentContractsForRecount(onlyDirty, It.IsAny<CancellationToken>()))
             .Callback(() => calls.Add("contracts")).ReturnsAsync([studentContract]);
@@ -411,7 +429,7 @@ public sealed class BalanceHandlersTests
                 _timeProvider.Object).Handle(new RecountBalancesCommand(onlyDirty), CancellationToken.None);
 
         // Assert
-        Assert.Equal(new BalancesRecountResponse(8, 6, 2, 1, 1), result.Value);
+        Assert.Equal(new BalancesRecountResponse(8, 6, 3, 1, 1), result.Value);
         Assert.Equal(["lessons", "contracts"], calls);
         generator.Verify(g => g.Handle(new GenerateGroupsLessonsCommand(onlyDirty, false), It.IsAny<CancellationToken>()),
             Times.Once);

@@ -68,9 +68,7 @@ public static class DepositsCalculator
 
             //vStudentMustPayToEndDate: ყველა ოპერაცია (მომავლისაც) და სტრიქონების დასრულების სავარაუდო თარიღებიდან
             //ბოლო; ორივე მხოლოდ მაშინ, როცა კონტრაქტს ჯგუფის სტრიქონი აქვს (Access-ში ოპერაციაც, მაგრამ ოპერაციის
-            //გარეშე კონტრაქტი სიაში ისედაც არ ხვდება)
-            bool hasEnd = contractGroupStudents.Count > 0;
-
+            //გარეშე კონტრაქტი სიაში ისედაც არ ხვდება). სტრიქონის გარეშე Max ცარიელ სიმრავლეზე null-ია
             DepositRowResponse row = new(contract.StudentContractId, contract.AcademicYearId, contract.StudentName,
                 contract.ContractNumber, balance, contract.StudentPhone, contract.PayerName, contract.PayerPhone,
                 input.NextLessonDates.TryGetValue(contract.StudentContractId, out DateTime nextLessonDate)
@@ -80,8 +78,8 @@ public static class DepositsCalculator
                     ? crmMustPayDate
                     : null, FourWeekFee(contractGroupStudents, dateToEnd), contract.DesiredMonthlyPaymentDay,
                 desiredPayDates?.NextPayDate, desiredPayDates?.AfterNextPayDate, desiredDayAmount, contract.NextPayDate,
-                hasEnd ? -SumOrNull(contractOperations) : null,
-                hasEnd ? contractGroupStudents.Max(g => g.EndDate ?? g.GroupVoidDate ?? openEndDate) : null);
+                contractGroupStudents.Count > 0 ? -SumOrNull(contractOperations) : null,
+                contractGroupStudents.Max(g => g.EndDate ?? g.GroupVoidDate ?? openEndDate));
 
             if (MatchesFilter(row, parameters, today))
             {
@@ -125,8 +123,8 @@ public static class DepositsCalculator
     //ზარისას Access-ის join სტრიქონს აორმაგებდა; აქ ბოლო (უდიდესი ID-ის) ზარი ირჩევა
     private static Dictionary<int, DateTime> LastCrmMustPayDates(IEnumerable<CrmMustPayDateData> calls)
     {
-        return calls.GroupBy(c => c.StudentContractId).ToDictionary(g => g.Key,
-            g => g.OrderByDescending(c => c.CallDate).ThenByDescending(c => c.CrmCallId).First().MustPayDate);
+        return calls.GroupBy(c => c.StudentContractId)
+            .ToDictionary(g => g.Key, g => g.MaxBy(c => (c.CallDate, c.CrmCallId))!.MustPayDate);
     }
 
     private static decimal? SumOrNull(IEnumerable<BalanceOperation> operations)

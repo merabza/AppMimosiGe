@@ -98,6 +98,14 @@ public sealed class BalancesRepositoryTests : IDisposable
         _context.SaveChanges();
     }
 
+    private void AddLessonOfContract(int lessonId, int lessonStudentId, int scId, DateTime lessonDt)
+    {
+        _context.Lessons.Add(Lesson(lessonId, 100, lessonDt));
+        _context.LessonsByStudents.Add(LessonStudent(lessonStudentId, lessonId, scId, null, 1f));
+        _context.SaveChanges();
+        _context.ChangeTracker.Clear();
+    }
+
     private DateTime? StoredNextPayDate(int scId)
     {
         _context.SaveChanges();
@@ -243,6 +251,20 @@ public sealed class BalancesRepositoryTests : IDisposable
 
         // Assert: after today's lesson, 302 through the row of another group
         Assert.Equal(new Dictionary<int, DateTime> { [11] = At(10, 5, 16) }, nextLessons);
+    }
+
+    //"from today" takes a lesson at today's midnight too
+    [Fact]
+    public async Task GetNextLessonDates_LessonAtTodaysMidnight_Counts()
+    {
+        // Arrange
+        AddLessonOfContract(306, 409, 12, At(10, 3));
+
+        // Act
+        Dictionary<int, DateTime> nextLessons = await _repository.GetNextLessonDates([12], At(10, 3));
+
+        // Assert
+        Assert.Equal(new Dictionary<int, DateTime> { [12] = At(10, 3) }, nextLessons);
     }
 
     [Fact]
