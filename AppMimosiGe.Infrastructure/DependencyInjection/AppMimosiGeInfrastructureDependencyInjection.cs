@@ -1,5 +1,6 @@
 using AppMimosiGe.Application.Groups;
 using AppMimosiGe.Application.LessonGenerator;
+using AppMimosiGe.Application.Lessons;
 using AppMimosiGe.Application.StudentContracts;
 using AppMimosiGe.Application.TeacherContracts;
 using AppMimosiGe.Infrastructure.Repositories;
@@ -20,6 +21,7 @@ public static class AppMimosiGeInfrastructureDependencyInjection
         services.AddScoped<ITeacherContractsRepository, TeacherContractsRepository>();
         services.AddScoped<IGroupsRepository, GroupsRepository>();
         services.AddScoped<ILessonGeneratorRepository, LessonGeneratorRepository>();
+        services.AddScoped<ILessonsRepository, LessonsRepository>();
 
         debugLogger?.Information("{MethodName} Finished", nameof(AddAppMimosiGeInfrastructure));
 

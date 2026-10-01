@@ -16,6 +16,7 @@ public static class AppMimosiGeApiDependencyInjection
         endpoints.UseTeacherContractsEndpoints(debugLogger);
         endpoints.UseGroupsEndpoints(debugLogger);
         endpoints.UseLessonGeneratorEndpoints(debugLogger);
+        endpoints.UseLessonsEndpoints(debugLogger);
 
         debugLogger?.Information("{MethodName} Finished", nameof(UseAppMimosiGeApi));
 

@@ -1,5 +1,6 @@
 using AppMimosiGe.Application.Groups;
 using AppMimosiGe.Application.LessonGenerator;
+using AppMimosiGe.Application.Lessons;
 using AppMimosiGe.Application.StudentContracts;
 using AppMimosiGe.Application.TeacherContracts;
 using AppMimosiGe.Infrastructure.DependencyInjection;
@@ -74,6 +75,21 @@ public sealed class AppMimosiGeInfrastructureDependencyInjectionTests
         ServiceDescriptor descriptor =
             Assert.Single(services, s => s.ServiceType == typeof(ILessonGeneratorRepository));
         Assert.Equal(typeof(LessonGeneratorRepository), descriptor.ImplementationType);
+        Assert.Equal(ServiceLifetime.Scoped, descriptor.Lifetime);
+    }
+
+    [Fact]
+    public void AddAppMimosiGeInfrastructure_RegistersLessonsRepositoryAsScoped()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+
+        // Act
+        services.AddAppMimosiGeInfrastructure(null);
+
+        // Assert
+        ServiceDescriptor descriptor = Assert.Single(services, s => s.ServiceType == typeof(ILessonsRepository));
+        Assert.Equal(typeof(LessonsRepository), descriptor.ImplementationType);
         Assert.Equal(ServiceLifetime.Scoped, descriptor.Lifetime);
     }
 
