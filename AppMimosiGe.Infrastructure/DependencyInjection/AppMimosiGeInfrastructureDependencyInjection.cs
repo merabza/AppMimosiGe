@@ -1,4 +1,5 @@
 using AppMimosiGe.Application.Balances;
+using AppMimosiGe.Application.CrmCalls;
 using AppMimosiGe.Application.Groups;
 using AppMimosiGe.Application.LessonGenerator;
 using AppMimosiGe.Application.Lessons;
@@ -28,6 +29,7 @@ public static class AppMimosiGeInfrastructureDependencyInjection
         services.AddScoped<ILessonsRepository, LessonsRepository>();
         services.AddScoped<IPaymentsRepository, PaymentsRepository>();
         services.AddScoped<IBalancesRepository, BalancesRepository>();
+        services.AddScoped<ICrmCallsRepository, CrmCallsRepository>();
         services.AddScoped<IUserClaimRights, UserClaimRights>();
 
         debugLogger?.Information("{MethodName} Finished", nameof(AddAppMimosiGeInfrastructure));

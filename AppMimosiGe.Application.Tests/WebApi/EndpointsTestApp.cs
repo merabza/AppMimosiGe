@@ -5,6 +5,13 @@ using AppMimosiGe.Application.Balances.GetDeposits;
 using AppMimosiGe.Application.Balances.GetStatement;
 using AppMimosiGe.Application.Balances.GetStatementStudentContracts;
 using AppMimosiGe.Application.Balances.RecountBalances;
+using AppMimosiGe.Application.CrmCalls.CreateCrmCall;
+using AppMimosiGe.Application.CrmCalls.DeleteCrmCall;
+using AppMimosiGe.Application.CrmCalls.GetCrmCall;
+using AppMimosiGe.Application.CrmCalls.GetCrmCallFormLookups;
+using AppMimosiGe.Application.CrmCalls.GetCrmCallsRowsData;
+using AppMimosiGe.Application.CrmCalls.GetCrmCallStudentContracts;
+using AppMimosiGe.Application.CrmCalls.UpdateCrmCall;
 using AppMimosiGe.Application.Groups.CreateGroup;
 using AppMimosiGe.Application.Groups.DeleteGroup;
 using AppMimosiGe.Application.Groups.GetGroup;
@@ -109,6 +116,14 @@ internal static class EndpointsTestApp
         builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetDepositsQuery, DepositsResponse>>());
         builder.Services.AddSingleton(
             Mock.Of<ICommandHandler<RecountBalancesCommand, BalancesRecountResponse>>());
+        builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetCrmCallsRowsDataQuery, CrmCallsRowsDataResponse>>());
+        builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetCrmCallFormLookupsQuery, CrmCallFormLookupsResponse>>());
+        builder.Services.AddSingleton(
+            Mock.Of<IQueryHandler<GetCrmCallStudentContractsQuery, List<LookupItemResponse>>>());
+        builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetCrmCallQuery, CrmCallResponse>>());
+        builder.Services.AddSingleton(Mock.Of<ICommandHandler<CreateCrmCallCommand, int>>());
+        builder.Services.AddSingleton(Mock.Of<ICommandHandler<UpdateCrmCallCommand>>());
+        builder.Services.AddSingleton(Mock.Of<ICommandHandler<DeleteCrmCallCommand>>());
         return builder.Build();
     }
 

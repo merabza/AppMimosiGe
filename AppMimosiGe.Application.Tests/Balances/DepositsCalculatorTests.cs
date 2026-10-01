@@ -318,6 +318,11 @@ public sealed class DepositsCalculatorTests
         Charge(2, At(9, 10, 15));
         _crmCalls.Add(new CrmMustPayDateData(6, 2, At(9, 22, 10), At(10, 5)));
         _crmCalls.Add(new CrmMustPayDateData(5, 2, At(9, 22, 10), At(10, 4)));
+        //the same tie in the other load order: neither the first nor the last loaded call wins (D93)
+        Contract(3);
+        Charge(3, At(9, 10, 15));
+        _crmCalls.Add(new CrmMustPayDateData(7, 3, At(9, 22, 10), At(10, 6)));
+        _crmCalls.Add(new CrmMustPayDateData(8, 3, At(9, 22, 10), At(10, 7)));
 
         // Act
         DepositsResponse response = Build();
@@ -325,6 +330,7 @@ public sealed class DepositsCalculatorTests
         // Assert
         Assert.Equal(At(9, 30), response.Rows.Single(r => r.StudentContractId == 1).CrmMustPayDate);
         Assert.Equal(At(10, 5), response.Rows.Single(r => r.StudentContractId == 2).CrmMustPayDate);
+        Assert.Equal(At(10, 7), response.Rows.Single(r => r.StudentContractId == 3).CrmMustPayDate);
     }
 
     //"ფილტრი": balance ≤ maximum (the list itself takes < maximum, so 0 shows only with a desired day)

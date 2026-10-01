@@ -1,0 +1,18 @@
+using AppMimosiGe.Application.CrmCalls.Validation;
+using BackendCarcassShared.Contracts.Errors;
+using FluentValidation;
+
+namespace AppMimosiGe.Application.CrmCalls.CreateCrmCall;
+
+// ReSharper disable once UnusedType.Global
+public sealed class CreateCrmCallCommandValidator : AbstractValidator<CreateCrmCallCommand>
+{
+    public CreateCrmCallCommandValidator(ICrmCallsRepository repository)
+    {
+        RuleFor(x => x.Request).NotNull().WithErrorCode(CrudApiErrors.UploadedInformationCouldNotBeDecrypted.Code)
+            .WithMessage(CrudApiErrors.UploadedInformationCouldNotBeDecrypted.Description);
+
+        When(x => x.Request is not null,
+            () => RuleFor(x => x.Request!).SetValidator(new CrmCallRequestValidator(repository)));
+    }
+}
