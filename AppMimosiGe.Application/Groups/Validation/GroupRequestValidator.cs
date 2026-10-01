@@ -53,5 +53,8 @@ public sealed class GroupRequestValidator : AbstractValidator<GroupRequest>
         RuleFor(x => x.DayTimePlaces).Must(dayTimePlaces => !GroupPeriods.AnyDayTimePlacePeriodsOverlap(dayTimePlaces))
             .When(x => x.DayTimePlaces is not null).WithErrorCode(GroupErrors.DayTimePlacePeriodsOverlap.Code)
             .WithMessage(GroupErrors.DayTimePlacePeriodsOverlap.Description);
+        RuleFor(x => x.Students).Must(students => !GroupPeriods.AnyStudentPeriodsOverlap(students))
+            .When(x => x.Students is not null).WithErrorCode(GroupErrors.StudentPeriodsOverlap.Code)
+            .WithMessage(GroupErrors.StudentPeriodsOverlap.Description);
     }
 }

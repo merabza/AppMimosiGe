@@ -7,6 +7,10 @@ using AppMimosiGe.Application.Groups.GetGroupFormLookups;
 using AppMimosiGe.Application.Groups.GetGroupsRowsData;
 using AppMimosiGe.Application.Groups.GetGroupStudentContracts;
 using AppMimosiGe.Application.Groups.UpdateGroup;
+using AppMimosiGe.Application.LessonGenerator.GenerateGroupLastLesson;
+using AppMimosiGe.Application.LessonGenerator.GenerateGroupLessons;
+using AppMimosiGe.Application.LessonGenerator.GenerateGroupsLessons;
+using AppMimosiGe.Application.LessonGenerator.GetLessonGeneratorLog;
 using AppMimosiGe.Application.StudentContracts.CreateStudentContract;
 using AppMimosiGe.Application.StudentContracts.DeleteStudentContract;
 using AppMimosiGe.Application.StudentContracts.GetStudentContract;
@@ -61,6 +65,14 @@ internal static class EndpointsTestApp
         builder.Services.AddSingleton(Mock.Of<ICommandHandler<CreateGroupCommand, int>>());
         builder.Services.AddSingleton(Mock.Of<ICommandHandler<UpdateGroupCommand>>());
         builder.Services.AddSingleton(Mock.Of<ICommandHandler<DeleteGroupCommand>>());
+        builder.Services.AddSingleton(Mock
+            .Of<ICommandHandler<GenerateGroupLessonsCommand, LessonsGenerationResponse>>());
+        builder.Services.AddSingleton(Mock
+            .Of<ICommandHandler<GenerateGroupLastLessonCommand, GroupLastLessonResponse>>());
+        builder.Services.AddSingleton(Mock
+            .Of<ICommandHandler<GenerateGroupsLessonsCommand, LessonsGenerationResponse>>());
+        builder.Services.AddSingleton(Mock
+            .Of<IQueryHandler<GetLessonGeneratorLogQuery, List<LessonGeneratorLogRowResponse>>>());
         return builder.Build();
     }
 

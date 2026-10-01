@@ -56,6 +56,24 @@ public sealed class GroupPeriodsTests
     }
 
     [Fact]
+    public void AnyStudentPeriodsOverlap_ComparesOnlyTheSameStudentContract()
+    {
+        Assert.False(GroupPeriods.AnyStudentPeriodsOverlap([]));
+        Assert.False(GroupPeriods.AnyStudentPeriodsOverlap([
+            Student(studentContractId: 20, startDate: Day(1)), Student(studentContractId: 21, startDate: Day(1))
+        ]));
+        Assert.False(GroupPeriods.AnyStudentPeriodsOverlap([
+            Student(studentContractId: 20, startDate: Day(1), endDate: Day(15)),
+            Student(studentContractId: 20, startDate: Day(15))
+        ]));
+        Assert.True(GroupPeriods.AnyStudentPeriodsOverlap([
+            Student(studentContractId: 21, startDate: Day(1)),
+            Student(studentContractId: 20, startDate: Day(1), endDate: Day(15)),
+            Student(studentContractId: 20, startDate: Day(14))
+        ]));
+    }
+
+    [Fact]
     public void AnyDayTimePlacePeriodsOverlap_ComparesOnlyTheSameWeekDay()
     {
         Assert.False(GroupPeriods.AnyDayTimePlacePeriodsOverlap([]));

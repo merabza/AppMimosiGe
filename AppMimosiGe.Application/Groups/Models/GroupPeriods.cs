@@ -28,6 +28,14 @@ public static class GroupPeriods
             (a, b) => a.WeekDayId == b.WeekDayId && Overlap(a.StartDate, a.EndDate, b.StartDate, b.EndDate));
     }
 
+    //ერთი კონტრაქტი ერთ დღეს ჯგუფში ორჯერ: Access-ის გენერატორის გაკვეთილის მოსწავლეების შედარება ამას ვერ არჩევდა (D64)
+    public static bool AnyStudentPeriodsOverlap(IReadOnlyList<GroupStudentRequest> students)
+    {
+        return AnyPairMatches(students,
+            (a, b) => a.StudentContractId == b.StudentContractId &&
+                      Overlap(a.StartDate, a.EndDate, b.StartDate, b.EndDate));
+    }
+
     private static bool AnyPairMatches<T>(IReadOnlyList<T> rows, Func<T, T, bool> match)
     {
         for (int i = 0; i < rows.Count; i++)

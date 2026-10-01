@@ -262,6 +262,26 @@ public sealed class GroupValidatorsTests
             [DayTimePlace(weekDayId: 2), DayTimePlace(weekDayId: 3)])));
     }
 
+    // D64: one contract twice in the group on one day
+    [Fact]
+    public async Task OverlappingPeriodsOfOneStudentContract_AreError()
+    {
+        Assert.Equal([GroupErrors.StudentPeriodsOverlap.Code], await ErrorCodes(ValidRequest(students:
+        [
+            Student(endDate: StartDate.AddMonths(2)), Student(startDate: StartDate.AddMonths(1))
+        ])));
+    }
+
+    [Fact]
+    public async Task ConsecutivePeriodsOfOneStudentContract_AreAllowed()
+    {
+        Assert.Empty(await ErrorCodes(ValidRequest(students:
+        [
+            Student(endDate: StartDate.AddMonths(1)), Student(startDate: StartDate.AddMonths(1)),
+            Student(studentContractId: 21)
+        ])));
+    }
+
     [Fact]
     public async Task CreateValidator_NullRequest_IsDecryptError()
     {
