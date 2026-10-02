@@ -5,6 +5,7 @@ using AppMimosiGe.Application.LessonGenerator;
 using AppMimosiGe.Application.Lessons;
 using AppMimosiGe.Application.Payments;
 using AppMimosiGe.Application.Rights;
+using AppMimosiGe.Application.Salary;
 using AppMimosiGe.Application.StudentContracts;
 using AppMimosiGe.Application.TeacherContracts;
 using AppMimosiGe.Application.WorkHours;
@@ -32,6 +33,7 @@ public static class AppMimosiGeInfrastructureDependencyInjection
         services.AddScoped<IBalancesRepository, BalancesRepository>();
         services.AddScoped<ICrmCallsRepository, CrmCallsRepository>();
         services.AddScoped<IWorkHoursRepository, WorkHoursRepository>();
+        services.AddScoped<ISalaryRepository, SalaryRepository>();
         services.AddScoped<IUserClaimRights, UserClaimRights>();
 
         debugLogger?.Information("{MethodName} Finished", nameof(AddAppMimosiGeInfrastructure));

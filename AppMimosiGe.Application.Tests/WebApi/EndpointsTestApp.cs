@@ -34,6 +34,19 @@ using AppMimosiGe.Application.Payments.GetPaymentFormLookups;
 using AppMimosiGe.Application.Payments.GetPaymentsRowsData;
 using AppMimosiGe.Application.Payments.GetPaymentStudentContracts;
 using AppMimosiGe.Application.Payments.UpdatePayment;
+using AppMimosiGe.Application.Salary.CountSalary;
+using AppMimosiGe.Application.Salary.CreateSalaryHeader;
+using AppMimosiGe.Application.Salary.CreateSalaryPart;
+using AppMimosiGe.Application.Salary.DeleteSalaryHeader;
+using AppMimosiGe.Application.Salary.DeleteSalaryPart;
+using AppMimosiGe.Application.Salary.GetDeclarationFile;
+using AppMimosiGe.Application.Salary.GetSalaryFormLookups;
+using AppMimosiGe.Application.Salary.GetSalaryHeader;
+using AppMimosiGe.Application.Salary.GetSalaryHeaders;
+using AppMimosiGe.Application.Salary.GetTransferFile;
+using AppMimosiGe.Application.Salary.Models;
+using AppMimosiGe.Application.Salary.UpdateSalaryHeader;
+using AppMimosiGe.Application.Salary.UpdateSalaryPart;
 using AppMimosiGe.Application.StudentContracts.CreateStudentContract;
 using AppMimosiGe.Application.StudentContracts.DeleteStudentContract;
 using AppMimosiGe.Application.StudentContracts.GetStudentContract;
@@ -143,6 +156,19 @@ internal static class EndpointsTestApp
         builder.Services.AddSingleton(Mock.Of<ICommandHandler<EndWorkCommand, WorkHourResponse>>());
         builder.Services.AddSingleton(Mock
             .Of<ICommandHandler<AutoGenerateWorkHoursCommand, WorkHoursAutoGenerateResponse>>());
+        builder.Services.AddSingleton(
+            Mock.Of<IQueryHandler<GetSalaryHeadersQuery, List<SalaryHeaderRowResponse>>>());
+        builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetSalaryFormLookupsQuery, SalaryFormLookupsResponse>>());
+        builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetSalaryHeaderQuery, SalaryHeaderResponse>>());
+        builder.Services.AddSingleton(Mock.Of<ICommandHandler<CreateSalaryHeaderCommand, int>>());
+        builder.Services.AddSingleton(Mock.Of<ICommandHandler<UpdateSalaryHeaderCommand>>());
+        builder.Services.AddSingleton(Mock.Of<ICommandHandler<DeleteSalaryHeaderCommand>>());
+        builder.Services.AddSingleton(Mock.Of<ICommandHandler<CreateSalaryPartCommand, int>>());
+        builder.Services.AddSingleton(Mock.Of<ICommandHandler<UpdateSalaryPartCommand>>());
+        builder.Services.AddSingleton(Mock.Of<ICommandHandler<DeleteSalaryPartCommand>>());
+        builder.Services.AddSingleton(Mock.Of<ICommandHandler<CountSalaryCommand, SalaryCountResponse>>());
+        builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetTransferFileQuery, SalaryFile>>());
+        builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetDeclarationFileQuery, SalaryFile>>());
         return builder.Build();
     }
 
