@@ -3,16 +3,6 @@ using System.Collections.Generic;
 
 namespace AppMimosiGe.Application.Balances.Models;
 
-/// <summary>
-///     ამონაწერის სტრიქონი: ოპერაცია და ნაშთი მის შემდეგ
-/// </summary>
-public sealed record StatementRow(BalanceOperation Operation, decimal RunningTotal);
-
-/// <summary>
-///     ამონაწერი: საწყისი და საბოლოო ნაშთი და ფილტრის შუალედის სტრიქონები
-/// </summary>
-public sealed record Statement(decimal StartBalance, decimal EndBalance, List<StatementRow> Rows);
-
 public static class StatementCalculator
 {
     /// <summary>

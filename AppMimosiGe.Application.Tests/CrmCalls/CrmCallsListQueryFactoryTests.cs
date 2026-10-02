@@ -91,10 +91,9 @@ public sealed class CrmCallsListQueryFactoryTests
     [Fact]
     public void Create_SameDayRange_IsValid()
     {
-        Result<CrmCallsListQuery> result =
-            CrmCallsListQueryFactory.Create(Request([
-                Filter("dateFrom", "2026-09-24"), Filter("dateTo", "2026-09-24")
-            ]));
+        Result<CrmCallsListQuery> result = CrmCallsListQueryFactory.Create(Request([
+            Filter("dateFrom", "2026-09-24"), Filter("dateTo", "2026-09-24")
+        ]));
 
         Assert.True(result.IsSuccess);
         Assert.Equal(result.Value.DateFrom, result.Value.DateTo);

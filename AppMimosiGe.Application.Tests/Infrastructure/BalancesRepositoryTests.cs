@@ -50,30 +50,48 @@ public sealed class BalancesRepositoryTests : IDisposable
         _context.StudentContracts.AddRange(
             new StudentContract
             {
-                ScId = 10, ContractNumber = "6.001", StudentHumanId = 1, PayerHumanId = 2, AcademicYearId = 11,
-                DesiredMonthlyPaymentDay = 15, NextPayDate = At(9, 3, 15), DirtyNextPayDate = true
-            },
-            new StudentContract
+                ScId = 10,
+                ContractNumber = "6.001",
+                StudentHumanId = 1,
+                PayerHumanId = 2,
+                AcademicYearId = 11,
+                DesiredMonthlyPaymentDay = 15,
+                NextPayDate = At(9, 3, 15),
+                DirtyNextPayDate = true
+            }, new StudentContract
             {
-                ScId = 11, ContractNumber = "6.002", StudentHumanId = 3, PayerHumanId = 3, AcademicYearId = 11,
+                ScId = 11,
+                ContractNumber = "6.002",
+                StudentHumanId = 3,
+                PayerHumanId = 3,
+                AcademicYearId = 11,
                 DirtyNextPayDate = false
-            },
-            new StudentContract
+            }, new StudentContract
             {
-                ScId = 12, ContractNumber = "5.001", StudentHumanId = 4, PayerHumanId = 2, AcademicYearId = 10,
+                ScId = 12,
+                ContractNumber = "5.001",
+                StudentHumanId = 4,
+                PayerHumanId = 2,
+                AcademicYearId = 10,
                 DirtyNextPayDate = true
             });
         _context.Courses.AddRange(new Course { CrsId = 1, CourseName = "English" },
             new Course { CrsId = 2, CourseName = "Math" });
         _context.Groups.AddRange(new Group { GrpId = 100, GroupCode = "E1", CourseId = 1, AcademicYearId = 11 },
-            new Group { GrpId = 101, GroupCode = "M1", CourseId = 2, AcademicYearId = 11, VoidDate = At(12, 20) });
+            new Group
+            {
+                GrpId = 101,
+                GroupCode = "M1",
+                CourseId = 2,
+                AcademicYearId = 11,
+                VoidDate = At(12, 20)
+            });
         _context.GroupsByStudents.AddRange(GroupStudent(200, 100, 10, 48m, 8f, null),
             GroupStudent(201, 101, 10, 100m, 12f, At(11, 1)), GroupStudent(202, 100, 11, 60m, 6f, null));
         _context.Lessons.AddRange(Lesson(300, 100, At(9, 3, 15)), Lesson(301, 100, At(9, 10, 15), 2),
             Lesson(302, 101, At(10, 5, 16)), Lesson(303, 100, At(10, 8, 15)), Lesson(304, 100, At(10, 2, 15), 2),
             Lesson(305, 100, At(10, 1, 9)));
-        _context.LessonsByStudents.AddRange(
-            LessonStudent(400, 300, 10, 200, 1f), //a charge
+        _context.LessonsByStudents.AddRange(LessonStudent(400, 300, 10, 200, 1f), //a charge
             LessonStudent(401, 301, 10, 200, 1f), //cancelled lesson: no charge
             LessonStudent(402, 302, 10, 201, 2f), //a charge of Math
             LessonStudent(403, 300, 11, 202, 1.5f), //a charge of contract 11
@@ -117,18 +135,25 @@ public sealed class BalancesRepositoryTests : IDisposable
     {
         return new Human
         {
-            HumId = id, LastName = lastName, FirstName = firstName, PersonalId = $"0100000000{id}",
+            HumId = id,
+            LastName = lastName,
+            FirstName = firstName,
+            PersonalId = $"0100000000{id}",
             PhoneNumber = phoneNumber
         };
     }
 
-    private static GroupByStudent GroupStudent(int id, int grpId, int scId, decimal fee, float hours,
-        DateTime? endDate)
+    private static GroupByStudent GroupStudent(int id, int grpId, int scId, decimal fee, float hours, DateTime? endDate)
     {
         return new GroupByStudent
         {
-            GbsId = id, GroupId = grpId, StudentContractId = scId, FourWeekFee = fee, FourWeekHours = hours,
-            StartDate = At(9, 1), EndDate = endDate
+            GbsId = id,
+            GroupId = grpId,
+            StudentContractId = scId,
+            FourWeekFee = fee,
+            FourWeekHours = hours,
+            StartDate = At(9, 1),
+            EndDate = endDate
         };
     }
 
@@ -141,7 +166,11 @@ public sealed class BalancesRepositoryTests : IDisposable
     {
         return new LessonByStudent
         {
-            Id = id, LessonId = lessonId, StudentContractId = scId, GroupByStudentId = gbsId, HoursCount = hours
+            Id = id,
+            LessonId = lessonId,
+            StudentContractId = scId,
+            GroupByStudentId = gbsId,
+            HoursCount = hours
         };
     }
 
@@ -149,7 +178,11 @@ public sealed class BalancesRepositoryTests : IDisposable
     {
         return new Payment
         {
-            Id = id, StudentContractId = scId, PayDate = payDate, Amount = amount, Document = document
+            Id = id,
+            StudentContractId = scId,
+            PayDate = payDate,
+            Amount = amount,
+            Document = document
         };
     }
 

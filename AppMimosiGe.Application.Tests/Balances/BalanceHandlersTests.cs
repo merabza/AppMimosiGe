@@ -87,10 +87,8 @@ public sealed class BalanceHandlersTests
         // Arrange
         SetUpContractFive(Contracts(5));
         Func<IReadOnlyCollection<int>?, bool> contractFive = Contracts(5);
-        _repository.Setup(r =>
-                r.GetStudentContractNames(It.Is<IReadOnlyCollection<int>>(ids => contractFive(ids)),
-                    It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Dictionary<int, string> { [5] = "Alpha Ann / 6.005" });
+        _repository.Setup(r => r.GetStudentContractNames(It.Is<IReadOnlyCollection<int>>(ids => contractFive(ids)),
+            It.IsAny<CancellationToken>())).ReturnsAsync(new Dictionary<int, string> { [5] = "Alpha Ann / 6.005" });
 
         // Act: rows from 02.09, the second page of two
         Result<StatementRowsDataResponse> result = await GetStatement(
@@ -256,7 +254,10 @@ public sealed class BalanceHandlersTests
         studentContractsRepository.Setup(r => r.GetAcademicYears(It.IsAny<CancellationToken>())).ReturnsAsync([
             new AcademicYear
             {
-                AyId = 10, AcademicYearName = "2025-2026", StartDate = At(10, 1).AddYears(-1), FinishDate = At(10, 1)
+                AyId = 10,
+                AcademicYearName = "2025-2026",
+                StartDate = At(10, 1).AddYears(-1),
+                FinishDate = At(10, 1)
             },
             new AcademicYear
             {
@@ -279,8 +280,7 @@ public sealed class BalanceHandlersTests
         // Arrange
         var paymentsRepository = new Mock<IPaymentsRepository>();
         List<LookupItemResponse> contracts = [new(10, "Alpha Ann 6.001")];
-        paymentsRepository.Setup(r => r.GetStudentContracts(11, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(contracts);
+        paymentsRepository.Setup(r => r.GetStudentContracts(11, It.IsAny<CancellationToken>())).ReturnsAsync(contracts);
 
         // Act
         Result<List<LookupItemResponse>> result =
@@ -300,8 +300,7 @@ public sealed class BalanceHandlersTests
             new DepositContractData(2, 11, "Beta Bob", "6.002", null, "Payer Pat", null, 30, null)
         ]);
         Func<IReadOnlyCollection<int>?, bool> bothContracts = Contracts(1, 2);
-        SetUpOperations(bothContracts,
-            [new ChargeData(31, 1, At(9, 3, 15), "English", 80m, 8f, 1f)],
+        SetUpOperations(bothContracts, [new ChargeData(31, 1, At(9, 3, 15), "English", 80m, 8f, 1f)],
             [new PaymentData(7, 2, At(9, 1), null, 10m)]);
         _repository.Setup(r => r.GetNextLessonDates(It.Is<IReadOnlyCollection<int>>(ids => bothContracts(ids)),
             At(10, 1), It.IsAny<CancellationToken>())).ReturnsAsync([]);
@@ -389,10 +388,9 @@ public sealed class BalanceHandlersTests
     private static GroupLessonsGenerationResponse GroupResult(int grpId, int created = 0, int updated = 0,
         int deleted = 0, int added = 0, int updatedStudents = 0, int deletedStudents = 0, int errors = 0)
     {
-        return new GroupLessonsGenerationResponse(grpId, $"G{grpId}", created, updated, deleted, added,
-            updatedStudents, deletedStudents, 0,
-            [.. Enumerable.Range(1, errors).Select(i => new LessonGeneratorErrorResponse(i, "error", null, null))],
-            []);
+        return new GroupLessonsGenerationResponse(grpId, $"G{grpId}", created, updated, deleted, added, updatedStudents,
+            deletedStudents, 0,
+            [.. Enumerable.Range(1, errors).Select(i => new LessonGeneratorErrorResponse(i, "error", null, null))], []);
     }
 
     private Mock<ICommandHandler<GenerateGroupsLessonsCommand, LessonsGenerationResponse>> Generator(
@@ -431,7 +429,8 @@ public sealed class BalanceHandlersTests
         // Assert
         Assert.Equal(new BalancesRecountResponse(8, 6, 3, 1, 1), result.Value);
         Assert.Equal(["lessons", "contracts"], calls);
-        generator.Verify(g => g.Handle(new GenerateGroupsLessonsCommand(onlyDirty, false), It.IsAny<CancellationToken>()),
+        generator.Verify(
+            g => g.Handle(new GenerateGroupsLessonsCommand(onlyDirty, false), It.IsAny<CancellationToken>()),
             Times.Once);
         Assert.Equal(At(9, 3, 15), studentContract.NextPayDate);
         Assert.False(studentContract.DirtyNextPayDate);

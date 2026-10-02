@@ -17,8 +17,7 @@ public interface IBalancesRepository
     Task<List<ChargeData>> GetCharges(IReadOnlyCollection<int>? scIds, CancellationToken cancellationToken = default);
 
     //scIds null: ყველა კონტრაქტის
-    Task<List<PaymentData>> GetPayments(IReadOnlyCollection<int>? scIds,
-        CancellationToken cancellationToken = default);
+    Task<List<PaymentData>> GetPayments(IReadOnlyCollection<int>? scIds, CancellationToken cancellationToken = default);
 
     //კონტრაქტის ID → "გვარი სახელი / ნომერი" (Access-ის ამონაწერის სტრიქონის ჩამოსაშლელი სია)
     Task<Dictionary<int, string>> GetStudentContractNames(IReadOnlyCollection<int> scIds,

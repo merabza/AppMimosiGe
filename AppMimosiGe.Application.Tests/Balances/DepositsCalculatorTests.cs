@@ -43,8 +43,8 @@ public sealed class DepositsCalculatorTests
     private DepositsResponse Build(EDepositsFilter filter = EDepositsFilter.None, decimal maximum = 0m,
         DateTime? dateTo = null)
     {
-        DepositsInput input = new(_contracts, [.. _operations.OrderBy(o => o.OperationDate)], _nextLessons,
-            _crmCalls, _groupStudents, _lastOperationMonth);
+        DepositsInput input = new(_contracts, [.. _operations.OrderBy(o => o.OperationDate)], _nextLessons, _crmCalls,
+            _groupStudents, _lastOperationMonth);
         return DepositsCalculator.Build(input, new DepositsParameters(maximum, dateTo ?? DateTo, filter, Today));
     }
 
@@ -300,8 +300,9 @@ public sealed class DepositsCalculatorTests
         DepositRowResponse row = Row(1);
 
         // Assert
-        Assert.Equal(new DepositRowResponse(1, 11, "Beta Bob", "6.001", -10m, "555000001", "Payer Pat", "555000002",
-            At(10, 2, 16), null, null, null, null, null, null, At(9, 20, 15), null, null), row);
+        Assert.Equal(
+            new DepositRowResponse(1, 11, "Beta Bob", "6.001", -10m, "555000001", "Payer Pat", "555000002",
+                At(10, 2, 16), null, null, null, null, null, null, At(9, 20, 15), null, null), row);
     }
 
     //vStudentMustPayDate: the latest call with "must pay until"; two calls at the same time: the later id
@@ -398,7 +399,7 @@ public sealed class DepositsCalculatorTests
         Contract(1, "Delta Dan", nextPayDate: At(9, 20));
         Contract(2, "Gamma Gia", nextPayDate: At(9, 10));
         Contract(3, "Beta Bob", nextPayDate: At(9, 20));
-        Contract(4, "Alpha Ann", nextPayDate: At(9, 20));
+        Contract(4, nextPayDate: At(9, 20));
         Contract(5, "Zeta Zoe");
         foreach (int scId in new[] { 1, 2, 3, 4, 5 })
         {
@@ -419,7 +420,7 @@ public sealed class DepositsCalculatorTests
         Contract(1, "Delta Dan", nextPayDate: At(9, 10));
         Contract(2, "Gamma Gia", nextPayDate: At(9, 20));
         Contract(3, "Beta Bob");
-        Contract(4, "Alpha Ann");
+        Contract(4);
         foreach (int scId in new[] { 1, 2, 3, 4 })
         {
             Charge(scId, At(9, 10, 15));

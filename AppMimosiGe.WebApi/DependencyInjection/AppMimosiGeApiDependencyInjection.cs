@@ -21,6 +21,7 @@ public static class AppMimosiGeApiDependencyInjection
         endpoints.UseChargesAndPaymentsEndpoints(debugLogger);
         endpoints.UseDepositsEndpoints(debugLogger);
         endpoints.UseCrmCallsEndpoints(debugLogger);
+        endpoints.UseWorkHoursEndpoints(debugLogger);
 
         debugLogger?.Information("{MethodName} Finished", nameof(UseAppMimosiGeApi));
 

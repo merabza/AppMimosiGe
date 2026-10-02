@@ -7,6 +7,7 @@ using AppMimosiGe.Application.Payments;
 using AppMimosiGe.Application.Rights;
 using AppMimosiGe.Application.StudentContracts;
 using AppMimosiGe.Application.TeacherContracts;
+using AppMimosiGe.Application.WorkHours;
 using AppMimosiGe.Infrastructure.DependencyInjection;
 using AppMimosiGe.Infrastructure.Repositories;
 using AppMimosiGe.Infrastructure.Rights;
@@ -140,6 +141,21 @@ public sealed class AppMimosiGeInfrastructureDependencyInjectionTests
         // Assert
         ServiceDescriptor descriptor = Assert.Single(services, s => s.ServiceType == typeof(ICrmCallsRepository));
         Assert.Equal(typeof(CrmCallsRepository), descriptor.ImplementationType);
+        Assert.Equal(ServiceLifetime.Scoped, descriptor.Lifetime);
+    }
+
+    [Fact]
+    public void AddAppMimosiGeInfrastructure_RegistersWorkHoursRepositoryAsScoped()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+
+        // Act
+        services.AddAppMimosiGeInfrastructure(null);
+
+        // Assert
+        ServiceDescriptor descriptor = Assert.Single(services, s => s.ServiceType == typeof(IWorkHoursRepository));
+        Assert.Equal(typeof(WorkHoursRepository), descriptor.ImplementationType);
         Assert.Equal(ServiceLifetime.Scoped, descriptor.Lifetime);
     }
 

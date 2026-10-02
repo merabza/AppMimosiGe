@@ -5,24 +5,6 @@ using AppMimosiGeShared.Contracts.V1.Responses;
 
 namespace AppMimosiGe.Application.Balances.Models;
 
-/// <summary>
-///     ბალანსების სიის მონაცემები: კონტრაქტები, მათი ოპერაციები (BalanceOperations.Build), შემდეგი გაკვეთილები
-///     (კონტრაქტის ID → თარიღი), CRM ზარები "უნდა გადაიხადოს" თარიღით, ჯგუფების სტრიქონები და ბოლო სამუშაო თვე
-/// </summary>
-public sealed record DepositsInput(
-    IReadOnlyList<DepositContractData> Contracts,
-    IReadOnlyList<BalanceOperation> Operations,
-    IReadOnlyDictionary<int, DateTime> NextLessonDates,
-    IReadOnlyList<CrmMustPayDateData> CrmMustPayDates,
-    IReadOnlyList<DepositGroupStudentData> GroupStudents,
-    DateTime? LastOperationMonth);
-
-/// <summary>
-///     ბალანსების სიის პარამეტრები: Access-ის FrmDeposites-ის "მაქსიმუმი", "თარიღამდე" (დღე, ჩათვლით), ფილტრის ღილაკი და
-///     დღევანდელი თარიღი
-/// </summary>
-public sealed record DepositsParameters(decimal Maximum, DateTime DateTo, EDepositsFilter Filter, DateTime Today);
-
 public static class DepositsCalculator
 {
     /// <summary>
@@ -90,14 +72,13 @@ public static class DepositsCalculator
         List<DepositRowResponse> ordered =
         [
             .. (parameters.Filter == EDepositsFilter.None
-                    ? rows.OrderBy(r => r.StopDate).ThenBy(r => r.NextLessonDate)
-                    : rows.OrderBy(r => r.NextLessonDate))
-                .ThenBy(r => r.StudentName, StringComparer.Ordinal).ThenBy(r => r.StudentContractId)
+                ? rows.OrderBy(r => r.StopDate).ThenBy(r => r.NextLessonDate)
+                : rows.OrderBy(r => r.NextLessonDate)).ThenBy(r => r.StudentName, StringComparer.Ordinal)
+            .ThenBy(r => r.StudentContractId)
         ];
 
         //Access-ის ფორმის footer: ნაჩვენები სტრიქონების ჯამები
-        return new DepositsResponse(ordered.Sum(r => r.Balance ?? 0m), ordered.Sum(r => r.FourWeekFee ?? 0m),
-            ordered);
+        return new DepositsResponse(ordered.Sum(r => r.Balance ?? 0m), ordered.Sum(r => r.FourWeekFee ?? 0m), ordered);
     }
 
     private static bool MatchesFilter(DepositRowResponse row, DepositsParameters parameters, DateTime today)
@@ -115,7 +96,8 @@ public static class DepositsCalculator
     //ასეთი სტრიქონის გარეშე null
     private static decimal? FourWeekFee(List<DepositGroupStudentData> groupStudents, DateTime dateToEnd)
     {
-        List<DepositGroupStudentData> active = [.. groupStudents.Where(g => g.EndDate is null || g.EndDate >= dateToEnd)];
+        List<DepositGroupStudentData> active =
+            [.. groupStudents.Where(g => g.EndDate is null || g.EndDate >= dateToEnd)];
         return active.Count == 0 ? null : active.Sum(g => g.FourWeekFee);
     }
 

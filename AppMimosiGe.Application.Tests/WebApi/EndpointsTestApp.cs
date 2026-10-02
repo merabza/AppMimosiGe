@@ -47,6 +47,15 @@ using AppMimosiGe.Application.TeacherContracts.GetTeacherContract;
 using AppMimosiGe.Application.TeacherContracts.GetTeacherContractFormLookups;
 using AppMimosiGe.Application.TeacherContracts.GetTeacherContractsRowsData;
 using AppMimosiGe.Application.TeacherContracts.UpdateTeacherContract;
+using AppMimosiGe.Application.WorkHours.AutoGenerateWorkHours;
+using AppMimosiGe.Application.WorkHours.CreateWorkHour;
+using AppMimosiGe.Application.WorkHours.DeleteWorkHour;
+using AppMimosiGe.Application.WorkHours.EndWork;
+using AppMimosiGe.Application.WorkHours.GetWorkHour;
+using AppMimosiGe.Application.WorkHours.GetWorkHourFormLookups;
+using AppMimosiGe.Application.WorkHours.GetWorkHoursRowsData;
+using AppMimosiGe.Application.WorkHours.StartWork;
+using AppMimosiGe.Application.WorkHours.UpdateWorkHour;
 using AppMimosiGeShared.Contracts.V1.Responses;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
@@ -111,11 +120,10 @@ internal static class EndpointsTestApp
         builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetStatementQuery, StatementRowsDataResponse>>());
         builder.Services.AddSingleton(
             Mock.Of<IQueryHandler<GetBalancesFormLookupsQuery, BalancesFormLookupsResponse>>());
-        builder.Services.AddSingleton(
-            Mock.Of<IQueryHandler<GetStatementStudentContractsQuery, List<LookupItemResponse>>>());
+        builder.Services.AddSingleton(Mock
+            .Of<IQueryHandler<GetStatementStudentContractsQuery, List<LookupItemResponse>>>());
         builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetDepositsQuery, DepositsResponse>>());
-        builder.Services.AddSingleton(
-            Mock.Of<ICommandHandler<RecountBalancesCommand, BalancesRecountResponse>>());
+        builder.Services.AddSingleton(Mock.Of<ICommandHandler<RecountBalancesCommand, BalancesRecountResponse>>());
         builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetCrmCallsRowsDataQuery, CrmCallsRowsDataResponse>>());
         builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetCrmCallFormLookupsQuery, CrmCallFormLookupsResponse>>());
         builder.Services.AddSingleton(
@@ -124,6 +132,17 @@ internal static class EndpointsTestApp
         builder.Services.AddSingleton(Mock.Of<ICommandHandler<CreateCrmCallCommand, int>>());
         builder.Services.AddSingleton(Mock.Of<ICommandHandler<UpdateCrmCallCommand>>());
         builder.Services.AddSingleton(Mock.Of<ICommandHandler<DeleteCrmCallCommand>>());
+        builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetWorkHoursRowsDataQuery, WorkHoursRowsDataResponse>>());
+        builder.Services.AddSingleton(
+            Mock.Of<IQueryHandler<GetWorkHourFormLookupsQuery, WorkHourFormLookupsResponse>>());
+        builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetWorkHourQuery, WorkHourResponse>>());
+        builder.Services.AddSingleton(Mock.Of<ICommandHandler<CreateWorkHourCommand, int>>());
+        builder.Services.AddSingleton(Mock.Of<ICommandHandler<UpdateWorkHourCommand>>());
+        builder.Services.AddSingleton(Mock.Of<ICommandHandler<DeleteWorkHourCommand>>());
+        builder.Services.AddSingleton(Mock.Of<ICommandHandler<StartWorkCommand, WorkHourResponse>>());
+        builder.Services.AddSingleton(Mock.Of<ICommandHandler<EndWorkCommand, WorkHourResponse>>());
+        builder.Services.AddSingleton(Mock
+            .Of<ICommandHandler<AutoGenerateWorkHoursCommand, WorkHoursAutoGenerateResponse>>());
         return builder.Build();
     }
 

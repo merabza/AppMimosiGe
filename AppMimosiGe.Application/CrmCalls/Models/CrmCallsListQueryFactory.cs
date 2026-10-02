@@ -83,8 +83,8 @@ public static class CrmCallsListQueryFactory
             sortFields.Add(new CrmCallSortField(field, sortField.Ascending));
         }
 
-        return new CrmCallsListQuery(request.Offset, request.RowsCount, studentContractId, dateFrom, dateTo,
-            callTypeId, answerTypeId, sortFields.Count == 0 ? DefaultSortFields : sortFields);
+        return new CrmCallsListQuery(request.Offset, request.RowsCount, studentContractId, dateFrom, dateTo, callTypeId,
+            answerTypeId, sortFields.Count == 0 ? DefaultSortFields : sortFields);
     }
 
     //ცარიელი მნიშვნელობა ფილტრის მოხსნას ნიშნავს

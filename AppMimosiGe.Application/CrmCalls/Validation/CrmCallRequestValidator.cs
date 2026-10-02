@@ -17,8 +17,7 @@ public sealed class CrmCallRequestValidator : AbstractValidator<CrmCallRequest>
             .WithMessage(CrmCallErrors.StudentContractNotFound.Description);
 
         RuleFor(x => x.CallTypeId).MustAsync((id, ct) => repository.CallTypeExists(id, ct))
-            .WithErrorCode(CrmCallErrors.CallTypeNotFound.Code)
-            .WithMessage(CrmCallErrors.CallTypeNotFound.Description);
+            .WithErrorCode(CrmCallErrors.CallTypeNotFound.Code).WithMessage(CrmCallErrors.CallTypeNotFound.Description);
 
         RuleFor(x => x.CallDate).NotEmpty().WithErrorCode(CrmCallErrors.CallDateIsRequired.Code)
             .WithMessage(CrmCallErrors.CallDateIsRequired.Description);

@@ -78,10 +78,8 @@ public sealed class CrmCallValidatorsTests
     [Fact]
     public async Task MissingStudentContract_IsNotFound()
     {
-        Assert.Equal([CrmCallErrors.StudentContractNotFound.Code],
-            await CreateErrorCodes(Request(11)));
-        Assert.Equal([CrmCallErrors.StudentContractNotFound.Code],
-            await UpdateErrorCodes(Request(11)));
+        Assert.Equal([CrmCallErrors.StudentContractNotFound.Code], await CreateErrorCodes(Request(11)));
+        Assert.Equal([CrmCallErrors.StudentContractNotFound.Code], await UpdateErrorCodes(Request(11)));
     }
 
     [Fact]
@@ -114,8 +112,7 @@ public sealed class CrmCallValidatorsTests
     [Fact]
     public async Task SeveralErrors_AreAllReported()
     {
-        Assert.Equal(
-        [
+        Assert.Equal([
             CrmCallErrors.StudentContractNotFound.Code, CrmCallErrors.CallTypeNotFound.Code,
             CrmCallErrors.CallDateIsRequired.Code, CrmCallErrors.AnswerTypeIsRequired.Code
         ], await CreateErrorCodes(Request(11, 2, DateTime.MinValue, null)));

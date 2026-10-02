@@ -87,10 +87,9 @@ public sealed class PaymentsListQueryFactoryTests
     [Fact]
     public void Create_SameDayRange_IsValid()
     {
-        Result<PaymentsListQuery> result =
-            PaymentsListQueryFactory.Create(Request([
-                Filter("dateFrom", "2026-09-15"), Filter("dateTo", "2026-09-15")
-            ]));
+        Result<PaymentsListQuery> result = PaymentsListQueryFactory.Create(Request([
+            Filter("dateFrom", "2026-09-15"), Filter("dateTo", "2026-09-15")
+        ]));
 
         Assert.True(result.IsSuccess);
         Assert.Equal(result.Value.DateFrom, result.Value.DateTo);

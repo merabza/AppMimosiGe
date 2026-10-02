@@ -37,8 +37,7 @@ public sealed class GetDepositsQueryHandler(IBalancesRepository repository, Time
             await repository.GetGroupStudents(scIds, cancellationToken),
             await repository.GetLastOperationMonth(cancellationToken));
 
-        return DepositsCalculator.Build(input,
-            new DepositsParameters(request.Maximum, request.DateTo, filter, today));
+        return DepositsCalculator.Build(input, new DepositsParameters(request.Maximum, request.DateTo, filter, today));
     }
 
     //ცარიელი: ფილტრის გარეშე. სახელით, რეგისტრის მიუხედავად; რიცხვითი მნიშვნელობა არ მიიღება

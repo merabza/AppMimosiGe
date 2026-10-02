@@ -55,8 +55,7 @@ public sealed class BalancesRepository(IMimosiGeDbContext context) : IBalancesRe
         return context.StudentContracts.AsNoTracking().Where(x => scIds.Contains(x.ScId))
             .Select(x => new
             {
-                x.ScId,
-                Name = x.StudentHuman.LastName + " " + x.StudentHuman.FirstName + " / " + x.ContractNumber
+                x.ScId, Name = x.StudentHuman.LastName + " " + x.StudentHuman.FirstName + " / " + x.ContractNumber
             }).ToDictionaryAsync(x => x.ScId, x => x.Name, cancellationToken);
     }
 
@@ -71,8 +70,8 @@ public sealed class BalancesRepository(IMimosiGeDbContext context) : IBalancesRe
 
         return studentContracts.Select(x => new DepositContractData(x.ScId, x.AcademicYearId,
             x.StudentHuman.LastName + " " + x.StudentHuman.FirstName, x.ContractNumber, x.StudentHuman.PhoneNumber,
-            x.PayerHuman.LastName + " " + x.PayerHuman.FirstName, x.PayerHuman.PhoneNumber,
-            x.DesiredMonthlyPaymentDay, x.NextPayDate)).ToListAsync(cancellationToken);
+            x.PayerHuman.LastName + " " + x.PayerHuman.FirstName, x.PayerHuman.PhoneNumber, x.DesiredMonthlyPaymentDay,
+            x.NextPayDate)).ToListAsync(cancellationToken);
     }
 
     //კონტრაქტის ნებისმიერი LessonsByStudents-ის სტრიქონის გაკვეთილი (ჯგუფის სტრიქონის შემოწმების გარეშე, როგორც Access-ში)
@@ -91,8 +90,7 @@ public sealed class BalancesRepository(IMimosiGeDbContext context) : IBalancesRe
     public Task<List<CrmMustPayDateData>> GetCrmMustPayDates(IReadOnlyCollection<int> scIds,
         CancellationToken cancellationToken = default)
     {
-        return context.CrmCalls.AsNoTracking()
-            .Where(x => x.MustPayDate != null && scIds.Contains(x.StudentContractId))
+        return context.CrmCalls.AsNoTracking().Where(x => x.MustPayDate != null && scIds.Contains(x.StudentContractId))
             .Select(x => new CrmMustPayDateData(x.CcId, x.StudentContractId, x.CallDate, x.MustPayDate!.Value))
             .ToListAsync(cancellationToken);
     }

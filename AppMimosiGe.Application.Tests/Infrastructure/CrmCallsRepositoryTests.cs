@@ -138,11 +138,11 @@ public sealed class CrmCallsRepositoryTests : IDisposable
         CrmCallsRowsDataResponse data = await _repository.GetRowsData(Query());
 
         Assert.Equal(
-            new CrmCallRowResponse(3, 10, "Alpha Ann / 6.001", At(9, 15, 18), 2, "Another", 1, "Off", "c3",
-                At(9, 20)), data.Rows.Single(r => r.Id == 3));
+            new CrmCallRowResponse(3, 10, "Alpha Ann / 6.001", At(9, 15, 18), 2, "Another", 1, "Off", "c3", At(9, 20)),
+            data.Rows.Single(r => r.Id == 3));
         Assert.Equal(
-            new CrmCallRowResponse(2, 11, "Beta Bob / 6.002", At(9, 3, 10), 1, "Reminder", 2, "No answer", null,
-                null), data.Rows.Single(r => r.Id == 2));
+            new CrmCallRowResponse(2, 11, "Beta Bob / 6.002", At(9, 3, 10), 1, "Reminder", 2, "No answer", null, null),
+            data.Rows.Single(r => r.Id == 2));
     }
 
     [Fact]
@@ -340,8 +340,8 @@ public sealed class CrmCallsRepositoryTests : IDisposable
         _context.SaveChanges();
         _context.ChangeTracker.Clear();
 
-        Assert.Equal("new", _context.CrmCalls.Single(c => c.StudentContractId == 12 && c.AnswerTypeId == 2)
-            .CallConversation);
+        Assert.Equal("new",
+            _context.CrmCalls.Single(c => c.StudentContractId == 12 && c.AnswerTypeId == 2).CallConversation);
     }
 
     [Fact]

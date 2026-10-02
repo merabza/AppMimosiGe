@@ -43,8 +43,9 @@ public sealed class StatementListQueryFactoryTests
         ], [], 20, 30));
 
         Assert.True(result.IsSuccess);
-        Assert.Equal(new StatementListQuery(20, 30, 12, new DateTime(2026, 9, 1, 0, 0, 0, DateTimeKind.Unspecified),
-            new DateTime(2026, 9, 30, 0, 0, 0, DateTimeKind.Unspecified)), result.Value);
+        Assert.Equal(
+            new StatementListQuery(20, 30, 12, new DateTime(2026, 9, 1, 0, 0, 0, DateTimeKind.Unspecified),
+                new DateTime(2026, 9, 30, 0, 0, 0, DateTimeKind.Unspecified)), result.Value);
     }
 
     // an empty value removes the filter, as the SPA sends it
