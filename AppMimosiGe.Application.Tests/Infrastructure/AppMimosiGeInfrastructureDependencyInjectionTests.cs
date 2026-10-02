@@ -1,4 +1,5 @@
 using AppMimosiGe.Application.Balances;
+using AppMimosiGe.Application.CrmCalls;
 using AppMimosiGe.Application.Groups;
 using AppMimosiGe.Application.LessonGenerator;
 using AppMimosiGe.Application.Lessons;
@@ -124,6 +125,21 @@ public sealed class AppMimosiGeInfrastructureDependencyInjectionTests
         // Assert
         ServiceDescriptor descriptor = Assert.Single(services, s => s.ServiceType == typeof(IBalancesRepository));
         Assert.Equal(typeof(BalancesRepository), descriptor.ImplementationType);
+        Assert.Equal(ServiceLifetime.Scoped, descriptor.Lifetime);
+    }
+
+    [Fact]
+    public void AddAppMimosiGeInfrastructure_RegistersCrmCallsRepositoryAsScoped()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+
+        // Act
+        services.AddAppMimosiGeInfrastructure(null);
+
+        // Assert
+        ServiceDescriptor descriptor = Assert.Single(services, s => s.ServiceType == typeof(ICrmCallsRepository));
+        Assert.Equal(typeof(CrmCallsRepository), descriptor.ImplementationType);
         Assert.Equal(ServiceLifetime.Scoped, descriptor.Lifetime);
     }
 

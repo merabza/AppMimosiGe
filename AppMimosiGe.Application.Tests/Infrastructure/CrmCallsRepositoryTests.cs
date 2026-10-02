@@ -167,6 +167,17 @@ public sealed class CrmCallsRepositoryTests : IDisposable
         await AssertIds(Query(dateTo: At(9, 2)));
     }
 
+    // a call exactly at midnight belongs to its own day: "from 20.09" takes it, "until 19.09" does not
+    [Fact]
+    public async Task GetRowsData_CallAtMidnight_BelongsToItsDay()
+    {
+        AddAndSave(Call(6, 10, 1, At(9, 20), 3, null, null));
+
+        await AssertIds(Query(dateFrom: At(9, 20)), 6, 5);
+        await AssertIds(Query(dateTo: At(9, 19)), 4, 1, 2, 3);
+        await AssertIds(Query(dateFrom: At(9, 20), dateTo: At(9, 20)), 6);
+    }
+
     [Fact]
     public async Task GetRowsData_FiltersByTypeAndResult()
     {

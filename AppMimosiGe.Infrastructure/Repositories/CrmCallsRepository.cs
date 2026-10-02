@@ -85,15 +85,16 @@ public sealed class CrmCallsRepository(IMimosiGeDbContext context) : ICrmCallsRe
         return context.CrmAnswerTypes.AnyAsync(x => x.CatId == catId, cancellationToken);
     }
 
+    //სახელები უნიკალურია (UQ ინდექსი), ამიტომ სახელით დალაგება ცალსახაა
     public Task<List<LookupItemResponse>> GetCallTypes(CancellationToken cancellationToken = default)
     {
-        return context.CrmCallTypes.AsNoTracking().OrderBy(x => x.CallTypeName).ThenBy(x => x.CctId)
+        return context.CrmCallTypes.AsNoTracking().OrderBy(x => x.CallTypeName)
             .Select(x => new LookupItemResponse(x.CctId, x.CallTypeName)).ToListAsync(cancellationToken);
     }
 
     public Task<List<LookupItemResponse>> GetAnswerTypes(CancellationToken cancellationToken = default)
     {
-        return context.CrmAnswerTypes.AsNoTracking().OrderBy(x => x.AnswerTypeName).ThenBy(x => x.CatId)
+        return context.CrmAnswerTypes.AsNoTracking().OrderBy(x => x.AnswerTypeName)
             .Select(x => new LookupItemResponse(x.CatId, x.AnswerTypeName)).ToListAsync(cancellationToken);
     }
 
