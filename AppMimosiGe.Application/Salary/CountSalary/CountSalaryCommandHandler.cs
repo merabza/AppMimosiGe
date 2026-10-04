@@ -35,8 +35,7 @@ public sealed class CountSalaryCommandHandler(ISalaryRepository repository, IUni
             await repository.GetLessonRows(from, from.AddMonths(2), cancellationToken),
             (await repository.GetOperationMonths(cancellationToken)).ToHashSet(),
             await repository.GetHourRates(cancellationToken),
-            await repository.GetPartTypeCountPlaces(cancellationToken),
-            [
+            await repository.GetPartTypeCountPlaces(cancellationToken), [
                 .. header.SalaryParts.Where(x => x.SalaryPartTypeId != SalaryCalculator.LessonSalaryPartTypeId)
                     .Select(x => new SalaryPartData(x.TeacherContractId, x.SalaryPartTypeId, x.SpAmount))
             ]);
@@ -92,7 +91,10 @@ public sealed class CountSalaryCommandHandler(ISalaryRepository repository, IUni
             SaIndividualIncomeTax = line.IndividualIncomeTax,
             SalaryLinesDetails = new List<SalaryLineDetail>(line.Details.Select(x => new SalaryLineDetail
             {
-                GroupId = x.GroupId, SadAmount = x.Amount, SadHoursCount = x.HoursCount, SadHourCost = x.HourCost
+                GroupId = x.GroupId,
+                SadAmount = x.Amount,
+                SadHoursCount = x.HoursCount,
+                SadHourCost = x.HourCost
             }))
         };
     }

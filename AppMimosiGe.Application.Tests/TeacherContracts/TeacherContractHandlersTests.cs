@@ -39,8 +39,7 @@ public sealed class TeacherContractHandlersTests
             RsCountryId = 8,
             BankAccount = "old",
             Description = "old",
-            WorkHoursStart = new DateTime(1899, 12, 30, 9, 0, 0, DateTimeKind.Unspecified),
-            Line = 3
+            WorkHoursStart = new DateTime(1899, 12, 30, 9, 0, 0, DateTimeKind.Unspecified)
         };
     }
 
@@ -92,7 +91,6 @@ public sealed class TeacherContractHandlersTests
         Assert.Equal(new DateTime(1899, 12, 30, 12, 0, 0, DateTimeKind.Unspecified), added.WorkHoursStart);
         Assert.Equal(new DateTime(1899, 12, 30, 18, 30, 0, DateTimeKind.Unspecified), added.WorkHoursEnd);
         Assert.Equal(new DateTime(2027, 6, 30, 0, 0, 0, DateTimeKind.Unspecified), added.ContractEndDate);
-        Assert.Equal(0, added.Line);
         _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -128,9 +126,8 @@ public sealed class TeacherContractHandlersTests
         _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
-    // Line is not on the form, so an edit keeps it
     [Fact]
-    public async Task Update_ChangesTheFieldsKeepsLineAndSaves()
+    public async Task Update_ChangesTheFieldsAndSaves()
     {
         TeacherContract existing = ExistingContract();
         _repository.Setup(r => r.GetForChange(42, It.IsAny<CancellationToken>())).ReturnsAsync(existing);
@@ -146,7 +143,6 @@ public sealed class TeacherContractHandlersTests
         Assert.Null(existing.BankAccount);
         Assert.Null(existing.Description);
         Assert.Null(existing.WorkHoursStart);
-        Assert.Equal(3, existing.Line);
         _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 

@@ -15,8 +15,7 @@ public sealed class GetDeclarationFileQueryHandler(ISalaryRepository repository)
 {
     //Access-ის ExportTaxDepDeclarationFile: ყველა უწყისის სტრიქონი, რომლის გადარიცხვის თარიღი ამ თვეშია.
     //ValidationDecorator მხოლოდ ბრძანებებს ამოწმებს, ამიტომ თვე აქ მოწმდება
-    public async Task<Result<SalaryFile>> Handle(GetDeclarationFileQuery request,
-        CancellationToken cancellationToken)
+    public async Task<Result<SalaryFile>> Handle(GetDeclarationFileQuery request, CancellationToken cancellationToken)
     {
         if (request.Month is not { } month)
         {

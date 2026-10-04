@@ -34,6 +34,11 @@ using AppMimosiGe.Application.Payments.GetPaymentFormLookups;
 using AppMimosiGe.Application.Payments.GetPaymentsRowsData;
 using AppMimosiGe.Application.Payments.GetPaymentStudentContracts;
 using AppMimosiGe.Application.Payments.UpdatePayment;
+using AppMimosiGe.Application.Reports.GetReportCatalog;
+using AppMimosiGe.Application.Reports.GetReportExcel;
+using AppMimosiGe.Application.Reports.GetReportLookups;
+using AppMimosiGe.Application.Reports.Models;
+using AppMimosiGe.Application.Reports.RunReport;
 using AppMimosiGe.Application.Salary.CountSalary;
 using AppMimosiGe.Application.Salary.CreateSalaryHeader;
 using AppMimosiGe.Application.Salary.CreateSalaryPart;
@@ -156,8 +161,7 @@ internal static class EndpointsTestApp
         builder.Services.AddSingleton(Mock.Of<ICommandHandler<EndWorkCommand, WorkHourResponse>>());
         builder.Services.AddSingleton(Mock
             .Of<ICommandHandler<AutoGenerateWorkHoursCommand, WorkHoursAutoGenerateResponse>>());
-        builder.Services.AddSingleton(
-            Mock.Of<IQueryHandler<GetSalaryHeadersQuery, List<SalaryHeaderRowResponse>>>());
+        builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetSalaryHeadersQuery, List<SalaryHeaderRowResponse>>>());
         builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetSalaryFormLookupsQuery, SalaryFormLookupsResponse>>());
         builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetSalaryHeaderQuery, SalaryHeaderResponse>>());
         builder.Services.AddSingleton(Mock.Of<ICommandHandler<CreateSalaryHeaderCommand, int>>());
@@ -169,6 +173,10 @@ internal static class EndpointsTestApp
         builder.Services.AddSingleton(Mock.Of<ICommandHandler<CountSalaryCommand, SalaryCountResponse>>());
         builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetTransferFileQuery, SalaryFile>>());
         builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetDeclarationFileQuery, SalaryFile>>());
+        builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetReportCatalogQuery, ReportCatalogResponse>>());
+        builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetReportLookupsQuery, ReportLookupsResponse>>());
+        builder.Services.AddSingleton(Mock.Of<IQueryHandler<RunReportQuery, ReportResponse>>());
+        builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetReportExcelQuery, ReportFile>>());
         return builder.Build();
     }
 

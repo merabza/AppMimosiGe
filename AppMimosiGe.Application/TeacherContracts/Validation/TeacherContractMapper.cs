@@ -9,7 +9,6 @@ public static class TeacherContractMapper
     //Access-ის დროის ველების თარიღი (D13): სამუშაოს დაწყება და დასრულება ინახება როგორც 1899-12-30 hh:mm
     public static readonly DateTime TimeOnlyBaseDate = new(1899, 12, 30, 0, 0, 0, DateTimeKind.Unspecified);
 
-    //Line (დროის ხაზი, რეპორტი r35) ფორმაზე არ იყო და აქ არ იცვლება: ახალს 0 აქვს, არსებულს თავისი რჩება
     public static void ApplyFields(TeacherContract teacherContract, TeacherContractRequest request)
     {
         teacherContract.ContractNumber = request.ContractNumber!;

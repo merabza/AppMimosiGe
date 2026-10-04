@@ -72,7 +72,14 @@ public sealed class SalaryHandlersTests
 
     private SalaryPart WithPart(int? typeId)
     {
-        var part = new SalaryPart { SpId = 9, ShId = 2, TeacherContractId = 1, SalaryPartTypeId = typeId, SpAmount = 1m };
+        var part = new SalaryPart
+        {
+            SpId = 9,
+            ShId = 2,
+            TeacherContractId = 1,
+            SalaryPartTypeId = typeId,
+            SpAmount = 1m
+        };
         _repository.Setup(r => r.GetPartForChange(9, It.IsAny<CancellationToken>())).ReturnsAsync(part);
         return part;
     }
@@ -148,8 +155,8 @@ public sealed class SalaryHandlersTests
         // Arrange
         SalaryHeader? added = null;
         _repository.Setup(r => r.AddHeader(It.IsAny<SalaryHeader>())).Callback<SalaryHeader>(h => added = h);
-        _unitOfWork.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask).Callback(() => added!.ShId = 4);
+        _unitOfWork.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask)
+            .Callback(() => added!.ShId = 4);
 
         // Act
         Result<int> result = await new CreateSalaryHeaderCommandHandler(_repository.Object, _unitOfWork.Object).Handle(
@@ -248,8 +255,8 @@ public sealed class SalaryHandlersTests
         WithHeader();
         SalaryPart? added = null;
         _repository.Setup(r => r.AddPart(It.IsAny<SalaryPart>())).Callback<SalaryPart>(p => added = p);
-        _unitOfWork.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask).Callback(() => added!.SpId = 11);
+        _unitOfWork.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask)
+            .Callback(() => added!.SpId = 11);
 
         // Act
         Result<int> result = await new CreateSalaryPartCommandHandler(_repository.Object, _unitOfWork.Object).Handle(
@@ -417,7 +424,11 @@ public sealed class SalaryHandlersTests
         var oldLessonPart = new SalaryPart { SpId = 20, ShId = 2, TeacherContractId = 1, SalaryPartTypeId = 1 };
         var manualPart = new SalaryPart
         {
-            SpId = 21, ShId = 2, TeacherContractId = 1, SalaryPartTypeId = AdditionType, SpAmount = 3m
+            SpId = 21,
+            ShId = 2,
+            TeacherContractId = 1,
+            SalaryPartTypeId = AdditionType,
+            SpAmount = 3m
         };
         var header = new SalaryHeader
         {
@@ -478,8 +489,9 @@ public sealed class SalaryHandlersTests
     {
         // Arrange: contract 1 teaches one group, contract 2 two groups
         WithCountData();
-        _repository.Setup(r => r.GetContracts(It.IsAny<CancellationToken>()))
-            .ReturnsAsync([new SalaryContractData(1, true, false, false), new SalaryContractData(2, true, false, false)]);
+        _repository.Setup(r => r.GetContracts(It.IsAny<CancellationToken>())).ReturnsAsync([
+            new SalaryContractData(1, true, false, false), new SalaryContractData(2, true, false, false)
+        ]);
         _repository.Setup(r => r.GetLessonRows(Day(2026, 9, 1), Day(2026, 11, 1), It.IsAny<CancellationToken>()))
             .ReturnsAsync([
                 new SalaryLessonStudentRow(1, 100, 1, null, 11, Day(2026, 9, 10, 10), 1, 2f),
@@ -516,8 +528,9 @@ public sealed class SalaryHandlersTests
     {
         // Arrange
         WithHeader();
-        _repository.Setup(r => r.GetTransferFileRows(2, It.IsAny<CancellationToken>()))
-            .ReturnsAsync([new TransferFileRow("GE01", null, "ა", "ბ", "1", 10m, null, "ხელფასი", "სექტემბერი", 2026)]);
+        _repository.Setup(r => r.GetTransferFileRows(2, It.IsAny<CancellationToken>())).ReturnsAsync([
+            new TransferFileRow("GE01", null, "ა", "ბ", "1", 10m, null, "ხელფასი", "სექტემბერი", 2026)
+        ]);
 
         // Act
         Result<SalaryFile> result = await new GetTransferFileQueryHandler(_repository.Object).Handle(
@@ -525,8 +538,8 @@ public sealed class SalaryHandlersTests
 
         // Assert
         Assert.Equal("salary_2026_10_4.csv", result.Value.FileName);
-        Assert.EndsWith(" 1,GE01,ა ბ,\"1\",10,ხელფასი,სექტემბერი  2026",
-            Encoding.UTF8.GetString(result.Value.Content), StringComparison.Ordinal);
+        Assert.EndsWith(" 1,GE01,ა ბ,\"1\",10,ხელფასი,სექტემბერი  2026", Encoding.UTF8.GetString(result.Value.Content),
+            StringComparison.Ordinal);
     }
 
     [Fact]
@@ -549,8 +562,9 @@ public sealed class SalaryHandlersTests
 
         // Assert
         AssertError(result, SalaryErrors.DeclarationMonthIsRequired);
-        _repository.Verify(r => r.GetDeclarationFileRows(It.IsAny<DateTime>(), It.IsAny<DateTime>(),
-            It.IsAny<CancellationToken>()), Times.Never);
+        _repository.Verify(
+            r => r.GetDeclarationFileRows(It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]

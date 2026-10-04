@@ -58,15 +58,13 @@ public sealed class SalaryFilesGeneratorTests
     public void TransferFile_RowsAreInAccessGroupByOrderAndNumberedWithVbaStr()
     {
         // Act: ანგარიშის გარეშე პირველია, შემდეგ ანგარიშით; ერთნაირი სტრიქონები აღარ ერთიანდება
-        string text = Text(SalaryFilesGenerator.TransferFile(
-        [
+        string text = Text(SalaryFilesGenerator.TransferFile([
             Transfer("GE02", 10m), Transfer("GE01", 20m), Transfer(null, 30m), Transfer("GE02", 10m),
             Transfer("GE01", 5m)
         ]));
 
         // Assert
-        Assert.Equal(
-        [
+        Assert.Equal([
             SalaryFilesGenerator.TransferFileHeader, " 1,,ანა ბერიძე,\"01001012345\",30,ხელფასი,სექტემბერი  2026",
             " 2,GE01,ანა ბერიძე,\"01001012345\",5,ხელფასი,სექტემბერი  2026",
             " 3,GE01,ანა ბერიძე,\"01001012345\",20,ხელფასი,სექტემბერი  2026",
@@ -79,8 +77,7 @@ public sealed class SalaryFilesGeneratorTests
     public void TransferFile_SameAccountIsOrderedByNameThenPersonalId()
     {
         // Act
-        string[] lines = Text(SalaryFilesGenerator.TransferFile(
-        [
+        string[] lines = Text(SalaryFilesGenerator.TransferFile([
             Transfer("GE01", 1m, "ბ"), Transfer("GE01", 1m, "ა", personalId: "2"),
             Transfer("GE01", 1m, "ა", personalId: "1")
         ])).Split("\r\n");
@@ -119,16 +116,14 @@ public sealed class SalaryFilesGeneratorTests
     public void TransferFile_EqualRowsAreOrderedByDescriptionThenMonth()
     {
         // Act
-        string[] lines = Text(SalaryFilesGenerator.TransferFile(
-        [
+        string[] lines = Text(SalaryFilesGenerator.TransferFile([
             Transfer("GE01", 1m, description: "ბ"), Transfer("GE01", 1m, description: "ა", monthName: "ოქტომბერი"),
             Transfer("GE01", 1m, description: "ა", monthName: "აგვისტო", year: 2027),
             Transfer("GE01", 1m, description: "ა", monthName: "აგვისტო")
         ])).Split("\r\n");
 
         // Assert
-        Assert.Equal(
-        [
+        Assert.Equal([
             " 1,GE01,ანა ბერიძე,\"01001012345\",1,ა,აგვისტო  2026",
             " 2,GE01,ანა ბერიძე,\"01001012345\",1,ა,აგვისტო  2027",
             " 3,GE01,ანა ბერიძე,\"01001012345\",1,ა,ოქტომბერი  2026",
@@ -165,16 +160,16 @@ public sealed class SalaryFilesGeneratorTests
         string text = Text(SalaryFilesGenerator.DeclarationFile([Declaration(1)]));
 
         // Assert: პირადი ნომერი 11 ციფრით და ბრჭყალებში, მძიმიანი მისამართი ბრჭყალებში
-        Assert.Equal(SalaryFilesGenerator.DeclarationFileHeader + "\r\n" +
-                     "\"01001012345\",ანა,ბერიძე,\"თბილისი, ვაკე\",268,4,1,4772.5,0,05.10.2026,20,0,0", text);
+        Assert.Equal(
+            SalaryFilesGenerator.DeclarationFileHeader + "\r\n" +
+            "\"01001012345\",ანა,ბერიძე,\"თბილისი, ვაკე\",268,4,1,4772.5,0,05.10.2026,20,0,0", text);
     }
 
     [Fact]
     public void DeclarationFile_RowsAreOrderedByLineAndEmptyValuesAreEmptyFields()
     {
         // Act
-        string[] lines = Text(SalaryFilesGenerator.DeclarationFile(
-        [
+        string[] lines = Text(SalaryFilesGenerator.DeclarationFile([
             Declaration(2, legalAddress: null, rsQuoteTypeId: null, gross: 1250m, legalName: "შპს, ალფა"),
             Declaration(1, gross: 0.1m)
         ])).Split("\r\n");

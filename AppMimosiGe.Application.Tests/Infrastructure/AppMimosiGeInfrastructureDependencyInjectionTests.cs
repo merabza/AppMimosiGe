@@ -4,12 +4,14 @@ using AppMimosiGe.Application.Groups;
 using AppMimosiGe.Application.LessonGenerator;
 using AppMimosiGe.Application.Lessons;
 using AppMimosiGe.Application.Payments;
+using AppMimosiGe.Application.Reports;
 using AppMimosiGe.Application.Rights;
 using AppMimosiGe.Application.Salary;
 using AppMimosiGe.Application.StudentContracts;
 using AppMimosiGe.Application.TeacherContracts;
 using AppMimosiGe.Application.WorkHours;
 using AppMimosiGe.Infrastructure.DependencyInjection;
+using AppMimosiGe.Infrastructure.Reports;
 using AppMimosiGe.Infrastructure.Repositories;
 using AppMimosiGe.Infrastructure.Rights;
 using Microsoft.Extensions.DependencyInjection;
@@ -173,6 +175,37 @@ public sealed class AppMimosiGeInfrastructureDependencyInjectionTests
         ServiceDescriptor descriptor = Assert.Single(services, s => s.ServiceType == typeof(ISalaryRepository));
         Assert.Equal(typeof(SalaryRepository), descriptor.ImplementationType);
         Assert.Equal(ServiceLifetime.Scoped, descriptor.Lifetime);
+    }
+
+    [Fact]
+    public void AddAppMimosiGeInfrastructure_RegistersReportsRepositoryAsScoped()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+
+        // Act
+        services.AddAppMimosiGeInfrastructure(null);
+
+        // Assert
+        ServiceDescriptor descriptor = Assert.Single(services, s => s.ServiceType == typeof(IReportsRepository));
+        Assert.Equal(typeof(ReportsRepository), descriptor.ImplementationType);
+        Assert.Equal(ServiceLifetime.Scoped, descriptor.Lifetime);
+    }
+
+    // the Excel writer keeps no state, so one instance serves every request
+    [Fact]
+    public void AddAppMimosiGeInfrastructure_RegistersReportExcelWriterAsSingleton()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+
+        // Act
+        services.AddAppMimosiGeInfrastructure(null);
+
+        // Assert
+        ServiceDescriptor descriptor = Assert.Single(services, s => s.ServiceType == typeof(IReportExcelWriter));
+        Assert.Equal(typeof(OpenXmlReportExcelWriter), descriptor.ImplementationType);
+        Assert.Equal(ServiceLifetime.Singleton, descriptor.Lifetime);
     }
 
     // the current user's roles are per request, so the claim check is scoped as well

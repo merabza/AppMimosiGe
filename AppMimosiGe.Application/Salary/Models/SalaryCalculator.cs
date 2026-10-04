@@ -109,7 +109,7 @@ public static class SalaryCalculator
         List<CalculatedSalaryLineDetail> details =
         [
             .. groupAmounts.Where(x => x.TeacherContractId == contract.Id && x.MonthDate == detailsMonth)
-                .GroupBy(x => x.GroupId).OrderBy(x => x.Key).Select(x => Detail(x.Key, x.ToList()))
+                .GroupBy(x => x.GroupId).OrderBy(x => x.Key).Select(x => Detail(x.Key, [.. x]))
         ];
 
         if (contract.IndEnt)
@@ -143,9 +143,8 @@ public static class SalaryCalculator
         int countPlaceId)
     {
         return parts.Where(x =>
-                x.SalaryPartTypeId is { } typeId && countPlaces.TryGetValue(typeId, out int? place) &&
-                place == countPlaceId)
-            .Sum(x => x.Amount);
+            x.SalaryPartTypeId is { } typeId && countPlaces.TryGetValue(typeId, out int? place) &&
+            place == countPlaceId).Sum(x => x.Amount);
     }
 
     //vR16TSBase2GroupsHours + vR16TSBase3GroupAmounts: მასწავლებელი × სქემა × თვე × ჯგუფი

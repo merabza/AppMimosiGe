@@ -46,7 +46,11 @@ public sealed class SalaryRepositoryTests : IDisposable
             new Human { HumId = 1, LastName = "Alpha", FirstName = "Ann", PersonalId = "01000000001" },
             new Human
             {
-                HumId = 2, LastName = "Beta", FirstName = "Bob", LegalName = "Ltd", PersonalId = "1000000002",
+                HumId = 2,
+                LastName = "Beta",
+                FirstName = "Bob",
+                LegalName = "Ltd",
+                PersonalId = "1000000002",
                 LegalAddress = "City, Street"
             });
         _context.RsCountries.Add(new RsCountry { Id = 1, Code = "268", CountryName = "Georgia" });
@@ -56,13 +60,22 @@ public sealed class SalaryRepositoryTests : IDisposable
         _context.TeacherContracts.AddRange(
             new TeacherContract
             {
-                Id = 1, ContractNumber = "T3.01", TeacherHumanId = 1, RsCountryId = 1, RsQuoteTypeId = 1,
-                PensionScheme = true, BankAccount = "GE01"
-            },
-            new TeacherContract
+                Id = 1,
+                ContractNumber = "T3.01",
+                TeacherHumanId = 1,
+                RsCountryId = 1,
+                RsQuoteTypeId = 1,
+                PensionScheme = true,
+                BankAccount = "GE01"
+            }, new TeacherContract
             {
-                Id = 2, ContractNumber = "T1.02", TeacherHumanId = 2, RsCountryId = 1, IndEnt = true,
-                NextMonth = true, Description = "Dividend"
+                Id = 2,
+                ContractNumber = "T1.02",
+                TeacherHumanId = 2,
+                RsCountryId = 1,
+                IndEnt = true,
+                NextMonth = true,
+                Description = "Dividend"
             });
         _context.SalaryPartTypes.AddRange(new SalaryPartType { SptId = 1, SptName = "Lessons", SptCountPlaceId = 1 },
             new SalaryPartType { SptId = 4, SptName = "Deduction", SptCountPlaceId = 2 },
@@ -73,31 +86,61 @@ public sealed class SalaryRepositoryTests : IDisposable
             new Group { GrpId = 200, GroupCode = "G-200" });
         _context.GroupsByStudents.AddRange(new GroupByStudent { GbsId = 1, GroupId = 100, StudentContractId = 50 },
             new GroupByStudent { GbsId = 2, GroupId = 200, StudentContractId = 51 });
-        _context.Lessons.AddRange(Lesson(1, Day(2026, 9, 10, 10), 1, null),
-            Lesson(2, Day(2026, 10, 10, 10), 1, 2), Lesson(3, Day(2026, 8, 31, 23), 1, null));
+        _context.Lessons.AddRange(Lesson(1, Day(2026, 9, 10, 10), 1, null), Lesson(2, Day(2026, 10, 10, 10), 1, 2),
+            Lesson(3, Day(2026, 8, 31, 23), 1, null));
         _context.LessonsByStudents.AddRange(StudentRow(1, 1, 50, 1, 2f), StudentRow(2, 1, 51, 2, 1f),
             StudentRow(3, 1, 50, null, 3f), StudentRow(4, 1, 51, 1, 4f), StudentRow(5, 2, 50, 1, 1.5f),
             StudentRow(6, 3, 50, 1, 1f));
         _context.SalaryHeaders.AddRange(Header(1, Day(2026, 10, 5), Day(2026, 10, 4)),
             Header(2, Day(2026, 11, 5), Day(2026, 11, 5)), Header(3, Day(2026, 9, 5), Day(2026, 9, 5)));
-        _context.SalaryParts.AddRange(
-            new SalaryPart { SpId = 20, ShId = 1, TeacherContractId = 1, SalaryPartTypeId = 1, SpAmount = 16m },
-            new SalaryPart { SpId = 21, ShId = 1, TeacherContractId = 2, SalaryPartTypeId = 4, SpAmount = 5m },
-            new SalaryPart { SpId = 22, ShId = 1, TeacherContractId = 1, SalaryPartTypeId = null, SpAmount = 1m });
-        _context.SalaryLines.AddRange(Line(30, 1, 1, 100m, 125m), Line(31, 1, 2, 50m, 60m),
-            Line(32, 2, 1, 20m, 25m));
+        _context.SalaryParts.AddRange(new SalaryPart
+        {
+            SpId = 20,
+            ShId = 1,
+            TeacherContractId = 1,
+            SalaryPartTypeId = 1,
+            SpAmount = 16m
+        }, new SalaryPart
+        {
+            SpId = 21,
+            ShId = 1,
+            TeacherContractId = 2,
+            SalaryPartTypeId = 4,
+            SpAmount = 5m
+        }, new SalaryPart
+        {
+            SpId = 22,
+            ShId = 1,
+            TeacherContractId = 1,
+            SalaryPartTypeId = null,
+            SpAmount = 1m
+        });
+        _context.SalaryLines.AddRange(Line(30, 1, 1, 100m, 125m), Line(31, 1, 2, 50m, 60m), Line(32, 2, 1, 20m, 25m));
         _context.SalaryLinesDetails.AddRange(
             new SalaryLineDetail
             {
-                SadId = 40, SaId = 30, GroupId = 200, SadAmount = 4m, SadHoursCount = 0.5f, SadHourCost = 8m
-            },
-            new SalaryLineDetail
+                SadId = 40,
+                SaId = 30,
+                GroupId = 200,
+                SadAmount = 4m,
+                SadHoursCount = 0.5f,
+                SadHourCost = 8m
+            }, new SalaryLineDetail
             {
-                SadId = 41, SaId = 30, GroupId = 100, SadAmount = 12m, SadHoursCount = 1.5f, SadHourCost = 8m
-            },
-            new SalaryLineDetail
+                SadId = 41,
+                SaId = 30,
+                GroupId = 100,
+                SadAmount = 12m,
+                SadHoursCount = 1.5f,
+                SadHourCost = 8m
+            }, new SalaryLineDetail
             {
-                SadId = 42, SaId = 32, GroupId = 100, SadAmount = 1m, SadHoursCount = 1f, SadHourCost = 1m
+                SadId = 42,
+                SaId = 32,
+                GroupId = 100,
+                SadAmount = 1m,
+                SadHoursCount = 1f,
+                SadHourCost = 1m
             });
         _context.SaveChanges();
     }
@@ -165,8 +208,7 @@ public sealed class SalaryRepositoryTests : IDisposable
         List<SalaryHeaderRowResponse> headers = await _repository.GetHeaders();
 
         // Assert
-        Assert.Equal(
-        [
+        Assert.Equal([
             new SalaryHeaderRowResponse(3, Day(2026, 9, 5), Day(2026, 9, 5), 0, 0m),
             new SalaryHeaderRowResponse(1, Day(2026, 10, 5), Day(2026, 10, 4), 2, 148m),
             new SalaryHeaderRowResponse(2, Day(2026, 11, 5), Day(2026, 11, 5), 1, 19m)
@@ -183,8 +225,7 @@ public sealed class SalaryRepositoryTests : IDisposable
         Assert.NotNull(header);
         Assert.Equal((1, Day(2026, 10, 5), Day(2026, 10, 4)),
             (header.ShId, header.ShChargeDate, header.ShTransferDate));
-        Assert.Equal(
-        [
+        Assert.Equal([
             new SalaryPartResponse(22, 1, "Alpha Ann / T3.01", null, null, 1m),
             new SalaryPartResponse(20, 1, "Alpha Ann / T3.01", 1, "Lessons", 16m),
             new SalaryPartResponse(21, 2, "Beta Bob / T1.02", 4, "Deduction", 5m)
@@ -195,8 +236,7 @@ public sealed class SalaryRepositoryTests : IDisposable
         Assert.Equal((1, "Alpha Ann / T3.01", 100m, 125m, 99m, Day(2026, 9, 1), (int?)1),
             (line.TeacherContractId, line.EmployeeName, line.SaNetAmountRound, line.SaAmountGross, line.SaAmountNet,
                 line.SaMonthDate, line.RsQuoteTypeId));
-        Assert.Equal(
-        [
+        Assert.Equal([
             new SalaryLineDetailResponse(41, 30, "Alpha Ann / T3.01", 100, "G-100", 1.5f, 12m, 8m),
             new SalaryLineDetailResponse(40, 30, "Alpha Ann / T3.01", 200, "G-200", 0.5f, 4m, 8m)
         ], header.Details);
@@ -220,7 +260,14 @@ public sealed class SalaryRepositoryTests : IDisposable
     public async Task GetHeader_PartsOfOneEmployeeAndType_AreOrderedById()
     {
         // Arrange
-        AddAndSave(new SalaryPart { SpId = 25, ShId = 1, TeacherContractId = 2, SalaryPartTypeId = 4, SpAmount = 1m });
+        AddAndSave(new SalaryPart
+        {
+            SpId = 25,
+            ShId = 1,
+            TeacherContractId = 2,
+            SalaryPartTypeId = 4,
+            SpAmount = 1m
+        });
 
         // Act
         SalaryHeaderResponse? header = await _repository.GetHeader(1);
@@ -250,11 +297,20 @@ public sealed class SalaryRepositoryTests : IDisposable
         AddAndSave(new Group { GrpId = 300, GroupCode = "G-100" }, Line(33, 2, 2, 20m, 25m),
             new SalaryLineDetail
             {
-                SadId = 43, SaId = 33, GroupId = 100, SadAmount = 1m, SadHoursCount = 1f, SadHourCost = 1m
-            },
-            new SalaryLineDetail
+                SadId = 43,
+                SaId = 33,
+                GroupId = 100,
+                SadAmount = 1m,
+                SadHoursCount = 1f,
+                SadHourCost = 1m
+            }, new SalaryLineDetail
             {
-                SadId = 44, SaId = 32, GroupId = 300, SadAmount = 1m, SadHoursCount = 1f, SadHourCost = 1m
+                SadId = 44,
+                SaId = 32,
+                GroupId = 300,
+                SadAmount = 1m,
+                SadHoursCount = 1f,
+                SadHourCost = 1m
             });
 
         // Act
@@ -327,8 +383,7 @@ public sealed class SalaryRepositoryTests : IDisposable
     {
         Assert.Equal([new LookupItemResponse(1, "Alpha Ann / T3.01"), new LookupItemResponse(2, "Beta Bob / T1.02")],
             await _repository.GetEmployeeLookups());
-        Assert.Equal(
-        [
+        Assert.Equal([
             new SalaryPartTypeLookupResponse(1, "Lessons", 1), new SalaryPartTypeLookupResponse(4, "Deduction", 2),
             new SalaryPartTypeLookupResponse(6, "Other", null)
         ], await _repository.GetPartTypeLookups());
@@ -355,8 +410,7 @@ public sealed class SalaryRepositoryTests : IDisposable
         List<SalaryLessonStudentRow> rows = await _repository.GetLessonRows(Day(2026, 9, 1), Day(2026, 11, 1));
 
         // Assert
-        Assert.Equal(
-        [
+        Assert.Equal([
             new SalaryLessonStudentRow(1, 100, 1, null, 11, Day(2026, 9, 10, 10), 1, 2f),
             new SalaryLessonStudentRow(2, 100, 1, 2, 11, Day(2026, 10, 10, 10), 1, 1.5f)
         ], rows.OrderBy(r => r.LessonId));
@@ -378,8 +432,8 @@ public sealed class SalaryRepositoryTests : IDisposable
     [Fact]
     public async Task GetLessonRows_EndIsExclusive()
     {
-        Assert.Equal([1], (await _repository.GetLessonRows(Day(2026, 9, 1), Day(2026, 10, 10, 10)))
-            .Select(r => r.LessonId));
+        Assert.Equal([1],
+            (await _repository.GetLessonRows(Day(2026, 9, 1), Day(2026, 10, 10, 10))).Select(r => r.LessonId));
     }
 
     [Fact]
@@ -389,8 +443,7 @@ public sealed class SalaryRepositoryTests : IDisposable
         List<TransferFileRow> rows = await _repository.GetTransferFileRows(1);
 
         // Assert
-        Assert.Equal(
-        [
+        Assert.Equal([
             new TransferFileRow("GE01", null, "Ann", "Alpha", "01000000001", 99m, null, "Salary", "September", 2026),
             new TransferFileRow(null, "Ltd", "Bob", "Beta", "1000000002", 49m, "Dividend", null, "September", 2026)
         ], rows.OrderBy(r => r.PersonalId, StringComparer.Ordinal));
@@ -414,8 +467,7 @@ public sealed class SalaryRepositoryTests : IDisposable
     public async Task GetDeclarationFileRows_PeriodStartIsInclusiveAndEndExclusive()
     {
         Assert.Equal([30, 31],
-            (await _repository.GetDeclarationFileRows(Day(2026, 10, 4), Day(2026, 10, 5))).Select(r => r.SaId)
-            .Order());
+            (await _repository.GetDeclarationFileRows(Day(2026, 10, 4), Day(2026, 10, 5))).Select(r => r.SaId).Order());
         Assert.Empty(await _repository.GetDeclarationFileRows(Day(2026, 10, 3), Day(2026, 10, 4)));
     }
 
@@ -426,8 +478,7 @@ public sealed class SalaryRepositoryTests : IDisposable
         List<DeclarationFileRow> rows = await _repository.GetDeclarationFileRows(Day(2026, 10, 1), Day(2026, 11, 1));
 
         // Assert
-        Assert.Equal(
-        [
+        Assert.Equal([
             new DeclarationFileRow(30, "01000000001", null, "Ann", "Alpha", null, "268", 1, 125m, Day(2026, 10, 4)),
             new DeclarationFileRow(31, "1000000002", "Ltd", "Bob", "Beta", "City, Street", "268", null, 60m,
                 Day(2026, 10, 4))

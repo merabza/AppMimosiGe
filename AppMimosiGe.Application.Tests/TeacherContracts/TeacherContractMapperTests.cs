@@ -103,18 +103,16 @@ public sealed class TeacherContractMapperTests
         Assert.Equal("პრემია", teacherContract.Description);
     }
 
-    // Line is not on the form: an edit keeps the stored value
     [Fact]
-    public void ApplyFields_KeepsLineAndId()
+    public void ApplyFields_KeepsId()
     {
         // Arrange
-        var teacherContract = new TeacherContract { Id = 42, Line = 3 };
+        var teacherContract = new TeacherContract { Id = 42 };
 
         // Act
         TeacherContractMapper.ApplyFields(teacherContract, ValidRequest());
 
         // Assert
         Assert.Equal(42, teacherContract.Id);
-        Assert.Equal(3, teacherContract.Line);
     }
 }

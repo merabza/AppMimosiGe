@@ -44,15 +44,16 @@ public static class SalaryFilesGenerator
     //(D107). ყველა ამ ველით ერთნაირი სტრიქონები ფაილში ერთნაირად იწერება, ამიტომ მათი რიგი არაფერს ცვლის
     public static byte[] TransferFile(IEnumerable<TransferFileRow> rows)
     {
-        var lines = rows.Select(x => new
-        {
-            BankAccount = x.BankAccount ?? string.Empty,
-            BenefName = (x.LegalName ?? x.FirstName) + " " + x.LastName,
-            x.PersonalId,
-            x.AmountNet,
-            Descr = x.Description ?? x.QuoteTypeName ?? string.Empty,
-            AddDescr = x.MonthName + " " + VbaStr(x.Year)
-        }).OrderBy(x => x.BankAccount, StringComparer.Ordinal).ThenBy(x => x.BenefName, StringComparer.Ordinal)
+        var lines = rows
+            .Select(x => new
+            {
+                BankAccount = x.BankAccount ?? string.Empty,
+                BenefName = (x.LegalName ?? x.FirstName) + " " + x.LastName,
+                x.PersonalId,
+                x.AmountNet,
+                Descr = x.Description ?? x.QuoteTypeName ?? string.Empty,
+                AddDescr = x.MonthName + " " + VbaStr(x.Year)
+            }).OrderBy(x => x.BankAccount, StringComparer.Ordinal).ThenBy(x => x.BenefName, StringComparer.Ordinal)
             .ThenBy(x => x.PersonalId, StringComparer.Ordinal).ThenBy(x => x.AmountNet)
             .ThenBy(x => x.Descr, StringComparer.Ordinal).ThenBy(x => x.AddDescr, StringComparer.Ordinal);
 
@@ -77,11 +78,11 @@ public static class SalaryFilesGenerator
         foreach (DeclarationFileRow row in rows.OrderBy(x => x.SaId))
         {
             text.Append(NewLine).Append(CareCsv(FormatPersonalId(row.PersonalId), true)).Append(',')
-                .Append(CareCsv(row.LegalName ?? row.FirstName)).Append(',').Append(CareCsv(row.LastName))
-                .Append(',').Append(CareCsv(row.LegalAddress ?? string.Empty)).Append(',')
-                .Append(CareCsv(row.CountryCode)).Append(",4,")
-                .Append(CareCsv(row.RsQuoteTypeId?.ToString(CultureInfo.InvariantCulture) ?? string.Empty))
-                .Append(',').Append(CareCsv(VbaNumber(row.AmountGross))).Append(",0,")
+                .Append(CareCsv(row.LegalName ?? row.FirstName)).Append(',').Append(CareCsv(row.LastName)).Append(',')
+                .Append(CareCsv(row.LegalAddress ?? string.Empty)).Append(',').Append(CareCsv(row.CountryCode))
+                .Append(",4,")
+                .Append(CareCsv(row.RsQuoteTypeId?.ToString(CultureInfo.InvariantCulture) ?? string.Empty)).Append(',')
+                .Append(CareCsv(VbaNumber(row.AmountGross))).Append(",0,")
                 .Append(CareCsv(row.TransferDate.ToString("dd.MM.yyyy", CultureInfo.InvariantCulture)))
                 .Append(",20,0,0");
         }

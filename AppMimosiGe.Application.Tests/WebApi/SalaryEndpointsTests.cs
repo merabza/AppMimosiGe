@@ -316,10 +316,11 @@ public sealed class SalaryEndpointsTests
             QueryHandler<GetTransferFileQuery, SalaryFile>(file);
 
         // Act
-        Results<FileContentHttpResult, ProblemHttpResult> result = await SalaryEndpoints.TransferFile(2, handler.Object);
+        Results<FileContentHttpResult, ProblemHttpResult>
+            result = await SalaryEndpoints.TransferFile(2, handler.Object);
 
         // Assert
-        FileContentHttpResult content = Assert.IsType<FileContentHttpResult>(result.Result);
+        var content = Assert.IsType<FileContentHttpResult>(result.Result);
         Assert.Equal((file.FileName, "text/csv"), (content.FileDownloadName, content.ContentType));
         Assert.Equal(file.Content, content.FileContents.ToArray());
         handler.Verify(h => h.Handle(new GetTransferFileQuery(2), It.IsAny<CancellationToken>()));
@@ -349,7 +350,7 @@ public sealed class SalaryEndpointsTests
             await SalaryEndpoints.DeclarationFile(Fifth, handler.Object);
 
         // Assert
-        FileContentHttpResult content = Assert.IsType<FileContentHttpResult>(result.Result);
+        var content = Assert.IsType<FileContentHttpResult>(result.Result);
         Assert.Equal((file.FileName, "text/csv"), (content.FileDownloadName, content.ContentType));
         handler.Verify(h => h.Handle(new GetDeclarationFileQuery(Fifth), It.IsAny<CancellationToken>()));
     }

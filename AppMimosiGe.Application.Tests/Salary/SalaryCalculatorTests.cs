@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using AppMimosiGe.Application.Salary.Models;
 using Xunit;
@@ -40,8 +41,7 @@ public sealed class SalaryCalculatorTests
         return new SalaryLessonStudentRow(lessonId, groupId, teacher, substitute, scheme, lessonDt, status, hours);
     }
 
-    private static SalaryContractData Contract(int id, bool pension = true, bool indEnt = false,
-        bool nextMonth = false)
+    private static SalaryContractData Contract(int id, bool pension = true, bool indEnt = false, bool nextMonth = false)
     {
         return new SalaryContractData(id, pension, indEnt, nextMonth);
     }
@@ -160,7 +160,7 @@ public sealed class SalaryCalculatorTests
     [InlineData(12, false, "2027-01-05")]
     public void SalaryDate_IsTheNextOrTheSameMonthsFifth(int month, bool nextMonth, string expected)
     {
-        Assert.Equal(DateTime.Parse(expected, System.Globalization.CultureInfo.InvariantCulture),
+        Assert.Equal(DateTime.Parse(expected, CultureInfo.InvariantCulture),
             SalaryCalculator.SalaryDate(new DateTime(2026, month, 1, 0, 0, 0, DateTimeKind.Unspecified), nextMonth));
     }
 
@@ -280,9 +280,10 @@ public sealed class SalaryCalculatorTests
     public void Calculate_PartsWithoutTypeOrCountPlaceAreNotCounted()
     {
         // Act
-        SalaryCalculationResult result = Calculate([Contract(1)], [],
-            [new SalaryPartData(1, null, 50m), new SalaryPartData(1, NotCountedType, 50m),
-                new SalaryPartData(1, 1234, 50m)]);
+        SalaryCalculationResult result = Calculate([Contract(1)], [], [
+            new SalaryPartData(1, null, 50m), new SalaryPartData(1, NotCountedType, 50m),
+            new SalaryPartData(1, 1234, 50m)
+        ]);
 
         // Assert
         Assert.Empty(result.Lines);
@@ -293,8 +294,7 @@ public sealed class SalaryCalculatorTests
     {
         // Act
         SalaryCalculationResult result = Calculate(
-            [Contract(1), Contract(2), Contract(3, false), Contract(4), Contract(5)], [],
-            [
+            [Contract(1), Contract(2), Contract(3, false), Contract(4), Contract(5)], [], [
                 new SalaryPartData(2, DeductionType, 0.01m), new SalaryPartData(3, AdditionType, 0.001m),
                 new SalaryPartData(4, DeductionType, 0.0099m), new SalaryPartData(5, AdditionType, 0m)
             ]);
@@ -324,15 +324,13 @@ public sealed class SalaryCalculatorTests
     public void Calculate_DetailsAreTheGroupsOfTheLinesMonth()
     {
         // Act: ჯგუფი 100 ორი სქემით, ჯგუფი 200
-        CalculatedSalaryLine line = Assert.Single(Calculate([Contract(1)],
-        [
+        CalculatedSalaryLine line = Assert.Single(Calculate([Contract(1)], [
             Row(1, 1, Day(9, 10), 2f), Row(2, 1, Day(9, 11), 1f, scheme: SchemeTen), Row(3, 1, Day(9, 12), 1.5f, 200),
             Row(4, 1, Day(10, 1), 2f, 300)
         ]).Lines);
 
         // Assert: ოქტომბრის ჯგუფი 300 სხვა უწყისისაა
-        Assert.Equal(
-        [
+        Assert.Equal([
             new CalculatedSalaryLineDetail(100, 26m, 3f, 8.6667m), new CalculatedSalaryLineDetail(200, 12m, 1.5f, 8m)
         ], line.Details);
     }

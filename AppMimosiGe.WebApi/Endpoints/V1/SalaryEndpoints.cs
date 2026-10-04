@@ -152,8 +152,7 @@ public static class SalaryEndpoints
 
     // POST api/v1/salary/{shId:int}/count
     internal static async Task<Results<Ok<SalaryCountResponse>, ProblemHttpResult>> Count([FromRoute] int shId,
-        ICommandHandler<CountSalaryCommand, SalaryCountResponse> handler,
-        CancellationToken cancellationToken = default)
+        ICommandHandler<CountSalaryCommand, SalaryCountResponse> handler, CancellationToken cancellationToken = default)
     {
         Result<SalaryCountResponse> result = await handler.Handle(new CountSalaryCommand(shId), cancellationToken);
         return result.Match<SalaryCountResponse, Results<Ok<SalaryCountResponse>, ProblemHttpResult>>(
@@ -161,9 +160,8 @@ public static class SalaryEndpoints
     }
 
     // GET api/v1/salary/{shId:int}/transferfile
-    internal static async Task<Results<FileContentHttpResult, ProblemHttpResult>> TransferFile(
-        [FromRoute] int shId, IQueryHandler<GetTransferFileQuery, SalaryFile> handler,
-        CancellationToken cancellationToken = default)
+    internal static async Task<Results<FileContentHttpResult, ProblemHttpResult>> TransferFile([FromRoute] int shId,
+        IQueryHandler<GetTransferFileQuery, SalaryFile> handler, CancellationToken cancellationToken = default)
     {
         Result<SalaryFile> result = await handler.Handle(new GetTransferFileQuery(shId), cancellationToken);
         return result.Match<SalaryFile, Results<FileContentHttpResult, ProblemHttpResult>>(

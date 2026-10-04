@@ -53,7 +53,8 @@ public sealed class SalaryValidatorsTests
 
         // Act + Assert
         Assert.Equal(expected,
-            Codes(await new CreateSalaryHeaderCommandValidator().ValidateAsync(new CreateSalaryHeaderCommand(request))));
+            Codes(await new CreateSalaryHeaderCommandValidator().ValidateAsync(
+                new CreateSalaryHeaderCommand(request))));
         Assert.Equal(expected,
             Codes(await new UpdateSalaryHeaderCommandValidator().ValidateAsync(
                 new UpdateSalaryHeaderCommand(1, request))));

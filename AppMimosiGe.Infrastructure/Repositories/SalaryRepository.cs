@@ -16,8 +16,8 @@ public sealed class SalaryRepository(IMimosiGeDbContext context) : ISalaryReposi
 {
     public Task<List<SalaryHeaderRowResponse>> GetHeaders(CancellationToken cancellationToken = default)
     {
-        return context.SalaryHeaders.AsNoTracking().OrderBy(h => h.ShChargeDate).ThenBy(h => h.ShId)
-            .Select(h => new SalaryHeaderRowResponse(h.ShId, h.ShChargeDate, h.ShTransferDate, h.SalaryLines.Count,
+        return context.SalaryHeaders.AsNoTracking().OrderBy(h => h.ShChargeDate).ThenBy(h => h.ShId).Select(h =>
+            new SalaryHeaderRowResponse(h.ShId, h.ShChargeDate, h.ShTransferDate, h.SalaryLines.Count,
                 h.SalaryLines.Sum(l => (decimal?)l.SaAmountNet) ?? 0m)).ToListAsync(cancellationToken);
     }
 
@@ -43,9 +43,9 @@ public sealed class SalaryRepository(IMimosiGeDbContext context) : ISalaryReposi
                 p.SalaryPartTypeId,
                 SalaryPartTypeName = p.SalaryPartType == null ? null : p.SalaryPartType.SptName,
                 p.SpAmount
-            }).OrderBy(p => p.EmployeeName).ThenBy(p => p.SalaryPartTypeId).ThenBy(p => p.SpId)
-            .Select(p => new SalaryPartResponse(p.SpId, p.TeacherContractId, p.EmployeeName, p.SalaryPartTypeId,
-                p.SalaryPartTypeName, p.SpAmount)).ToListAsync(cancellationToken);
+            }).OrderBy(p => p.EmployeeName).ThenBy(p => p.SalaryPartTypeId).ThenBy(p => p.SpId).Select(p =>
+                new SalaryPartResponse(p.SpId, p.TeacherContractId, p.EmployeeName, p.SalaryPartTypeId,
+                    p.SalaryPartTypeName, p.SpAmount)).ToListAsync(cancellationToken);
 
         List<SalaryLineResponse> lines = await context.SalaryLines.AsNoTracking().Where(l => l.ShId == shId)
             .Select(l => new
@@ -74,12 +74,11 @@ public sealed class SalaryRepository(IMimosiGeDbContext context) : ISalaryReposi
                 d.SadHoursCount,
                 d.SadAmount,
                 d.SadHourCost
-            }).OrderBy(d => d.EmployeeName).ThenBy(d => d.GroupCode).ThenBy(d => d.SadId)
-            .Select(d => new SalaryLineDetailResponse(d.SadId, d.SaId, d.EmployeeName, d.GroupId, d.GroupCode,
-                d.SadHoursCount, d.SadAmount, d.SadHourCost)).ToListAsync(cancellationToken);
+            }).OrderBy(d => d.EmployeeName).ThenBy(d => d.GroupCode).ThenBy(d => d.SadId).Select(d =>
+                new SalaryLineDetailResponse(d.SadId, d.SaId, d.EmployeeName, d.GroupId, d.GroupCode, d.SadHoursCount,
+                    d.SadAmount, d.SadHourCost)).ToListAsync(cancellationToken);
 
-        return new SalaryHeaderResponse(header.ShId, header.ShChargeDate, header.ShTransferDate, parts, lines,
-            details);
+        return new SalaryHeaderResponse(header.ShId, header.ShChargeDate, header.ShTransferDate, parts, lines, details);
     }
 
     public Task<SalaryHeader?> GetHeaderForChange(int shId, CancellationToken cancellationToken = default)
@@ -155,10 +154,10 @@ public sealed class SalaryRepository(IMimosiGeDbContext context) : ISalaryReposi
         return context.LessonsByStudents.AsNoTracking()
             .Where(s => s.GroupByStudent != null && s.GroupByStudent.StudentContractId == s.StudentContractId &&
                         s.GroupByStudent.GroupId == s.Lesson.GroupId && s.Lesson.LessonDt >= from &&
-                        s.Lesson.LessonDt < toExclusive)
-            .Select(s => new SalaryLessonStudentRow(s.LessonId, s.Lesson.GroupId, s.Lesson.TeacherContractId,
-                s.Lesson.SubstituteTeacherContractId, s.Lesson.SalarySchemaId, s.Lesson.LessonDt,
-                s.Lesson.LessonStatusId, s.HoursCount)).ToListAsync(cancellationToken);
+                        s.Lesson.LessonDt < toExclusive).Select(s => new SalaryLessonStudentRow(s.LessonId,
+                s.Lesson.GroupId, s.Lesson.TeacherContractId, s.Lesson.SubstituteTeacherContractId,
+                s.Lesson.SalarySchemaId, s.Lesson.LessonDt, s.Lesson.LessonStatusId, s.HoursCount))
+            .ToListAsync(cancellationToken);
     }
 
     public Task<List<DateTime>> GetOperationMonths(CancellationToken cancellationToken = default)
@@ -199,8 +198,8 @@ public sealed class SalaryRepository(IMimosiGeDbContext context) : ISalaryReposi
 
         return
         [
-            .. lines.Select(l => new TransferFileRow(l.BankAccount, l.LegalName, l.FirstName, l.LastName,
-                l.PersonalId, l.SaAmountNet, l.Description, l.QuoteTypeName,
+            .. lines.Select(l => new TransferFileRow(l.BankAccount, l.LegalName, l.FirstName, l.LastName, l.PersonalId,
+                l.SaAmountNet, l.Description, l.QuoteTypeName,
                 monthNames.GetValueOrDefault(l.SaMonthDate.Month, string.Empty), l.SaMonthDate.Year))
         ];
     }

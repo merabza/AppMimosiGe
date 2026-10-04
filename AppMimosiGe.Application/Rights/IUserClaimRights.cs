@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,4 +13,7 @@ public interface IUserClaimRights
 {
     //false, თუ მომხმარებლის არცერთ როლს არ აქვს ეს უფლება ან უფლების დადგენა ვერ მოხერხდა
     Task<bool> HasClaim(string claimKey, CancellationToken cancellationToken = default);
+
+    //მომხმარებლის როლების ყველა სპეციალური უფლება (მაგ. რეპორტების კატალოგისთვის, D112); უფლება ვერ დადგინდა: ცარიელი
+    Task<IReadOnlySet<string>> GetClaims(CancellationToken cancellationToken = default);
 }
