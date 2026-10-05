@@ -139,6 +139,56 @@ public sealed class GroupLessonsGenerationTests
         _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    // part 20: the group is changed before the plan (the year's close date), so the plan sees the change
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task Run_PrepareGroup_ChangesTheLoadedGroupBeforeThePlan(bool dryRun)
+    {
+        // Arrange
+        Group group = Group();
+        _repository.Setup(r => r.GetGroupForGeneration(42, !dryRun, It.IsAny<CancellationToken>())).ReturnsAsync(group);
+        List<Group> prepared = [];
+
+        // Act: void on 15 September, so only the Mondays 7 and 14 remain
+        GroupGenerationResult? result = await GroupLessonsGeneration.Run(_repository.Object, _unitOfWork.Object, 42,
+            dryRun, Now, input => GroupLessonsPlanner.PlanGroup(input, SeptemberEnd), CancellationToken.None, g =>
+            {
+                prepared.Add(g);
+                g.VoidDate = Date(9, 15);
+            });
+
+        // Assert
+        Assert.Same(group, Assert.Single(prepared));
+        Assert.Equal([Date(9, 7, 15), Date(9, 14, 15)], result!.Response.Changes.Select(c => c.LessonDt));
+        _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), dryRun ? Times.Never : Times.Once);
+    }
+
+    // an existing last lesson keeps its id even if the plan creates a lesson at the same time
+    [Fact]
+    public async Task Run_ExistingLastLesson_WinsOverALessonCreatedAtTheSameTime()
+    {
+        // Arrange
+        _repository.Setup(r => r.GetGroupForGeneration(42, true, It.IsAny<CancellationToken>())).ReturnsAsync(Group());
+        Lesson? added = null;
+        _repository.Setup(r => r.AddLesson(It.IsAny<Lesson>())).Callback<Lesson>(lesson => added = lesson);
+        _unitOfWork.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).Callback(() => added?.Id = 900);
+        DateTime lessonDt = Date(9, 14, 15);
+        var plan = new GroupLessonsPlan(
+            [
+                new PlannedLessonChange(ELessonChangeKind.Create, null,
+                    new LessonValues(lessonDt, 5, 8, 8f, lessonDt, lessonDt), null, [])
+            ], [], [], false, new PlannedLastLesson(100, lessonDt));
+
+        // Act
+        GroupGenerationResult? result = await GroupLessonsGeneration.Run(_repository.Object, _unitOfWork.Object, 42,
+            false, Now, _ => plan, CancellationToken.None);
+
+        // Assert
+        Assert.Equal(900, added!.Id);
+        Assert.Equal(100, result!.LastLessonId);
+    }
+
     [Fact]
     public async Task Run_AppliesThePlanSavesOnceAndReturnsTheSavedIds()
     {

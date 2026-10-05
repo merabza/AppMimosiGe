@@ -23,6 +23,13 @@ public sealed class CreateStudentContractCommandValidator : AbstractValidator<Cr
                 .When(x => !string.IsNullOrEmpty(x.Request!.ContractNumber))
                 .WithErrorCode(StudentContractErrors.ContractNumberAlreadyExists.Code)
                 .WithMessage(StudentContractErrors.ContractNumberAlreadyExists.Description);
+
+            //მოსწავლის ბალანსი მისი ყველა კონტრაქტის ჯამია, ამიტომ წელში მოსწავლეს ერთი კონტრაქტი აქვს (ნაწილი 20)
+            RuleFor(x => x.Request!)
+                .MustAsync(async (request, ct) =>
+                    !await repository.StudentHasContract(request.AcademicYearId, request.StudentHumanId, 0, ct))
+                .WithErrorCode(StudentContractErrors.StudentAlreadyHasContract.Code)
+                .WithMessage(StudentContractErrors.StudentAlreadyHasContract.Description);
         });
     }
 }

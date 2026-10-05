@@ -247,4 +247,41 @@ public sealed class StudentContractValidatorsTests
         ValidationResult result = await validator.ValidateAsync(new UpdateStudentContractCommand(1, null));
         Assert.False(result.IsValid);
     }
+
+    // part 20: the balance is the student's account over every contract, so a student has one contract in a year
+    [Fact]
+    public async Task Create_StudentWithAContractInTheYear_Fails()
+    {
+        Mock<IStudentContractsRepository> repository = RepositoryWhereEverythingExists();
+        repository.Setup(r => r.StudentHasContract(11, 1, 0, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        var validator = new CreateStudentContractCommandValidator(repository.Object);
+
+        ValidationResult result = await validator.ValidateAsync(new CreateStudentContractCommand(ValidRequest()));
+
+        Assert.Equal([StudentContractErrors.StudentAlreadyHasContract.Code], result.Errors.Select(e => e.ErrorCode));
+    }
+
+    [Fact]
+    public async Task Update_ExcludesTheContractItselfFromTheStudentsContracts()
+    {
+        Mock<IStudentContractsRepository> repository = RepositoryWhereEverythingExists();
+        var validator = new UpdateStudentContractCommandValidator(repository.Object);
+
+        ValidationResult result = await validator.ValidateAsync(new UpdateStudentContractCommand(42, ValidRequest()));
+
+        Assert.True(result.IsValid);
+        repository.Verify(r => r.StudentHasContract(11, 1, 42, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Update_StudentWithAnotherContractInTheYear_Fails()
+    {
+        Mock<IStudentContractsRepository> repository = RepositoryWhereEverythingExists();
+        repository.Setup(r => r.StudentHasContract(11, 1, 42, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        var validator = new UpdateStudentContractCommandValidator(repository.Object);
+
+        ValidationResult result = await validator.ValidateAsync(new UpdateStudentContractCommand(42, ValidRequest()));
+
+        Assert.Equal([StudentContractErrors.StudentAlreadyHasContract.Code], result.Errors.Select(e => e.ErrorCode));
+    }
 }

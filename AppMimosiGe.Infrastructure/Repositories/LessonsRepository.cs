@@ -107,13 +107,14 @@ public sealed class LessonsRepository(IMimosiGeDbContext context) : ILessonsRepo
             .ToListAsync(cancellationToken);
     }
 
+    //მასწავლებლის კონტრაქტის ნომერი ყველა კონტრაქტს შორის უნიკალურია (D50), ამიტომ სახელი არ მეორდება
     public Task<List<LookupItemResponse>> GetTeacherContracts(CancellationToken cancellationToken = default)
     {
         return context.TeacherContracts.AsNoTracking()
             .Select(x => new
             {
                 x.Id, Name = x.TeacherHuman.LastName + " " + x.TeacherHuman.FirstName + " / " + x.ContractNumber
-            }).OrderBy(x => x.Name).ThenBy(x => x.Id).Select(x => new LookupItemResponse(x.Id, x.Name))
+            }).OrderBy(x => x.Name).Select(x => new LookupItemResponse(x.Id, x.Name))
             .ToListAsync(cancellationToken);
     }
 
@@ -136,6 +137,11 @@ public sealed class LessonsRepository(IMimosiGeDbContext context) : ILessonsRepo
         if (query.GrpId is { } grpId)
         {
             lessons = lessons.Where(l => l.GroupId == grpId);
+        }
+
+        if (query.AcademicYearId is { } academicYearId)
+        {
+            lessons = lessons.Where(l => l.Group.AcademicYearId == academicYearId);
         }
 
         if (query.TeacherContractId is { } teacherContractId)

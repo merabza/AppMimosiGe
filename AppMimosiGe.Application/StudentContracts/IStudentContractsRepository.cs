@@ -23,6 +23,15 @@ public interface IStudentContractsRepository
     Task<bool> ContractNumberExists(int academicYearId, string contractNumber, int exceptScId,
         CancellationToken cancellationToken = default);
 
+    //მოსწავლეს ამ წელში სხვა კონტრაქტი აქვს (exceptScId გამოირიცხება)
+    Task<bool> StudentHasContract(int academicYearId, int studentHumanId, int exceptScId,
+        CancellationToken cancellationToken = default);
+
+    //წლის კონტრაქტების ნომრები (შემდეგი თავისუფალი ნომრისთვის)
+    Task<List<string>> GetContractNumbers(int academicYearId, CancellationToken cancellationToken = default);
+
+    Task<AcademicYear?> GetAcademicYear(int ayId, CancellationToken cancellationToken = default);
+
     //კონტრაქტზე მიბმულია ჯგუფი, გაკვეთილი, გადახდა ან CRM ზარი
     Task<bool> IsInUse(int scId, CancellationToken cancellationToken = default);
 

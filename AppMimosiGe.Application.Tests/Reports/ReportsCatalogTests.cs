@@ -67,12 +67,18 @@ public sealed class ReportsCatalogTests
         "r11WrongStatuseLessons", "r12LessonsWithWrongVoidStatus", "r14Missings", "r34TeacherMissAndSubstitutes"
     ];
 
-    private static readonly string[] NoParameterKeys =
+    private static readonly string[] NoParameterKeys = ["r15BlackList"];
+
+    //Access's reports without RepFltNames that check every group row or lesson: an optional academic year (part 20)
+    private static readonly string[] AcademicYearKeys =
     [
-        "r13LessonsWithErrors", "r15BlackList", "r22", "r26StudMissDate", "r27TeacherMissDate",
-        "r28DayTimesMissDate", "r29TeacherMissSalary", "r30StudentMissFees", "r31StudSameStartEndDate",
-        "r32TeachSameStartEndDate", "r33DTPSameStartEndDate"
+        "r13LessonsWithErrors", "r22", "r26StudMissDate", "r27TeacherMissDate", "r28DayTimesMissDate",
+        "r29TeacherMissSalary", "r30StudentMissFees", "r31StudSameStartEndDate", "r32TeachSameStartEndDate",
+        "r33DTPSameStartEndDate"
     ];
+
+    private const string AllGroupRows =
+        "არჩეული სასწავლო წლის (ცარიელი — ყველა წლის) ყველა ჯგუფის ყველა სტრიქონი, თარიღების მიუხედავად.";
 
     //part 18: the groups' state for one date (r09 had no filter in Access, D132)
     private static readonly string[] Part18OneDateKeys =
@@ -272,6 +278,15 @@ public sealed class ReportsCatalogTests
         Assert.All(NoParameterKeys, key => Assert.Empty(ReportsCatalog.Find(key)!.Parameters));
     }
 
+    [Fact]
+    public void Definitions_GroupRowChecksHaveAnOptionalAcademicYear()
+    {
+        Assert.All(AcademicYearKeys,
+            key => Assert.Equal(
+                [new ReportParameter(ReportParameterNames.AcademicYearId, ReportParameterCaptions.AcademicYear, false)],
+                ReportsCatalog.Find(key)!.Parameters));
+    }
+
     // AppMimosiGeMenu.txt's titles, the typos fixed ("აცდელინი", "ერთიდაიგივე")
     [Theory]
     [InlineData("r11WrongStatuseLessons", "გასაუქმებელი გაკვეთილები")]
@@ -317,32 +332,29 @@ public sealed class ReportsCatalogTests
         "თარიღები ჯგუფის განრიგით არ არის დათვლილი (კვირის დღეების არასწორი ცვლილების ნიშანი).")]
     [InlineData("r26StudMissDate",
         "მოსწავლის ჯგუფიდან გასვლის თარიღი არ ემთხვევა იმავე საგნის შემდეგი სტრიქონის (სხვა ან იმავე ჯგუფში) " +
-        "დაწყებას: შუალედში მოსწავლეს გაკვეთილი და დარიცხვა არ აქვს. ყველა ჯგუფის ყველა სტრიქონი, თარიღების " +
-        "მიუხედავად.")]
+        "დაწყებას: შუალედში მოსწავლეს გაკვეთილი და დარიცხვა არ აქვს. " + AllGroupRows)]
     [InlineData("r27TeacherMissDate",
         "ჯგუფში მასწავლებლის სტრიქონის დასრულება არ ემთხვევა ჯგუფის შემდეგი მასწავლებლის სტრიქონის დაწყებას: " +
-        "შუალედში ჯგუფს მასწავლებელი არ ჰყავს და გაკვეთილები არ იქმნება. ყველა ჯგუფის ყველა სტრიქონი, თარიღების " +
-        "მიუხედავად.")]
+        "შუალედში ჯგუფს მასწავლებელი არ ჰყავს და გაკვეთილები არ იქმნება. " + AllGroupRows)]
     [InlineData("r28DayTimesMissDate",
         "ჯგუფის განრიგის სტრიქონის დასრულება არ ემთხვევა ჯგუფის შემდეგი განრიგის სტრიქონის დაწყებას (კვირის " +
-        "დღის მიუხედავად). ყველა ჯგუფის ყველა სტრიქონი, თარიღების მიუხედავად.")]
+        "დღის მიუხედავად). " + AllGroupRows)]
     [InlineData("r29TeacherMissSalary",
         "ჯგუფის მასწავლებლის სტრიქონები, რომელთა ხელფასის სქემა მასწავლებლის კონტრაქტის ძირითადი სქემისგან " +
-        "განსხვავდება (ძირითადი სქემის გარეშე კონტრაქტი არ მოწმდება). ყველა ჯგუფის ყველა სტრიქონი, თარიღების " +
-        "მიუხედავად.")]
+        "განსხვავდება (ძირითადი სქემის გარეშე კონტრაქტი არ მოწმდება). " + AllGroupRows)]
     [InlineData("r30StudentMissFees",
         "მოსწავლის 4 კვირის გადასახადი 0.01-ზე მეტით განსხვავდება საათის ღირებულება × კოეფიციენტი × ჯგუფის " +
         "კვირის საათები × 4-ისგან იმ თარიღებზე, როცა მოსწავლის, მასწავლებლის ან განრიგის სტრიქონი იწყება ან " +
-        "მთავრდება. ყველა ჯგუფის ყველა სტრიქონი, თარიღების მიუხედავად.")]
+        "მთავრდება. " + AllGroupRows)]
     [InlineData("r31StudSameStartEndDate",
         "ჯგუფის მოსწავლის სტრიქონები, რომლებიც ერთსა და იმავე თარიღზე იწყება და მთავრდება, ანუ არცერთ დღეს " +
-        "არ მოქმედებს. ყველა ჯგუფის ყველა სტრიქონი, თარიღების მიუხედავად.")]
+        "არ მოქმედებს. " + AllGroupRows)]
     [InlineData("r32TeachSameStartEndDate",
         "ჯგუფის მასწავლებლის სტრიქონები, რომლებიც ერთსა და იმავე თარიღზე იწყება და მთავრდება, ანუ არცერთ დღეს " +
-        "არ მოქმედებს. ყველა ჯგუფის ყველა სტრიქონი, თარიღების მიუხედავად.")]
+        "არ მოქმედებს. " + AllGroupRows)]
     [InlineData("r33DTPSameStartEndDate",
         "ჯგუფის განრიგის სტრიქონები, რომლებიც ერთსა და იმავე თარიღზე იწყება და მთავრდება, ანუ არცერთ დღეს არ " +
-        "მოქმედებს. ყველა ჯგუფის ყველა სტრიქონი, თარიღების მიუხედავად.")]
+        "მოქმედებს. " + AllGroupRows)]
     [InlineData("r34TeacherMissAndSubstitutes",
         "გაკვეთილები სტატუსით „გაუქმდა\" ან შემცვლელი მასწავლებლით, გაკვეთილის მასწავლებლების მიხედვით: " +
         "შემთხვევების რაოდენობა და წილი ყველა შემთხვევიდან.")]
@@ -517,25 +529,26 @@ public sealed class ReportsCatalogTests
         }
     }
 
-    //the query a part 17 report's handler gets for the period StartDate–Date (r17: the date only)
+    //the query a part 17 report's handler gets for the period StartDate–Date (r17: the date only) and the academic
+    //year 11 (the checks without dates, part 20)
     private static object Part17Query(string key)
     {
         return key switch
         {
             "r11WrongStatuseLessons" => new WrongStatusLessonsReportQuery(StartDate, Date),
             "r12LessonsWithWrongVoidStatus" => new LessonsWithWrongVoidStatusReportQuery(StartDate, Date),
-            "r13LessonsWithErrors" => new LessonsWithErrorsReportQuery(),
+            "r13LessonsWithErrors" => new LessonsWithErrorsReportQuery(11),
             "r14Missings" => new MissingsReportQuery(StartDate, Date),
             "r17MissingsInRow" => new MissingsInRowReportQuery(Date),
-            "r22" => new WrongWeekDayChangesReportQuery(),
-            "r26StudMissDate" => new StudentMissedTransitionsReportQuery(),
-            "r27TeacherMissDate" => new TeacherMissedTransitionsReportQuery(),
-            "r28DayTimesMissDate" => new DayTimeMissedTransitionsReportQuery(),
-            "r29TeacherMissSalary" => new TeacherSchemeMismatchesReportQuery(),
-            "r30StudentMissFees" => new StudentFeeMismatchesReportQuery(),
-            "r31StudSameStartEndDate" => new StudentSameStartEndDateReportQuery(),
-            "r32TeachSameStartEndDate" => new TeacherSameStartEndDateReportQuery(),
-            "r33DTPSameStartEndDate" => new DayTimeSameStartEndDateReportQuery(),
+            "r22" => new WrongWeekDayChangesReportQuery(11),
+            "r26StudMissDate" => new StudentMissedTransitionsReportQuery(11),
+            "r27TeacherMissDate" => new TeacherMissedTransitionsReportQuery(11),
+            "r28DayTimesMissDate" => new DayTimeMissedTransitionsReportQuery(11),
+            "r29TeacherMissSalary" => new TeacherSchemeMismatchesReportQuery(11),
+            "r30StudentMissFees" => new StudentFeeMismatchesReportQuery(11),
+            "r31StudSameStartEndDate" => new StudentSameStartEndDateReportQuery(11),
+            "r32TeachSameStartEndDate" => new TeacherSameStartEndDateReportQuery(11),
+            "r33DTPSameStartEndDate" => new DayTimeSameStartEndDateReportQuery(11),
             _ => new TeacherMissAndSubstitutesReportQuery(StartDate, Date)
         };
     }
@@ -672,7 +685,7 @@ public sealed class ReportsCatalogTests
 
         // Act
         Result<ReportTable> result = await ReportsCatalog.Find(key)!.Run(
-            new ReportParametersRequest(StartDate, Date, null, null, null), provider, CancellationToken.None);
+            new ReportParametersRequest(StartDate, Date, null, null, null, 11), provider, CancellationToken.None);
 
         // Assert
         Assert.Same(tables[expected.GetType()], result.Value);

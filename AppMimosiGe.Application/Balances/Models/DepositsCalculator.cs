@@ -12,7 +12,9 @@ public static class DepositsCalculator
     ///     რომელსაც სასურველ დღეზე გადასახდელი თანხა აქვს. "ფილტრი": ბალანსი ≤ მაქსიმუმი; "დარეკვის ფილტრი": ამას გარდა
     ///     გაკვეთილი აქვს და CRM-ის "უნდა გადაიხადოს" (ცარიელი = დღეს) დღეს ან უფრო ადრეა. რიგი: ფილტრის გარეშე შემდეგი
     ///     გადახდის თარიღით და შემდეგი გაკვეთილით (Access-ის ფორმის OrderBy; "ფილტრის მოხსნა" Access-ში რიგსაც შლიდა, აქ ამ
-    ///     რიგს აბრუნებს), ფილტრებით შემდეგი გაკვეთილით; ცარიელი თარიღი პირველია, როგორც Access-ში
+    ///     რიგს აბრუნებს), ფილტრებით შემდეგი გაკვეთილით; ცარიელი თარიღი პირველია, როგორც Access-ში.
+    ///     ნაწილი 20: ყველაფერი მოსწავლის ანგარიშით ითვლება (StudentAccounts: მოსწავლის ყველა წლის კონტრაქტი), ხოლო მოსწავლე
+    ///     სიაში ერთხელ ჩანს, ბოლო სასწავლო წლის კონტრაქტით, ამიტომ footer-ის ჯამი არ ორმაგდება
     /// </summary>
     public static DepositsResponse Build(DepositsInput input, DepositsParameters parameters)
     {
@@ -21,15 +23,22 @@ public static class DepositsCalculator
         DateTime dateToEnd = parameters.DateTo.Date.AddDays(1);
         //დაუსრულებელი სტრიქონის სავარაუდო დასრულება: ბოლო სამუშაო თვის მომდევნო თვე (Access: DateAdd("m", 1, MaxOfMonthDate))
         DateTime? openEndDate = input.LastOperationMonth?.AddMonths(1);
-        ILookup<int, BalanceOperation> operations = input.Operations.ToLookup(o => o.StudentContractId);
-        ILookup<int, DepositGroupStudentData> groupStudents = input.GroupStudents.ToLookup(g => g.StudentContractId);
-        Dictionary<int, DateTime> crmMustPayDates = LastCrmMustPayDates(input.CrmMustPayDates);
+        IReadOnlyDictionary<int, int> studentByContract = input.StudentByContract;
+        ILookup<int, BalanceOperation> operations =
+            StudentAccounts.ByAccount(input.Operations, studentByContract, o => o.StudentContractId);
+        ILookup<int, DepositGroupStudentData> groupStudents =
+            StudentAccounts.ByAccount(input.GroupStudents, studentByContract, g => g.StudentContractId);
+        Dictionary<int, DateTime> nextLessonDates = input.NextLessonDates
+            .GroupBy(x => StudentAccounts.AccountOf(studentByContract, x.Key))
+            .ToDictionary(g => g.Key, g => g.Min(x => x.Value));
+        Dictionary<int, DateTime> crmMustPayDates = LastCrmMustPayDates(input.CrmMustPayDates, studentByContract);
 
         List<DepositRowResponse> rows = [];
-        foreach (DepositContractData contract in input.Contracts)
+        foreach (DepositContractData contract in LastContractOfEachStudent(input.Contracts, studentByContract))
         {
-            List<BalanceOperation> contractOperations = [.. operations[contract.StudentContractId]];
-            List<DepositGroupStudentData> contractGroupStudents = [.. groupStudents[contract.StudentContractId]];
+            int account = StudentAccounts.AccountOf(studentByContract, contract.StudentContractId);
+            List<BalanceOperation> contractOperations = [.. operations[account]];
+            List<DepositGroupStudentData> contractGroupStudents = [.. groupStudents[account]];
 
             //vStudentDeposites: ოპერაციები "თარიღამდე"; ოპერაციის გარეშე ბალანსი არ არის (null)
             decimal? balance = SumOrNull(contractOperations.Where(o => o.OperationDate < dateToEnd));
@@ -53,10 +62,10 @@ public static class DepositsCalculator
             //გარეშე კონტრაქტი სიაში ისედაც არ ხვდება). სტრიქონის გარეშე Max ცარიელ სიმრავლეზე null-ია
             DepositRowResponse row = new(contract.StudentContractId, contract.AcademicYearId, contract.StudentName,
                 contract.ContractNumber, balance, contract.StudentPhone, contract.PayerName, contract.PayerPhone,
-                input.NextLessonDates.TryGetValue(contract.StudentContractId, out DateTime nextLessonDate)
+                nextLessonDates.TryGetValue(account, out DateTime nextLessonDate)
                     ? nextLessonDate
                     : null,
-                crmMustPayDates.TryGetValue(contract.StudentContractId, out DateTime crmMustPayDate)
+                crmMustPayDates.TryGetValue(account, out DateTime crmMustPayDate)
                     ? crmMustPayDate
                     : null, FourWeekFee(contractGroupStudents, dateToEnd), contract.DesiredMonthlyPaymentDay,
                 desiredPayDates?.NextPayDate, desiredPayDates?.AfterNextPayDate, desiredDayAmount, contract.NextPayDate,
@@ -101,12 +110,21 @@ public static class DepositsCalculator
         return active.Count == 0 ? null : active.Sum(g => g.FourWeekFee);
     }
 
-    //vStudentMustPayDate: კონტრაქტის ბოლო ზარი (CallDate-ით), რომელშიც "უნდა გადაიხადოს" შევსებულია. ერთი დროის ორი
-    //ზარისას Access-ის join სტრიქონს აორმაგებდა; აქ ბოლო (უდიდესი ID-ის) ზარი ირჩევა
-    private static Dictionary<int, DateTime> LastCrmMustPayDates(IEnumerable<CrmMustPayDateData> calls)
+    //vStudentMustPayDate: მოსწავლის კონტრაქტების ბოლო ზარი (CallDate-ით), რომელშიც "უნდა გადაიხადოს" შევსებულია. ერთი
+    //დროის ორი ზარისას Access-ის join სტრიქონს აორმაგებდა; აქ ბოლო (უდიდესი ID-ის) ზარი ირჩევა
+    private static Dictionary<int, DateTime> LastCrmMustPayDates(IEnumerable<CrmMustPayDateData> calls,
+        IReadOnlyDictionary<int, int> studentByContract)
     {
-        return calls.GroupBy(c => c.StudentContractId)
+        return calls.GroupBy(c => StudentAccounts.AccountOf(studentByContract, c.StudentContractId))
             .ToDictionary(g => g.Key, g => g.MaxBy(c => (c.CallDate, c.CrmCallId))!.MustPayDate);
+    }
+
+    //მოსწავლის ბოლო სასწავლო წლის კონტრაქტი (ერთ წელში მოსწავლეს ერთი კონტრაქტი აქვს; თუ ძველ მონაცემებში მეტია, ბოლო ID)
+    private static IEnumerable<DepositContractData> LastContractOfEachStudent(
+        IEnumerable<DepositContractData> contracts, IReadOnlyDictionary<int, int> studentByContract)
+    {
+        return contracts.GroupBy(c => StudentAccounts.AccountOf(studentByContract, c.StudentContractId))
+            .Select(g => g.MaxBy(c => (c.AcademicYearStartDate, c.StudentContractId))!);
     }
 
     private static decimal? SumOrNull(IEnumerable<BalanceOperation> operations)

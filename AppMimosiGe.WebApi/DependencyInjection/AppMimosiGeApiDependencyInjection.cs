@@ -23,6 +23,7 @@ public static class AppMimosiGeApiDependencyInjection
         endpoints.UseCrmCallsEndpoints(debugLogger);
         endpoints.UseWorkHoursEndpoints(debugLogger);
         endpoints.UseSalaryEndpoints(debugLogger);
+        endpoints.UseAcademicYearEndpoints(debugLogger);
         endpoints.UseReportsEndpoints(debugLogger);
 
         debugLogger?.Information("{MethodName} Finished", nameof(UseAppMimosiGeApi));

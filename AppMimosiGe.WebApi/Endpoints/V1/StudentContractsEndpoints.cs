@@ -5,6 +5,7 @@ using AppMimosiGe.Application.StudentContracts.CreateStudentContract;
 using AppMimosiGe.Application.StudentContracts.DeleteStudentContract;
 using AppMimosiGe.Application.StudentContracts.GetStudentContract;
 using AppMimosiGe.Application.StudentContracts.GetStudentContractFormLookups;
+using AppMimosiGe.Application.StudentContracts.GetStudentContractNextNumber;
 using AppMimosiGe.Application.StudentContracts.GetStudentContractsRowsData;
 using AppMimosiGe.Application.StudentContracts.SearchHumans;
 using AppMimosiGe.Application.StudentContracts.UpdateStudentContract;
@@ -36,6 +37,7 @@ public static class StudentContractsEndpoints
         group.MapGet(Routes.StudentContractsRoute.RowsData, GetRowsData);
         group.MapGet(Routes.StudentContractsRoute.FormLookups, GetFormLookups);
         group.MapGet(Routes.StudentContractsRoute.Humans, SearchHumans);
+        group.MapGet(Routes.StudentContractsRoute.NextNumber, GetNextNumber);
         group.MapGet(Routes.StudentContractsRoute.GetOne, GetOne);
         group.MapPost(Routes.StudentContractsRoute.Create, Create);
         group.MapPut(Routes.StudentContractsRoute.Update, Update);
@@ -80,6 +82,20 @@ public static class StudentContractsEndpoints
             result = await handler.Handle(new SearchHumansQuery(search), cancellationToken);
         return result.Match<List<LookupItemResponse>, Results<Ok<List<LookupItemResponse>>, ProblemHttpResult>>(
             success => TypedResults.Ok(success), failure => (ProblemHttpResult)CustomResults.Problem(failure));
+    }
+
+    // GET api/v1/studentcontracts/nextnumber?academicYearId={id}
+    internal static async Task<Results<Ok<StudentContractNextNumberResponse>, ProblemHttpResult>> GetNextNumber(
+        [FromQuery] int academicYearId,
+        IQueryHandler<GetStudentContractNextNumberQuery, StudentContractNextNumberResponse> handler,
+        CancellationToken cancellationToken = default)
+    {
+        Result<StudentContractNextNumberResponse> result =
+            await handler.Handle(new GetStudentContractNextNumberQuery(academicYearId), cancellationToken);
+        return result
+            .Match<StudentContractNextNumberResponse,
+                Results<Ok<StudentContractNextNumberResponse>, ProblemHttpResult>>(success => TypedResults.Ok(success),
+                failure => (ProblemHttpResult)CustomResults.Problem(failure));
     }
 
     // GET api/v1/studentcontracts/{scId:int}

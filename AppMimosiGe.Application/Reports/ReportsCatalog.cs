@@ -69,7 +69,8 @@ public static class ReportsCatalog
         new(ChecksCategoryKey, "შემოწმება")
     ];
 
-    private const string AllGroupRowsNote = "ყველა ჯგუფის ყველა სტრიქონი, თარიღების მიუხედავად.";
+    private const string AllGroupRowsNote =
+        "არჩეული სასწავლო წლის (ცარიელი — ყველა წლის) ყველა ჯგუფის ყველა სტრიქონი, თარიღების მიუხედავად.";
 
     //Access-ის რეპორტების სათაურში მხოლოდ თარიღისას "თარიღისთვის" ეწერა (FrmMain-ზე "თარიღამდე:")
     private static readonly ReportParameter[] ForDate =
@@ -83,6 +84,10 @@ public static class ReportsCatalog
     ];
 
     private static readonly ReportParameter[] NoParameters = [];
+
+    //პარამეტრების გარეშე შემოწმებების სასწავლო წელი (ნაწილი 20): არასავალდებულო, ცარიელი = ყველა წელი (D125)
+    private static readonly ReportParameter[] AcademicYear =
+        [new(ReportParameterNames.AcademicYearId, ReportParameterCaptions.AcademicYear, false)];
 
     //Access-ის ფილტრები მასწავლებელი, საგანი და მოსწავლე: არასავალდებულო (ცარიელი = ყველა)
     private static readonly ReportParameter Teacher =
@@ -144,7 +149,8 @@ public static class ReportsCatalog
         ReportDefinition.Create("r13LessonsWithErrors", "შეცდომიანი გაკვეთილები",
             "გაკვეთილები, რომლებზეც გენერატორმა ბოლო გაშვებისას შეცდომა ჩაწერა: ზედმეტი გაკვეთილი ან მოსწავლე " +
             "შეტანილი მონაცემით, რომელიც ამიტომ არ წაიშალა. ჯგუფის შეცდომები გენერატორის ლოგშია.",
-            [LessonsCategoryKey, ChecksCategoryKey], NoParameters, _ => new LessonsWithErrorsReportQuery()),
+            [LessonsCategoryKey, ChecksCategoryKey], AcademicYear,
+            p => new LessonsWithErrorsReportQuery(p.AcademicYearId)),
         ReportDefinition.Create("r14Missings", "გაცდენები",
             "გაცდენების რაოდენობა მოსწავლისა და საგნის მიხედვით, ყველაზე მეტიდან: უკვე დაწყებული გაკვეთილები " +
             "„გაუქმდა\" სტატუსის გარდა.", [LessonsCategoryKey, ChecksCategoryKey], Period,
@@ -173,7 +179,8 @@ public static class ReportsCatalog
         ReportDefinition.Create("r22", "კვირის დღეების არასწორი ცვლილებები",
             "გაკვეთილები, რომელთა თეორიულად მინიმალური ან მაქსიმალური თარიღის დრო 00:00:00-ია, ანუ თეორიული " +
             "თარიღები ჯგუფის განრიგით არ არის დათვლილი (კვირის დღეების არასწორი ცვლილების ნიშანი).",
-            [LessonsCategoryKey, ChecksCategoryKey], NoParameters, _ => new WrongWeekDayChangesReportQuery()),
+            [LessonsCategoryKey, ChecksCategoryKey], AcademicYear,
+            p => new WrongWeekDayChangesReportQuery(p.AcademicYearId)),
         ReportDefinition.Create("r23GroupSizesAnalize", "ჯგუფების ზომების ანალიზი",
             "ჯგუფები მოსწავლეების რაოდენობით და შევსების პროცენტით, ზომების მიხედვით; ბოლოს ჯგუფების რაოდენობა, " +
             $"საშუალო დატვირთვა და შევსების საშუალო პროცენტი. {ActiveGroupsNote}", [GroupsCategoryKey, ChecksCategoryKey],
@@ -190,39 +197,39 @@ public static class ReportsCatalog
         ReportDefinition.Create("r26StudMissDate", "მოსწავლეების აცდენილი გადასვლები",
             "მოსწავლის ჯგუფიდან გასვლის თარიღი არ ემთხვევა იმავე საგნის შემდეგი სტრიქონის (სხვა ან იმავე ჯგუფში) " +
             $"დაწყებას: შუალედში მოსწავლეს გაკვეთილი და დარიცხვა არ აქვს. {AllGroupRowsNote}", [ChecksCategoryKey],
-            NoParameters, _ => new StudentMissedTransitionsReportQuery()),
+            AcademicYear, p => new StudentMissedTransitionsReportQuery(p.AcademicYearId)),
         ReportDefinition.Create("r27TeacherMissDate", "მასწავლებლების აცდენილი გადასვლები",
             "ჯგუფში მასწავლებლის სტრიქონის დასრულება არ ემთხვევა ჯგუფის შემდეგი მასწავლებლის სტრიქონის დაწყებას: " +
             $"შუალედში ჯგუფს მასწავლებელი არ ჰყავს და გაკვეთილები არ იქმნება. {AllGroupRowsNote}",
-            [ChecksCategoryKey], NoParameters, _ => new TeacherMissedTransitionsReportQuery()),
+            [ChecksCategoryKey], AcademicYear, p => new TeacherMissedTransitionsReportQuery(p.AcademicYearId)),
         ReportDefinition.Create("r28DayTimesMissDate", "დროების აცდენილი გადასვლები",
             "ჯგუფის განრიგის სტრიქონის დასრულება არ ემთხვევა ჯგუფის შემდეგი განრიგის სტრიქონის დაწყებას (კვირის " +
-            $"დღის მიუხედავად). {AllGroupRowsNote}", [ChecksCategoryKey], NoParameters,
-            _ => new DayTimeMissedTransitionsReportQuery()),
+            $"დღის მიუხედავად). {AllGroupRowsNote}", [ChecksCategoryKey], AcademicYear,
+            p => new DayTimeMissedTransitionsReportQuery(p.AcademicYearId)),
         ReportDefinition.Create("r29TeacherMissSalary", "მასწავლებლების აცდენილი ხელფასები",
             "ჯგუფის მასწავლებლის სტრიქონები, რომელთა ხელფასის სქემა მასწავლებლის კონტრაქტის ძირითადი სქემისგან " +
             $"განსხვავდება (ძირითადი სქემის გარეშე კონტრაქტი არ მოწმდება). {AllGroupRowsNote}", [ChecksCategoryKey],
-            NoParameters, _ => new TeacherSchemeMismatchesReportQuery()),
+            AcademicYear, p => new TeacherSchemeMismatchesReportQuery(p.AcademicYearId)),
         ReportDefinition.Create("r30StudentMissFees", "მოსწავლის სწავლის საფასურის აცდენა",
             "მოსწავლის 4 კვირის გადასახადი 0.01-ზე მეტით განსხვავდება საათის ღირებულება × კოეფიციენტი × ჯგუფის " +
             "კვირის საათები × 4-ისგან იმ თარიღებზე, როცა მოსწავლის, მასწავლებლის ან განრიგის სტრიქონი იწყება ან " +
-            $"მთავრდება. {AllGroupRowsNote}", [ChecksCategoryKey], NoParameters,
-            _ => new StudentFeeMismatchesReportQuery()),
+            $"მთავრდება. {AllGroupRowsNote}", [ChecksCategoryKey], AcademicYear,
+            p => new StudentFeeMismatchesReportQuery(p.AcademicYearId)),
         ReportDefinition.Create("r31StudSameStartEndDate",
             "მოსწავლის სწავლის დაწყება და დამთავრება ერთსა და იმავე თარიღზე",
             "ჯგუფის მოსწავლის სტრიქონები, რომლებიც ერთსა და იმავე თარიღზე იწყება და მთავრდება, ანუ არცერთ დღეს " +
-            $"არ მოქმედებს. {AllGroupRowsNote}", [ChecksCategoryKey], NoParameters,
-            _ => new StudentSameStartEndDateReportQuery()),
+            $"არ მოქმედებს. {AllGroupRowsNote}", [ChecksCategoryKey], AcademicYear,
+            p => new StudentSameStartEndDateReportQuery(p.AcademicYearId)),
         ReportDefinition.Create("r32TeachSameStartEndDate",
             "მასწავლებლის ჯგუფში მუშაობის დაწყება და დამთავრება ერთსა და იმავე თარიღზე",
             "ჯგუფის მასწავლებლის სტრიქონები, რომლებიც ერთსა და იმავე თარიღზე იწყება და მთავრდება, ანუ არცერთ დღეს " +
-            $"არ მოქმედებს. {AllGroupRowsNote}", [ChecksCategoryKey], NoParameters,
-            _ => new TeacherSameStartEndDateReportQuery()),
+            $"არ მოქმედებს. {AllGroupRowsNote}", [ChecksCategoryKey], AcademicYear,
+            p => new TeacherSameStartEndDateReportQuery(p.AcademicYearId)),
         ReportDefinition.Create("r33DTPSameStartEndDate",
             "დღეების განაწილება, დაწყებული და დამთავრებული ერთსა და იმავე თარიღზე",
             "ჯგუფის განრიგის სტრიქონები, რომლებიც ერთსა და იმავე თარიღზე იწყება და მთავრდება, ანუ არცერთ დღეს არ " +
-            $"მოქმედებს. {AllGroupRowsNote}", [ChecksCategoryKey], NoParameters,
-            _ => new DayTimeSameStartEndDateReportQuery()),
+            $"მოქმედებს. {AllGroupRowsNote}", [ChecksCategoryKey], AcademicYear,
+            p => new DayTimeSameStartEndDateReportQuery(p.AcademicYearId)),
         ReportDefinition.Create("r34TeacherMissAndSubstitutes", "გაუქმებები და ჩანაცვლებები",
             "გაკვეთილები სტატუსით „გაუქმდა\" ან შემცვლელი მასწავლებლით, გაკვეთილის მასწავლებლების მიხედვით: " +
             "შემთხვევების რაოდენობა და წილი ყველა შემთხვევიდან.", [ChecksCategoryKey], Period,

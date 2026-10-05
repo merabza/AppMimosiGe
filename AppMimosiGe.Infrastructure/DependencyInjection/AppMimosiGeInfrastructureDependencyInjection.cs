@@ -1,3 +1,4 @@
+using AppMimosiGe.Application.AcademicYears;
 using AppMimosiGe.Application.Balances;
 using AppMimosiGe.Application.CrmCalls;
 using AppMimosiGe.Application.Groups;
@@ -37,6 +38,7 @@ public static class AppMimosiGeInfrastructureDependencyInjection
         services.AddScoped<IWorkHoursRepository, WorkHoursRepository>();
         services.AddScoped<ISalaryRepository, SalaryRepository>();
         services.AddScoped<IReportsRepository, ReportsRepository>();
+        services.AddScoped<IAcademicYearsRepository, AcademicYearsRepository>();
         services.AddSingleton<IReportExcelWriter, OpenXmlReportExcelWriter>();
         services.AddScoped<IUserClaimRights, UserClaimRights>();
 

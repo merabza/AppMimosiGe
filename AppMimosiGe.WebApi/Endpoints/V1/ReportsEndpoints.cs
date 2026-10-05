@@ -63,28 +63,30 @@ public static class ReportsEndpoints
             success => TypedResults.Ok(success), failure => (ProblemHttpResult)CustomResults.Problem(failure));
     }
 
-    // GET api/v1/reports/{key}?startDate=&endDate=&teacherId=&courseId=&studentId=
+    // GET api/v1/reports/{key}?startDate=&endDate=&teacherId=&courseId=&studentId=&academicYearId=
     internal static async Task<Results<Ok<ReportResponse>, ProblemHttpResult>> Run([FromRoute] string key,
         [FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate, [FromQuery] int? teacherId,
         [FromQuery] int? courseId, [FromQuery] int? studentId, IQueryHandler<RunReportQuery, ReportResponse> handler,
-        CancellationToken cancellationToken = default)
+        [FromQuery] int? academicYearId = null, CancellationToken cancellationToken = default)
     {
         Result<ReportResponse> result = await handler.Handle(
-            new RunReportQuery(key, new ReportParametersRequest(startDate, endDate, teacherId, courseId, studentId)),
+            new RunReportQuery(key,
+                new ReportParametersRequest(startDate, endDate, teacherId, courseId, studentId, academicYearId)),
             cancellationToken);
         return result.Match<ReportResponse, Results<Ok<ReportResponse>, ProblemHttpResult>>(
             success => TypedResults.Ok(success), failure => (ProblemHttpResult)CustomResults.Problem(failure));
     }
 
-    // GET api/v1/reports/{key}/excel?startDate=&endDate=&teacherId=&courseId=&studentId=
+    // GET api/v1/reports/{key}/excel?startDate=&endDate=&teacherId=&courseId=&studentId=&academicYearId=
     internal static async Task<Results<FileContentHttpResult, ProblemHttpResult>> Excel([FromRoute] string key,
         [FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate, [FromQuery] int? teacherId,
         [FromQuery] int? courseId, [FromQuery] int? studentId, IQueryHandler<GetReportExcelQuery, ReportFile> handler,
-        CancellationToken cancellationToken = default)
+        [FromQuery] int? academicYearId = null, CancellationToken cancellationToken = default)
     {
         Result<ReportFile> result = await handler.Handle(
             new GetReportExcelQuery(key,
-                new ReportParametersRequest(startDate, endDate, teacherId, courseId, studentId)), cancellationToken);
+                new ReportParametersRequest(startDate, endDate, teacherId, courseId, studentId, academicYearId)),
+            cancellationToken);
         return result.Match<ReportFile, Results<FileContentHttpResult, ProblemHttpResult>>(
             success => TypedResults.File(success.Content, ExcelContentType, success.FileName),
             failure => (ProblemHttpResult)CustomResults.Problem(failure));

@@ -187,7 +187,7 @@ public sealed class ReportsRepositoryLessonsTests : IDisposable
         Save(Log(1, 100, 1, 11), Log(2, 100, 3, 14), Log(3, 100, null, 6), Log(4, 101, 3, 14));
 
         // Act
-        List<LessonErrorRow> errors = await _repository.GetLessonErrors();
+        List<LessonErrorRow> errors = await _repository.GetLessonErrors(null);
 
         // Assert
         Assert.Equal([
@@ -202,12 +202,43 @@ public sealed class ReportsRepositoryLessonsTests : IDisposable
         };
     }
 
+    //sync EF calls stay out of the async tests
+    private void SetGroupYear(int grpId, int academicYearId)
+    {
+        _context.Groups.Single(g => g.GrpId == grpId).AcademicYearId = academicYearId;
+        _context.SaveChanges();
+        _context.ChangeTracker.Clear();
+    }
+
+    // part 20: only the logs and lessons of the year's groups (group 101 is of year 2, group 100 of none)
+    [Fact]
+    public async Task GetLessonErrorsAndMidnightTeoDates_OfAYear_LoadOnlyItsGroups()
+    {
+        // Arrange
+        Save(Log(1, 100, 1, 11), Log(4, 101, 3, 14));
+        SetGroupYear(101, 2);
+
+        // Act
+        List<LessonErrorRow> errors = await _repository.GetLessonErrors(2);
+        List<TeoDatesLessonRow> lessons = await _repository.GetLessonsWithMidnightTeoDates(2);
+
+        // Assert
+        Assert.Equal([4], errors.Select(e => e.LogId));
+        Assert.Equal([3], lessons.Select(l => l.LessonId));
+        return;
+
+        static LessonCheckCreateErrorLog Log(int id, int groupId, int? lessonId, int errorId) => new()
+        {
+            Id = id, CreatedDate = October, GroupId = groupId, LessonId = lessonId, ErrorLogTextId = errorId
+        };
+    }
+
     // a theoretical date at 00:00:00 (hours, minutes and seconds); 00:00:01 is not
     [Fact]
     public async Task GetLessonsWithMidnightTeoDates_LoadsTheLessonsWithAMidnightDate()
     {
         // Act
-        List<TeoDatesLessonRow> lessons = await _repository.GetLessonsWithMidnightTeoDates();
+        List<TeoDatesLessonRow> lessons = await _repository.GetLessonsWithMidnightTeoDates(null);
 
         // Assert
         Assert.Equal([

@@ -36,12 +36,13 @@ public sealed class ReportParameterRulesTests
         "No parameters", [ReportsCatalog.ChecksCategoryKey], [], _ => new FakeReportQuery());
 
     private static readonly ReportLookupsResponse Lookups = new([new LookupItemResponse(5, "Alpha Ann / T5")],
-        [new LookupItemResponse(3, "Math")], [new LookupItemResponse(20, "Beta Bob / 6.020")]);
+        [new LookupItemResponse(3, "Math")], [new LookupItemResponse(20, "Beta Bob / 6.020")],
+        [new LookupItemResponse(11, "2026-2027")]);
 
     private static ReportParametersRequest Parameters(DateTime? start = null, DateTime? end = null,
-        int? teacherId = null, int? courseId = null, int? studentId = null)
+        int? teacherId = null, int? courseId = null, int? studentId = null, int? academicYearId = null)
     {
-        return new ReportParametersRequest(start, end, teacherId, courseId, studentId);
+        return new ReportParametersRequest(start, end, teacherId, courseId, studentId, academicYearId);
     }
 
     [Fact]
@@ -130,9 +131,10 @@ public sealed class ReportParameterRulesTests
     [InlineData(ReportParameterNames.TeacherId)]
     [InlineData(ReportParameterNames.CourseId)]
     [InlineData(ReportParameterNames.StudentId)]
+    [InlineData(ReportParameterNames.AcademicYearId)]
     public void HasValue_EveryParameter(string name)
     {
-        Assert.True(ReportParameterRules.HasValue(name, Parameters(Start, End, 5, 3, 20)));
+        Assert.True(ReportParameterRules.HasValue(name, Parameters(Start, End, 5, 3, 20, 11)));
         Assert.False(ReportParameterRules.HasValue(name, Parameters()));
     }
 
@@ -154,6 +156,7 @@ public sealed class ReportParameterRulesTests
     [InlineData(ReportParameterNames.TeacherId)]
     [InlineData(ReportParameterNames.CourseId)]
     [InlineData(ReportParameterNames.StudentId)]
+    [InlineData(ReportParameterNames.AcademicYearId)]
     public void NeedsLookups_AnyOfTheLookups(string name)
     {
         var definition = ReportDefinition.Create("rOne", "One", "One lookup", [ReportsCatalog.ChecksCategoryKey],
@@ -180,6 +183,17 @@ public sealed class ReportParameterRulesTests
         Assert.Equal("Math", ReportParameterRules.DisplayValue(ReportParameterNames.CourseId, parameters, Lookups));
         Assert.Equal("Beta Bob / 6.020",
             ReportParameterRules.DisplayValue(ReportParameterNames.StudentId, parameters, Lookups));
+    }
+
+    // the check reports' academic year (part 20): its name, or "all" when it is empty
+    [Fact]
+    public void DisplayValue_AcademicYearShowsItsName()
+    {
+        Assert.Equal("2026-2027",
+            ReportParameterRules.DisplayValue(ReportParameterNames.AcademicYearId, Parameters(academicYearId: 11),
+                Lookups));
+        Assert.Equal("ყველა",
+            ReportParameterRules.DisplayValue(ReportParameterNames.AcademicYearId, Parameters(), Lookups));
     }
 
     // an empty optional filter is "all"; an id that is not in the lists is shown as the id

@@ -15,6 +15,9 @@ public static class LessonsListQueryFactory
 {
     public const string GrpIdFilter = "grpId";
 
+    //ჯგუფის სასწავლო წელი
+    public const string AcademicYearIdFilter = "academicYearId";
+
     //მასწავლებელი ან შემცვლელი
     public const string TeacherContractIdFilter = "teacherContractId";
 
@@ -42,6 +45,7 @@ public static class LessonsListQueryFactory
         }
 
         int? grpId = null;
+        int? academicYearId = null;
         int? teacherContractId = null;
         DateTime? dateFrom = null;
         DateTime? dateTo = null;
@@ -54,6 +58,7 @@ public static class LessonsListQueryFactory
             bool isValid = filter.FieldName switch
             {
                 GrpIdFilter => TryParseId(value, out grpId),
+                AcademicYearIdFilter => TryParseId(value, out academicYearId),
                 TeacherContractIdFilter => TryParseId(value, out teacherContractId),
                 DateFromFilter => TryParseDate(value, out dateFrom),
                 DateToFilter => TryParseDate(value, out dateTo),
@@ -87,7 +92,7 @@ public static class LessonsListQueryFactory
         }
 
         return new LessonsListQuery(request.Offset, request.RowsCount, now, grpId, teacherContractId, dateFrom, dateTo,
-            lessonStatusId, unfilled, sortFields.Count == 0 ? DefaultSortFields : sortFields);
+            lessonStatusId, unfilled, sortFields.Count == 0 ? DefaultSortFields : sortFields, academicYearId);
     }
 
     //ცარიელი მნიშვნელობა ფილტრის მოხსნას ნიშნავს

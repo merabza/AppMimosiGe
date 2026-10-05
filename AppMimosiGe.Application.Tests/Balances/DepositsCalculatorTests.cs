@@ -17,17 +17,21 @@ public sealed class DepositsCalculatorTests
     private readonly List<DepositGroupStudentData> _groupStudents = [];
     private readonly Dictionary<int, DateTime> _nextLessons = [];
     private readonly List<BalanceOperation> _operations = [];
+    private readonly Dictionary<int, int> _studentByContract = [];
     private DateTime? _lastOperationMonth = At(11, 1).AddYears(1);
 
     private static DateTime At(int month, int day, int hour = 0) =>
         new(2026, month, day, hour, 0, 0, DateTimeKind.Unspecified);
 
     //synthetic people only: never real names
+    //every contract is its own student unless studentHumanId says otherwise (the student's account, part 20)
     private void Contract(int scId, string studentName = "Alpha Ann", int? desiredDay = null,
-        DateTime? nextPayDate = null)
+        DateTime? nextPayDate = null, int? studentHumanId = null, int academicYearId = 11)
     {
-        _contracts.Add(new DepositContractData(scId, 11, studentName, $"6.00{scId}", "555000001", "Payer Pat",
-            "555000002", desiredDay, nextPayDate));
+        int humanId = studentHumanId ?? 100 + scId;
+        _studentByContract[scId] = humanId;
+        _contracts.Add(new DepositContractData(scId, academicYearId, studentName, $"6.00{scId}", "555000001",
+            "Payer Pat", "555000002", desiredDay, nextPayDate, humanId, new DateTime(2015 + academicYearId, 9, 1, 0, 0, 0, DateTimeKind.Unspecified)));
     }
 
     private void Charge(int scId, DateTime date, decimal amount = -10m)
@@ -44,7 +48,7 @@ public sealed class DepositsCalculatorTests
         DateTime? dateTo = null)
     {
         DepositsInput input = new(_contracts, [.. _operations.OrderBy(o => o.OperationDate)], _nextLessons, _crmCalls,
-            _groupStudents, _lastOperationMonth);
+            _groupStudents, _lastOperationMonth, _studentByContract);
         return DepositsCalculator.Build(input, new DepositsParameters(maximum, dateTo ?? DateTo, filter, Today));
     }
 
@@ -485,5 +489,109 @@ public sealed class DepositsCalculatorTests
         Assert.Empty(response.Rows);
         Assert.Equal(0m, response.TotalBalance);
         Assert.Equal(0m, response.TotalFourWeekFee);
+    }
+
+    // --- the student's account (part 20): every contract of the student, of every year
+
+    //contract 1 of 2025-2026 (year 10) left a debt of 30, contract 2 of 2026-2027 (year 11) of the same student has a
+    //payment of 50 and a charge of 10: the student's balance is +10
+    private void StudentWithTwoYears()
+    {
+        Contract(1, studentHumanId: 100, academicYearId: 10);
+        Charge(1, At(5, 10, 15), -30m);
+        Contract(2, desiredDay: 15, studentHumanId: 100);
+        Payment(2, At(9, 1), 50m);
+        Charge(2, At(9, 10, 15), -10m);
+    }
+
+    [Fact]
+    public void Build_StudentWithContractsOfTwoYears_ShowsTheBalanceOfAllOfThem()
+    {
+        // Arrange
+        StudentWithTwoYears();
+
+        // Act
+        DepositRowResponse row = Assert.Single(Build(maximum: 20m).Rows);
+
+        // Assert: one row, of the latest year's contract
+        Assert.Equal((2, 11, 10m), (row.StudentContractId, row.AcademicYearId, row.Balance));
+        //the desired day amount counts the old debt too: -(−30 + 50 − 10)
+        Assert.Equal(-10m, row.DesiredDayAmount);
+    }
+
+    // the student's old debt alone shows on the new contract
+    [Fact]
+    public void Build_OldDebt_ShowsOnTheNewContract()
+    {
+        // Arrange
+        Contract(1, studentHumanId: 100, academicYearId: 10);
+        Charge(1, At(5, 10, 15), -30m);
+        Contract(2, studentHumanId: 100);
+
+        // Act + Assert
+        DepositRowResponse row = Assert.Single(Build().Rows);
+        Assert.Equal((2, -30m), (row.StudentContractId, row.Balance));
+    }
+
+    // the footer counts a student once
+    [Fact]
+    public void Build_StudentWithTwoContracts_IsCountedOnceInTheTotals()
+    {
+        // Arrange
+        StudentWithTwoYears();
+        _groupStudents.Add(new DepositGroupStudentData(1, 40m, At(6, 30), At(6, 30)));
+        _groupStudents.Add(new DepositGroupStudentData(2, 48m, null, null));
+
+        // Act
+        DepositsResponse response = Build(maximum: 20m);
+
+        // Assert: the ended row of the old contract is not active
+        Assert.Equal((10m, 48m), (response.TotalBalance, response.TotalFourWeekFee));
+    }
+
+    // the next lesson, the CRM date and the must-pay-to-end come from every contract of the student
+    [Fact]
+    public void Build_TakesTheLessonsCallsAndRowsOfEveryContractOfTheStudent()
+    {
+        // Arrange
+        StudentWithTwoYears();
+        _nextLessons[1] = At(10, 12, 15);
+        _nextLessons[2] = At(10, 5, 15);
+        _crmCalls.Add(new CrmMustPayDateData(600, 1, At(9, 20, 10), At(9, 25)));
+        _crmCalls.Add(new CrmMustPayDateData(601, 2, At(9, 21, 10), At(9, 30)));
+        _groupStudents.Add(new DepositGroupStudentData(2, 48m, null, null));
+
+        // Act
+        DepositRowResponse row = Assert.Single(Build(maximum: 20m).Rows);
+
+        // Assert
+        Assert.Equal((At(10, 5, 15), At(9, 30)), (row.NextLessonDate, row.CrmMustPayDate));
+        Assert.Equal(-10m, row.MustPayToEnd);
+    }
+
+    // two contracts of the same year (older data): the larger id is the student's row
+    [Fact]
+    public void Build_TwoContractsOfOneYear_ShowsTheLaterOne()
+    {
+        // Arrange
+        Contract(1, studentHumanId: 100);
+        Charge(1, At(9, 10, 15), -30m);
+        Contract(2, studentHumanId: 100);
+
+        // Act + Assert
+        Assert.Equal(2, Assert.Single(Build().Rows).StudentContractId);
+    }
+
+    // a contract that is not in the map is its own account
+    [Fact]
+    public void Build_ContractWithoutStudent_IsItsOwnAccount()
+    {
+        // Arrange
+        Contract(1);
+        Charge(1, At(9, 10, 15), -30m);
+        _studentByContract.Remove(1);
+
+        // Act + Assert
+        Assert.Equal(-30m, Assert.Single(Build().Rows).Balance);
     }
 }

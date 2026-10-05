@@ -1,3 +1,4 @@
+using AppMimosiGe.Application.AcademicYears;
 using AppMimosiGe.Application.Balances;
 using AppMimosiGe.Application.CrmCalls;
 using AppMimosiGe.Application.Groups;
@@ -189,6 +190,22 @@ public sealed class AppMimosiGeInfrastructureDependencyInjectionTests
         // Assert
         ServiceDescriptor descriptor = Assert.Single(services, s => s.ServiceType == typeof(IReportsRepository));
         Assert.Equal(typeof(ReportsRepository), descriptor.ImplementationType);
+        Assert.Equal(ServiceLifetime.Scoped, descriptor.Lifetime);
+    }
+
+    [Fact]
+    public void AddAppMimosiGeInfrastructure_RegistersAcademicYearsRepositoryAsScoped()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+
+        // Act
+        services.AddAppMimosiGeInfrastructure(null);
+
+        // Assert
+        ServiceDescriptor descriptor =
+            Assert.Single(services, s => s.ServiceType == typeof(IAcademicYearsRepository));
+        Assert.Equal(typeof(AcademicYearsRepository), descriptor.ImplementationType);
         Assert.Equal(ServiceLifetime.Scoped, descriptor.Lifetime);
     }
 

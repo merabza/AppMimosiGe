@@ -102,7 +102,7 @@ public sealed class ReportsRepositoryGroupRowsTests : IDisposable
         Seed();
 
         // Act
-        GroupRowsSnapshot snapshot = await _repository.GetGroupRows();
+        GroupRowsSnapshot snapshot = await _repository.GetGroupRows(null);
 
         // Assert
         Assert.Equal([new CheckGroup(100, "A1", 3, "Math", Day(2027, 1, 1)), new CheckGroup(101, "B1", 3, "Math", null)],
@@ -125,12 +125,44 @@ public sealed class ReportsRepositoryGroupRowsTests : IDisposable
         Assert.Equal(Day(2027, 9, 1), snapshot.MaxFinishDate);
     }
 
+    // part 20: only the rows of the year's groups, and the open end is the finish of that year
+    [Fact]
+    public async Task GetGroupRows_OfAYear_LoadsOnlyItsGroupsAndItsFinish()
+    {
+        // Arrange: group 100 of year 1, group 101 of year 2
+        Seed();
+        SetGroupYears();
+
+        // Act
+        GroupRowsSnapshot snapshot = await _repository.GetGroupRows(1);
+
+        // Assert
+        Assert.Equal([100], snapshot.Groups.Select(g => g.GroupId));
+        Assert.Equal([1], snapshot.Students.Select(s => s.GbsId));
+        Assert.Equal([1], snapshot.Teachers.Select(t => t.GbtId));
+        Assert.Equal([1], snapshot.DayTimes.Select(d => d.GdtpId));
+        Assert.Equal([5], snapshot.TeacherContracts.Keys);
+        Assert.Equal(Day(2026, 9, 1), snapshot.MaxFinishDate);
+    }
+
+    //sync EF calls stay out of the async tests
+    private void SetGroupYears()
+    {
+        foreach (Group group in _context.Groups)
+        {
+            group.AcademicYearId = group.GrpId == 100 ? 1 : 2;
+        }
+
+        _context.SaveChanges();
+        _context.ChangeTracker.Clear();
+    }
+
     // no academic years: the open end is no date (Access's Max over no rows is Null)
     [Fact]
     public async Task GetGroupRows_NoData_IsEmpty()
     {
         // Act
-        GroupRowsSnapshot snapshot = await _repository.GetGroupRows();
+        GroupRowsSnapshot snapshot = await _repository.GetGroupRows(null);
 
         // Assert
         Assert.Empty(snapshot.Groups);

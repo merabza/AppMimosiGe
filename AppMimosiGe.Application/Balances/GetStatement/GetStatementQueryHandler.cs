@@ -45,7 +45,15 @@ public sealed class GetStatementQueryHandler(IBalancesRepository repository)
         }
 
         StatementListQuery query = listQuery.Value;
-        int[]? scIds = query.StudentContractId is { } studentContractId ? [studentContractId] : null;
+        //კონტრაქტის ამონაწერი მოსწავლის ანგარიშისაა: მისი ყველა წლის კონტრაქტის ოპერაციები (ნაწილი 20; სტრიქონს
+        //კონტრაქტის სახელი აქვს)
+        int[]? scIds = query.StudentContractId is { } studentContractId
+            ?
+            [
+                .. new[] { studentContractId }.Union(
+                    (await repository.GetStudentAccountContracts([studentContractId], cancellationToken)).Keys)
+            ]
+            : null;
         List<BalanceOperation> operations = BalanceOperations.Build(
             await repository.GetCharges(scIds, cancellationToken),
             await repository.GetPayments(scIds, cancellationToken));

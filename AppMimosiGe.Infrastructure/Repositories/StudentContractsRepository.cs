@@ -69,6 +69,25 @@ public sealed class StudentContractsRepository(IMimosiGeDbContext context) : ISt
             cancellationToken);
     }
 
+    public Task<bool> StudentHasContract(int academicYearId, int studentHumanId, int exceptScId,
+        CancellationToken cancellationToken = default)
+    {
+        return context.StudentContracts.AnyAsync(
+            sc => sc.AcademicYearId == academicYearId && sc.StudentHumanId == studentHumanId && sc.ScId != exceptScId,
+            cancellationToken);
+    }
+
+    public Task<List<string>> GetContractNumbers(int academicYearId, CancellationToken cancellationToken = default)
+    {
+        return context.StudentContracts.AsNoTracking().Where(sc => sc.AcademicYearId == academicYearId)
+            .Select(sc => sc.ContractNumber).ToListAsync(cancellationToken);
+    }
+
+    public Task<AcademicYear?> GetAcademicYear(int ayId, CancellationToken cancellationToken = default)
+    {
+        return context.AcademicYears.AsNoTracking().SingleOrDefaultAsync(ay => ay.AyId == ayId, cancellationToken);
+    }
+
     public async Task<bool> IsInUse(int scId, CancellationToken cancellationToken = default)
     {
         return await context.GroupsByStudents.AnyAsync(x => x.StudentContractId == scId, cancellationToken) ||

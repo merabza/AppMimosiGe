@@ -15,7 +15,7 @@ public sealed class WrongWeekDayChangesReportQueryHandler(IReportsRepository rep
     public async Task<Result<ReportTable>> Handle(WrongWeekDayChangesReportQuery query,
         CancellationToken cancellationToken)
     {
-        List<TeoDatesLessonRow> lessons = await repository.GetLessonsWithMidnightTeoDates(cancellationToken);
+        List<TeoDatesLessonRow> lessons = await repository.GetLessonsWithMidnightTeoDates(query.AcademicYearId, cancellationToken);
         return LessonCheckReports.WrongWeekDayChanges(lessons);
     }
 }

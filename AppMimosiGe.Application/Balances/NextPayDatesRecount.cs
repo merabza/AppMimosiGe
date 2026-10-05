@@ -11,7 +11,7 @@ namespace AppMimosiGe.Application.Balances;
 
 /// <summary>
 ///     კონტრაქტების შემდეგი გადახდის თარიღის გადათვლა (Access-ის CheckAllStudentsNextPayDates): მხოლოდ dirty
-///     კონტრაქტები ან, სრული გადაანგარიშებისას, ყველა. თითოეულს NextPayDate ეწერება (ვალის გარეშე NULL) და
+///     კონტრაქტების მოსწავლეები ან, სრული გადაანგარიშებისას, ყველა. თითოეულს NextPayDate ეწერება (ვალის გარეშე NULL) და
 ///     DirtyNextPayDate ექრება; ყველაფერი ერთი SaveChanges-ით
 /// </summary>
 public static class NextPayDatesRecount
@@ -27,14 +27,17 @@ public static class NextPayDatesRecount
         }
 
         int[] scIds = [.. studentContracts.Select(sc => sc.ScId)];
-        ILookup<int, BalanceOperation> operations = BalanceOperations
-            .Build(await repository.GetCharges(scIds, cancellationToken),
-                await repository.GetPayments(scIds, cancellationToken)).ToLookup(o => o.StudentContractId);
+        //მოსწავლის ანგარიში (ნაწილი 20): თარიღი მოსწავლის ყველა კონტრაქტის ოპერაციებით ითვლება და ყველა მათგანს ეწერება.
+        //რეპოზიტორია dirty კონტრაქტის მოსწავლის ყველა კონტრაქტს აბრუნებს
+        Dictionary<int, int> studentByContract = studentContracts.ToDictionary(sc => sc.ScId, sc => sc.StudentHumanId);
+        ILookup<int, BalanceOperation> operations = StudentAccounts.ByAccount(
+            BalanceOperations.Build(await repository.GetCharges(scIds, cancellationToken),
+                await repository.GetPayments(scIds, cancellationToken)), studentByContract, o => o.StudentContractId);
 
         int changedCount = 0;
         foreach (StudentContract studentContract in studentContracts)
         {
-            List<BalanceOperation> contractOperations = [.. operations[studentContract.ScId]];
+            List<BalanceOperation> contractOperations = [.. operations[studentContract.StudentHumanId]];
             DateTime? nextPayDate = NextPayDateCalculator.Calculate(contractOperations,
                 NextPayDateCalculator.LastPayDate(contractOperations, today));
             if (studentContract.NextPayDate != nextPayDate)

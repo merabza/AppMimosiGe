@@ -16,4 +16,5 @@ public static class ReportParameterCaptions
     public const string Teacher = "მასწავლებელი";
     public const string Course = "საგანი";
     public const string Student = "მოსწავლე";
+    public const string AcademicYear = "სასწავლო წელი";
 }

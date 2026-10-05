@@ -175,10 +175,21 @@ public sealed class LessonsRepositoryTests : IDisposable
 
     private static LessonsListQuery Query(int? grpId = null, int? teacherContractId = null, DateTime? dateFrom = null,
         DateTime? dateTo = null, int? lessonStatusId = null, bool unfilled = false,
-        IReadOnlyList<LessonSortField>? sortFields = null, int offset = 0, int rowsCount = 100)
+        IReadOnlyList<LessonSortField>? sortFields = null, int offset = 0, int rowsCount = 100,
+        int? academicYearId = null)
     {
         return new LessonsListQuery(offset, rowsCount, Now, grpId, teacherContractId, dateFrom, dateTo, lessonStatusId,
-            unfilled, sortFields ?? LessonsListQueryFactory.DefaultSortFields);
+            unfilled, sortFields ?? LessonsListQueryFactory.DefaultSortFields, academicYearId);
+    }
+
+    // the academic year of the lesson's group (part 20): group 1 is of 2026-2027, group 2 of 2025-2026
+    [Theory]
+    [InlineData(11, new[] { 100, 103, 101, 102 })]
+    [InlineData(10, new[] { 200 })]
+    [InlineData(12, new int[0])]
+    public async Task GetRowsData_FiltersByTheAcademicYearOfTheGroup(int academicYearId, int[] expected)
+    {
+        await AssertIds(Query(academicYearId: academicYearId), expected);
     }
 
     private async Task<int[]> Ids(LessonsListQuery query)

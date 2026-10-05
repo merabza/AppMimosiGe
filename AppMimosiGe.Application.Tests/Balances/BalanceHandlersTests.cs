@@ -74,6 +74,8 @@ public sealed class BalanceHandlersTests
     //contract 5: payment 100 (01.09), charges of 6 (03.09 15:00, 10.09 15:00, 17.09 15:00)
     private void SetUpContractFive(Func<IReadOnlyCollection<int>?, bool> scIds)
     {
+        _repository.Setup(r => r.GetStudentAccountContracts(It.Is<IReadOnlyCollection<int>>(ids => Contracts(5)(ids)),
+            It.IsAny<CancellationToken>())).ReturnsAsync(new Dictionary<int, int> { [5] = 105 });
         SetUpOperations(scIds, [
             new ChargeData(31, 5, At(9, 3, 15), "English", 48m, 8f, 1f),
             new ChargeData(32, 5, At(9, 10, 15), "English", 48m, 8f, 1f),
@@ -105,6 +107,52 @@ public sealed class BalanceHandlersTests
             row);
     }
 
+    // part 20: the statement of a contract is the student's account, every contract of the student of every year
+    [Fact]
+    public async Task GetStatement_OneContract_ShowsEveryContractOfTheStudent()
+    {
+        // Arrange: contract 4 of last year left a debt of 20
+        _repository.Setup(r => r.GetStudentAccountContracts(It.Is<IReadOnlyCollection<int>>(ids => Contracts(5)(ids)),
+            It.IsAny<CancellationToken>())).ReturnsAsync(new Dictionary<int, int> { [4] = 105, [5] = 105 });
+        SetUpOperations(Contracts(5, 4), [
+            new ChargeData(20, 4, At(5, 10, 15), "Math", 80m, 4f, 1f),
+            new ChargeData(31, 5, At(9, 3, 15), "English", 48m, 8f, 1f)
+        ], [new PaymentData(7, 5, At(9, 1), "bank 7", 100m)]);
+        _repository.Setup(r =>
+                r.GetStudentContractNames(It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<int, string> { [4] = "Alpha Ann / 5.004", [5] = "Alpha Ann / 6.005" });
+
+        // Act
+        Result<StatementRowsDataResponse> result = await GetStatement(
+            """{"offset":0,"rowsCount":10,"filterFields":[{"fieldName":"studentContractId","value":"5"}]}""");
+
+        // Assert
+        StatementRowsDataResponse response = result.Value;
+        Assert.Equal([(4, -20m), (5, 80m), (5, 74m)],
+            response.Rows.Select(r => (r.StudentContractId, r.RunningTotal)));
+        Assert.Equal(74m, response.EndBalance);
+    }
+
+    // a contract the repository does not know (deleted meanwhile) still loads its own operations
+    [Fact]
+    public async Task GetStatement_UnknownContract_LoadsOnlyItsOwnOperations()
+    {
+        // Arrange
+        _repository.Setup(r => r.GetStudentAccountContracts(It.Is<IReadOnlyCollection<int>>(ids => Contracts(9)(ids)),
+            It.IsAny<CancellationToken>())).ReturnsAsync(new Dictionary<int, int>());
+        SetUpOperations(Contracts(9), [], [new PaymentData(7, 9, At(9, 1), null, 10m)]);
+        _repository.Setup(r =>
+                r.GetStudentContractNames(It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+
+        // Act
+        Result<StatementRowsDataResponse> result = await GetStatement(
+            """{"offset":0,"rowsCount":10,"filterFields":[{"fieldName":"studentContractId","value":"9"}]}""");
+
+        // Assert
+        Assert.Equal([7], result.Value.Rows.Select(r => r.Id));
+    }
+
     [Fact]
     public async Task GetStatement_AllContracts_LoadsEveryOperationAndTheNamesOfThePage()
     {
@@ -132,6 +180,9 @@ public sealed class BalanceHandlersTests
         Assert.Equal(["Alpha Ann / 6.005", "", "Alpha Ann / 6.005"], response.Rows.Select(r => r.StudentName));
         //the amounts are rounded like the totals
         Assert.Equal(-8.3333m, (await GetStatement("""{"offset":3,"rowsCount":3}""")).Value.Rows[0].Amount);
+        //every contract is loaded anyway: no student's accounts are asked
+        _repository.Verify(r => r.GetStudentAccountContracts(It.IsAny<IReadOnlyCollection<int>>(),
+            It.IsAny<CancellationToken>()), Times.Never);
     }
 
     //the page may be gone after a filter change: then the last page shows
@@ -296,9 +347,12 @@ public sealed class BalanceHandlersTests
     private void SetUpDeposits(int? academicYearId)
     {
         _repository.Setup(r => r.GetDepositContracts(academicYearId, It.IsAny<CancellationToken>())).ReturnsAsync([
-            new DepositContractData(1, 11, "Alpha Ann", "6.001", null, "Payer Pat", null, null, null),
-            new DepositContractData(2, 11, "Beta Bob", "6.002", null, "Payer Pat", null, 30, null)
+            new DepositContractData(1, 11, "Alpha Ann", "6.001", null, "Payer Pat", null, null, null, 101,
+                At(9, 1)),
+            new DepositContractData(2, 11, "Beta Bob", "6.002", null, "Payer Pat", null, 30, null, 102, At(9, 1))
         ]);
+        _repository.Setup(r => r.GetStudentAccountContracts(It.Is<IReadOnlyCollection<int>>(ids => Contracts(1, 2)(ids)),
+            It.IsAny<CancellationToken>())).ReturnsAsync(new Dictionary<int, int> { [1] = 101, [2] = 102 });
         Func<IReadOnlyCollection<int>?, bool> bothContracts = Contracts(1, 2);
         SetUpOperations(bothContracts, [new ChargeData(31, 1, At(9, 3, 15), "English", 80m, 8f, 1f)],
             [new PaymentData(7, 2, At(9, 1), null, 10m)]);
@@ -370,6 +424,58 @@ public sealed class BalanceHandlersTests
         Assert.Equal(expected, string.Join(",", result.Value.Rows.Select(r => r.StudentContractId)));
     }
 
+    // part 20: the student's other contracts (of other years) are loaded with the list, so their operations count
+    [Fact]
+    public async Task GetDeposits_LoadsTheOtherContractsOfTheListsStudents()
+    {
+        // Arrange: contract 3 of 2027-2028 is student 100's, whose contract 1 of 2026-2027 has a debt of 10
+        _repository.Setup(r => r.GetDepositContracts(12, It.IsAny<CancellationToken>())).ReturnsAsync([
+            new DepositContractData(3, 12, "Alpha Ann", "7.001", null, "Payer Pat", null, null, null, 100,
+                At(9, 1).AddYears(1))
+        ]);
+        _repository.Setup(r => r.GetStudentAccountContracts(It.Is<IReadOnlyCollection<int>>(ids => Contracts(3)(ids)),
+            It.IsAny<CancellationToken>())).ReturnsAsync(new Dictionary<int, int> { [1] = 100, [3] = 100 });
+        Func<IReadOnlyCollection<int>?, bool> accountContracts = Contracts(3, 1);
+        SetUpOperations(accountContracts, [new ChargeData(31, 1, At(9, 3, 15), "English", 80m, 8f, 1f)], []);
+        _repository.Setup(r => r.GetNextLessonDates(It.Is<IReadOnlyCollection<int>>(ids => accountContracts(ids)),
+            At(10, 1), It.IsAny<CancellationToken>())).ReturnsAsync([]);
+        _repository.Setup(r => r.GetCrmMustPayDates(It.Is<IReadOnlyCollection<int>>(ids => accountContracts(ids)),
+            It.IsAny<CancellationToken>())).ReturnsAsync([]);
+        _repository.Setup(r => r.GetGroupStudents(It.Is<IReadOnlyCollection<int>>(ids => accountContracts(ids)),
+            It.IsAny<CancellationToken>())).ReturnsAsync([]);
+
+        // Act
+        Result<DepositsResponse> result = await GetDeposits(null, 12);
+
+        // Assert
+        DepositRowResponse row = Assert.Single(result.Value.Rows);
+        Assert.Equal((3, -10m), (row.StudentContractId, row.Balance));
+    }
+
+    // an empty year has no students whose other contracts would be needed
+    [Fact]
+    public async Task GetDeposits_NoContracts_AsksNoStudentAccounts()
+    {
+        // Arrange
+        _repository.Setup(r => r.GetDepositContracts(12, It.IsAny<CancellationToken>())).ReturnsAsync([]);
+        Func<IReadOnlyCollection<int>?, bool> none = ids => ids is not null && ids.Count == 0;
+        SetUpOperations(none, [], []);
+        _repository.Setup(r => r.GetNextLessonDates(It.Is<IReadOnlyCollection<int>>(ids => none(ids)), At(10, 1),
+            It.IsAny<CancellationToken>())).ReturnsAsync([]);
+        _repository.Setup(r => r.GetCrmMustPayDates(It.Is<IReadOnlyCollection<int>>(ids => none(ids)),
+            It.IsAny<CancellationToken>())).ReturnsAsync([]);
+        _repository.Setup(r => r.GetGroupStudents(It.Is<IReadOnlyCollection<int>>(ids => none(ids)),
+            It.IsAny<CancellationToken>())).ReturnsAsync([]);
+
+        // Act
+        Result<DepositsResponse> result = await GetDeposits(null, 12);
+
+        // Assert
+        Assert.Empty(result.Value.Rows);
+        _repository.Verify(r => r.GetStudentAccountContracts(It.IsAny<IReadOnlyCollection<int>>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
     [Theory]
     [InlineData("x")]
     [InlineData("1")]
@@ -409,7 +515,10 @@ public sealed class BalanceHandlersTests
     {
         // Arrange: groups 1 (no change), 2..7 (one kind of change each, 7 with an error too), 8 (only errors)
         var generator = new Mock<ICommandHandler<GenerateGroupsLessonsCommand, LessonsGenerationResponse>>();
-        var studentContract = new StudentContract { ScId = 5, ContractNumber = "6.005", DirtyNextPayDate = true };
+        var studentContract = new StudentContract
+        {
+            ScId = 5, ContractNumber = "6.005", DirtyNextPayDate = true, StudentHumanId = 105
+        };
         var calls = new List<string>();
         generator.Setup(g => g.Handle(It.IsAny<GenerateGroupsLessonsCommand>(), It.IsAny<CancellationToken>()))
             .Callback(() => calls.Add("lessons")).ReturnsAsync(new LessonsGenerationResponse(false, At(11, 30), 0, [

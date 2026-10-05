@@ -19,7 +19,7 @@ public static class ReportParameterRules
     private const string DateFormat = "dd.MM.yyyy";
     private const string FileDateFormat = "yyyy-MM-dd";
 
-    //არასავალდებულო ცარიელი ფილტრი (მასწავლებელი, საგანი, მოსწავლე)
+    //არასავალდებულო ცარიელი ფილტრი (მასწავლებელი, საგანი, მოსწავლე, სასწავლო წელი)
     private const string AllValue = "ყველა";
 
     //თარიღები დღეებია: დრო იჭრება
@@ -53,6 +53,7 @@ public static class ReportParameterRules
             Names.TeacherId => parameters.TeacherId.HasValue,
             Names.CourseId => parameters.CourseId.HasValue,
             Names.StudentId => parameters.StudentId.HasValue,
+            Names.AcademicYearId => parameters.AcademicYearId.HasValue,
             _ => false
         };
     }
@@ -60,7 +61,8 @@ public static class ReportParameterRules
     //ჩამოსაშლელი სიიდან არჩეული პარამეტრის სახელს სათაურისთვის lookups სჭირდება
     public static bool NeedsLookups(ReportDefinition definition)
     {
-        return definition.Parameters.Any(p => p.Name is Names.TeacherId or Names.CourseId or Names.StudentId);
+        return definition.Parameters.Any(p =>
+            p.Name is Names.TeacherId or Names.CourseId or Names.StudentId or Names.AcademicYearId);
     }
 
     //სათაურის მნიშვნელობა: თარიღი dd.MM.yyyy, მასწავლებელი, საგანი და მოსწავლე სახელით, ცარიელი ფილტრი "ყველა"
@@ -73,6 +75,7 @@ public static class ReportParameterRules
             Names.TeacherId => LookupName(parameters.TeacherId, lookups?.Teachers),
             Names.CourseId => LookupName(parameters.CourseId, lookups?.Courses),
             Names.StudentId => LookupName(parameters.StudentId, lookups?.Students),
+            Names.AcademicYearId => LookupName(parameters.AcademicYearId, lookups?.AcademicYears),
             _ => string.Empty
         };
     }

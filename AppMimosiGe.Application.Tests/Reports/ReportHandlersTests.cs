@@ -140,7 +140,7 @@ public sealed class ReportHandlersTests
     public async Task GetLookups_ReturnsTheRepositorysLists()
     {
         // Arrange
-        var lookups = new ReportLookupsResponse([], [new LookupItemResponse(3, "Math")], []);
+        var lookups = new ReportLookupsResponse([], [new LookupItemResponse(3, "Math")], [], []);
         _repository.Setup(r => r.GetLookups(It.IsAny<CancellationToken>())).ReturnsAsync(lookups);
 
         // Act

@@ -1,5 +1,9 @@
 using System.Collections.Generic;
 using System.Linq;
+using AppMimosiGe.Application.AcademicYears.CloseAcademicYearGroups;
+using AppMimosiGe.Application.AcademicYears.CreateAcademicYear;
+using AppMimosiGe.Application.AcademicYears.GetAcademicYears;
+using AppMimosiGe.Application.AcademicYears.GetAcademicYearWizardInfo;
 using AppMimosiGe.Application.Balances.GetBalancesFormLookups;
 using AppMimosiGe.Application.Balances.GetDeposits;
 using AppMimosiGe.Application.Balances.GetStatement;
@@ -56,6 +60,7 @@ using AppMimosiGe.Application.StudentContracts.CreateStudentContract;
 using AppMimosiGe.Application.StudentContracts.DeleteStudentContract;
 using AppMimosiGe.Application.StudentContracts.GetStudentContract;
 using AppMimosiGe.Application.StudentContracts.GetStudentContractFormLookups;
+using AppMimosiGe.Application.StudentContracts.GetStudentContractNextNumber;
 using AppMimosiGe.Application.StudentContracts.GetStudentContractsRowsData;
 using AppMimosiGe.Application.StudentContracts.SearchHumans;
 using AppMimosiGe.Application.StudentContracts.UpdateStudentContract;
@@ -177,6 +182,14 @@ internal static class EndpointsTestApp
         builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetReportLookupsQuery, ReportLookupsResponse>>());
         builder.Services.AddSingleton(Mock.Of<IQueryHandler<RunReportQuery, ReportResponse>>());
         builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetReportExcelQuery, ReportFile>>());
+        builder.Services.AddSingleton(Mock
+            .Of<IQueryHandler<GetStudentContractNextNumberQuery, StudentContractNextNumberResponse>>());
+        builder.Services.AddSingleton(Mock
+            .Of<IQueryHandler<GetAcademicYearWizardInfoQuery, AcademicYearWizardInfoResponse>>());
+        builder.Services.AddSingleton(Mock.Of<ICommandHandler<CreateAcademicYearCommand, NewAcademicYearResponse>>());
+        builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetAcademicYearsQuery, AcademicYearsResponse>>());
+        builder.Services.AddSingleton(Mock
+            .Of<ICommandHandler<CloseAcademicYearGroupsCommand, CloseAcademicYearGroupsResponse>>());
         return builder.Build();
     }
 

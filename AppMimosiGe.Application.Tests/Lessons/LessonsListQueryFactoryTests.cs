@@ -47,9 +47,29 @@ public sealed class LessonsListQueryFactoryTests
         Assert.Null(query.DateTo);
         Assert.Null(query.LessonStatusId);
         Assert.False(query.Unfilled);
+        Assert.Null(query.AcademicYearId);
         Assert.Equal([
             new LessonSortField(ELessonSortField.LessonDt, true), new LessonSortField(ELessonSortField.GroupCode, true)
         ], query.SortFields);
+    }
+
+    // the academic year of the lesson's group (part 20); empty is no filter, anything but an id is invalid
+    [Theory]
+    [InlineData("11", 11)]
+    [InlineData(" 12 ", 12)]
+    [InlineData("", null)]
+    public void Create_ParsesTheAcademicYear(string value, int? expected)
+    {
+        Assert.Equal(expected,
+            LessonsListQueryFactory.Create(Request([Filter("academicYearId", value)]), Now).Value.AcademicYearId);
+    }
+
+    [Theory]
+    [InlineData("all")]
+    [InlineData("-1")]
+    public void Create_InvalidAcademicYear_IsInvalid(string value)
+    {
+        AssertInvalid(LessonsListQueryFactory.Create(Request([Filter("academicYearId", value)]), Now));
     }
 
     [Fact]

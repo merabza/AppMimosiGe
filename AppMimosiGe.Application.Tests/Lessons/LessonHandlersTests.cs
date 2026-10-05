@@ -9,6 +9,7 @@ using AppMimosiGe.Application.Lessons.GetLessonFormLookups;
 using AppMimosiGe.Application.Lessons.GetLessonsRowsData;
 using AppMimosiGe.Application.Lessons.Models;
 using AppMimosiGe.Application.Lessons.UpdateLesson;
+using AppMimosiGe.Application.StudentContracts;
 using AppMimosiGeShared.Contracts.Errors;
 using AppMimosiGeShared.Contracts.V1.Requests;
 using AppMimosiGeShared.Contracts.V1.Responses;
@@ -314,7 +315,7 @@ public sealed class LessonHandlersTests
     }
 
     [Fact]
-    public async Task GetFormLookups_ReturnsGroupsTeachersAndStatuses()
+    public async Task GetFormLookups_ReturnsGroupsTeachersStatusesAndYears()
     {
         // Arrange
         List<LookupItemResponse> groups = [new(7, "1001 / 2026-2027")];
@@ -323,16 +324,39 @@ public sealed class LessonHandlersTests
         _repository.Setup(r => r.GetGroups(It.IsAny<CancellationToken>())).ReturnsAsync(groups);
         _repository.Setup(r => r.GetTeacherContracts(It.IsAny<CancellationToken>())).ReturnsAsync(teachers);
         _repository.Setup(r => r.GetLessonStatuses(It.IsAny<CancellationToken>())).ReturnsAsync(statuses);
+        var studentContractsRepository = new Mock<IStudentContractsRepository>();
+        studentContractsRepository.Setup(r => r.GetAcademicYears(It.IsAny<CancellationToken>())).ReturnsAsync([
+            new AcademicYear
+            {
+                AyId = 11,
+                AcademicYearName = "2026-2027",
+                StartDate = new DateTime(2026, 9, 1, 0, 0, 0, DateTimeKind.Unspecified),
+                FinishDate = new DateTime(2027, 9, 1, 0, 0, 0, DateTimeKind.Unspecified)
+            },
+            new AcademicYear
+            {
+                AyId = 10,
+                AcademicYearName = "2025-2026",
+                StartDate = new DateTime(2025, 9, 1, 0, 0, 0, DateTimeKind.Unspecified),
+                FinishDate = new DateTime(2026, 9, 1, 0, 0, 0, DateTimeKind.Unspecified)
+            }
+        ]);
+        var timeProvider = new Mock<TimeProvider>();
+        timeProvider.Setup(t => t.GetUtcNow()).Returns(new DateTimeOffset(2026, 10, 1, 9, 30, 0, TimeSpan.Zero));
+        timeProvider.Setup(t => t.LocalTimeZone).Returns(TimeZoneInfo.Utc);
 
         // Act
         Result<LessonFormLookupsResponse> result =
-            await new GetLessonFormLookupsQueryHandler(_repository.Object).Handle(new GetLessonFormLookupsQuery(),
-                CancellationToken.None);
+            await new GetLessonFormLookupsQueryHandler(_repository.Object, studentContractsRepository.Object,
+                timeProvider.Object).Handle(new GetLessonFormLookupsQuery(), CancellationToken.None);
 
         // Assert
         Assert.Same(groups, result.Value.Groups);
         Assert.Same(teachers, result.Value.TeacherContracts);
         Assert.Same(statuses, result.Value.LessonStatuses);
+        Assert.Equal(11, result.Value.CurrentAcademicYearId);
+        Assert.Equal([new LookupItemResponse(10, "2025-2026"), new LookupItemResponse(11, "2026-2027")],
+            result.Value.AcademicYears);
     }
 
     [Fact]

@@ -47,6 +47,15 @@ public sealed class BalancesRepositoryTests : IDisposable
         //so test data is saved synchronously
         _context.Humans.AddRange(Human(1, "Alpha", "Ann", "555000001"), Human(2, "Beta", "Bob", "555000002"),
             Human(3, "Gamma", "Gia", null), Human(4, "Delta", "Dan", "555000004"));
+        _context.AcademicYears.AddRange(
+            new AcademicYear
+            {
+                AyId = 10, AcademicYearName = "2025-2026", StartDate = At(9, 1).AddYears(-1), FinishDate = At(9, 1)
+            },
+            new AcademicYear
+            {
+                AyId = 11, AcademicYearName = "2026-2027", StartDate = At(9, 1), FinishDate = At(9, 1).AddYears(1)
+            });
         _context.StudentContracts.AddRange(
             new StudentContract
             {
@@ -107,6 +116,22 @@ public sealed class BalancesRepositoryTests : IDisposable
         _context.OperationMonths.AddRange(new OperationMonth { Id = 1, MonthDate = At(9, 1) },
             new OperationMonth { Id = 2, MonthDate = At(11, 1).AddYears(1) });
         _context.SaveChanges();
+    }
+
+    //contract 13: Alpha Ann's (the student of contract 10) contract of 2025-2026, not dirty
+    private void AddPreviousYearContractOfAlpha()
+    {
+        _context.StudentContracts.Add(new StudentContract
+        {
+            ScId = 13,
+            ContractNumber = "5.002",
+            StudentHumanId = 1,
+            PayerHumanId = 2,
+            AcademicYearId = 10,
+            DirtyNextPayDate = false
+        });
+        _context.SaveChanges();
+        _context.ChangeTracker.Clear();
     }
 
     //sync EF calls stay out of the async tests
@@ -250,8 +275,8 @@ public sealed class BalancesRepositoryTests : IDisposable
         // Assert
         Assert.Equal([
             new DepositContractData(10, 11, "Alpha Ann", "6.001", "555000001", "Beta Bob", "555000002", 15,
-                At(9, 3, 15)),
-            new DepositContractData(11, 11, "Gamma Gia", "6.002", null, "Gamma Gia", null, null, null)
+                At(9, 3, 15), 1, At(9, 1)),
+            new DepositContractData(11, 11, "Gamma Gia", "6.002", null, "Gamma Gia", null, null, null, 3, At(9, 1))
         ], contracts.OrderBy(c => c.StudentContractId));
     }
 
@@ -349,6 +374,39 @@ public sealed class BalancesRepositoryTests : IDisposable
         // Assert: tracked, so the change is saved
         Assert.Equal([10, 12], contracts.Select(c => c.ScId));
         Assert.Null(StoredNextPayDate(10));
+    }
+
+    [Fact]
+    public async Task GetStudentContractsForRecount_OnlyDirty_TakesEveryContractOfTheStudent()
+    {
+        // Arrange
+        AddPreviousYearContractOfAlpha();
+
+        // Act
+        List<StudentContract> contracts = await _repository.GetStudentContractsForRecount(true);
+
+        // Assert: 13 is not dirty, but its student has the dirty contract 10
+        Assert.Equal([10, 12, 13], contracts.Select(c => c.ScId));
+    }
+
+    [Fact]
+    public async Task GetStudentAccountContracts_AreAllContractsOfTheStudentsOfEveryYear()
+    {
+        // Arrange
+        AddPreviousYearContractOfAlpha();
+
+        // Act
+        Dictionary<int, int> accounts = await _repository.GetStudentAccountContracts([10, 11]);
+
+        // Assert
+        Assert.Equal(new Dictionary<int, int> { [10] = 1, [11] = 3, [13] = 1 }, accounts);
+    }
+
+    [Fact]
+    public async Task GetStudentAccountContracts_UnknownContract_IsEmpty()
+    {
+        // Act + Assert
+        Assert.Empty(await _repository.GetStudentAccountContracts([99]));
     }
 
     [Fact]

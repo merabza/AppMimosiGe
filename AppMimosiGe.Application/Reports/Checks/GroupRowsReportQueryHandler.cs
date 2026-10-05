@@ -16,7 +16,7 @@ public abstract class GroupRowsReportQueryHandler<TQuery>(IReportsRepository rep
 {
     public async Task<Result<ReportTable>> Handle(TQuery query, CancellationToken cancellationToken)
     {
-        GroupRowsSnapshot snapshot = await repository.GetGroupRows(cancellationToken);
+        GroupRowsSnapshot snapshot = await repository.GetGroupRows(query.AcademicYearId, cancellationToken);
         return Build(snapshot);
     }
 

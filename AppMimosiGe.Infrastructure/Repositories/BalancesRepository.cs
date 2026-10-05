@@ -71,7 +71,16 @@ public sealed class BalancesRepository(IMimosiGeDbContext context) : IBalancesRe
         return studentContracts.Select(x => new DepositContractData(x.ScId, x.AcademicYearId,
             x.StudentHuman.LastName + " " + x.StudentHuman.FirstName, x.ContractNumber, x.StudentHuman.PhoneNumber,
             x.PayerHuman.LastName + " " + x.PayerHuman.FirstName, x.PayerHuman.PhoneNumber, x.DesiredMonthlyPaymentDay,
-            x.NextPayDate)).ToListAsync(cancellationToken);
+            x.NextPayDate, x.StudentHumanId, x.AcademicYear.StartDate)).ToListAsync(cancellationToken);
+    }
+
+    public Task<Dictionary<int, int>> GetStudentAccountContracts(IReadOnlyCollection<int> scIds,
+        CancellationToken cancellationToken = default)
+    {
+        IQueryable<int> studentHumanIds = context.StudentContracts.Where(x => scIds.Contains(x.ScId))
+            .Select(x => x.StudentHumanId);
+        return context.StudentContracts.AsNoTracking().Where(x => studentHumanIds.Contains(x.StudentHumanId))
+            .ToDictionaryAsync(x => x.ScId, x => x.StudentHumanId, cancellationToken);
     }
 
     //კონტრაქტის ნებისმიერი LessonsByStudents-ის სტრიქონის გაკვეთილი (ჯგუფის სტრიქონის შემოწმების გარეშე, როგორც Access-ში)
@@ -111,7 +120,10 @@ public sealed class BalancesRepository(IMimosiGeDbContext context) : IBalancesRe
     public Task<List<StudentContract>> GetStudentContractsForRecount(bool onlyDirty,
         CancellationToken cancellationToken = default)
     {
-        return context.StudentContracts.Where(x => !onlyDirty || x.DirtyNextPayDate).OrderBy(x => x.ScId)
+        //მოსწავლის ანგარიში მისი ყველა კონტრაქტია, ამიტომ dirty კონტრაქტის მოსწავლის ყველა კონტრაქტი გადაითვლება
+        return context.StudentContracts
+            .Where(x => !onlyDirty || context.StudentContracts.Any(d =>
+                d.DirtyNextPayDate && d.StudentHumanId == x.StudentHumanId)).OrderBy(x => x.ScId)
             .ToListAsync(cancellationToken);
     }
 }

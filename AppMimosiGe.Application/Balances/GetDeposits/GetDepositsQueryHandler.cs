@@ -26,7 +26,12 @@ public sealed class GetDepositsQueryHandler(IBalancesRepository repository, Time
         DateTime today = timeProvider.GetLocalNow().Date;
         List<DepositContractData> contracts =
             await repository.GetDepositContracts(request.AcademicYearId, cancellationToken);
-        int[] scIds = [.. contracts.Select(c => c.StudentContractId)];
+        //მოსწავლის ანგარიში: სიის კონტრაქტების მოსწავლეების ყველა წლის კონტრაქტი (ნაწილი 20)
+        Dictionary<int, int> studentByContract = contracts.Count == 0
+            ? []
+            : await repository.GetStudentAccountContracts([.. contracts.Select(c => c.StudentContractId)],
+                cancellationToken);
+        int[] scIds = [.. contracts.Select(c => c.StudentContractId).Union(studentByContract.Keys)];
         List<BalanceOperation> operations = BalanceOperations.Build(
             await repository.GetCharges(scIds, cancellationToken),
             await repository.GetPayments(scIds, cancellationToken));
@@ -35,7 +40,7 @@ public sealed class GetDepositsQueryHandler(IBalancesRepository repository, Time
             await repository.GetNextLessonDates(scIds, today, cancellationToken),
             await repository.GetCrmMustPayDates(scIds, cancellationToken),
             await repository.GetGroupStudents(scIds, cancellationToken),
-            await repository.GetLastOperationMonth(cancellationToken));
+            await repository.GetLastOperationMonth(cancellationToken), studentByContract);
 
         return DepositsCalculator.Build(input, new DepositsParameters(request.Maximum, request.DateTo, filter, today));
     }

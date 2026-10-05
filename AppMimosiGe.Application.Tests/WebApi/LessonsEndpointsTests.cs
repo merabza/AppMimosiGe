@@ -82,7 +82,7 @@ public sealed class LessonsEndpointsTests
     public async Task GetFormLookups_Success_ReturnsOk()
     {
         // Arrange
-        var lookups = new LessonFormLookupsResponse([], [], []);
+        var lookups = new LessonFormLookupsResponse([], [], [], null, []);
         Mock<IQueryHandler<GetLessonFormLookupsQuery, LessonFormLookupsResponse>> handler =
             QueryHandler<GetLessonFormLookupsQuery, LessonFormLookupsResponse>(lookups);
 

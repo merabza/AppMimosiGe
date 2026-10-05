@@ -298,7 +298,7 @@ public sealed class StudentContractsEndpointsTests
     }
 
     [Fact]
-    public async Task UseStudentContractsEndpoints_MapsSevenEndpointsThatRequireAuthorization()
+    public async Task UseStudentContractsEndpoints_MapsEightEndpointsThatRequireAuthorization()
     {
         // Arrange
         await using WebApplication app = EndpointsTestApp.Build();
@@ -308,7 +308,7 @@ public sealed class StudentContractsEndpointsTests
 
         // Assert
         List<RouteEndpoint> endpoints = EndpointsTestApp.MappedEndpoints(app);
-        Assert.Equal(7, endpoints.Count);
+        Assert.Equal(8, endpoints.Count);
         Assert.All(endpoints, e => Assert.NotEmpty(e.Metadata.GetOrderedMetadata<IAuthorizeData>()));
     }
 

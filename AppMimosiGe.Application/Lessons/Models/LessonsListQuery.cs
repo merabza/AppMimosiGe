@@ -6,7 +6,8 @@ namespace AppMimosiGe.Application.Lessons.Models;
 /// <summary>
 ///     გაკვეთილების სიის ერთი გვერდის მოთხოვნა: ფილტრი, დალაგება და გვერდი.
 ///     TeacherContractId გაკვეთილს მასწავლებლითაც პოულობს და შემცვლელითაც. DateFrom და DateTo დღეებია, ორივე
-///     ჩათვლით. Unfilled: მხოლოდ შეუვსებელი გაკვეთილები; "წარსული" Now-ით მოწმდება
+///     ჩათვლით. Unfilled: მხოლოდ შეუვსებელი გაკვეთილები; "წარსული" Now-ით მოწმდება. AcademicYearId: ჯგუფის სასწავლო წელი
+///     (ნაწილი 20)
 /// </summary>
 public sealed record LessonsListQuery(
     int Offset,
@@ -18,4 +19,5 @@ public sealed record LessonsListQuery(
     DateTime? DateTo,
     int? LessonStatusId,
     bool Unfilled,
-    IReadOnlyList<LessonSortField> SortFields);
+    IReadOnlyList<LessonSortField> SortFields,
+    int? AcademicYearId = null);

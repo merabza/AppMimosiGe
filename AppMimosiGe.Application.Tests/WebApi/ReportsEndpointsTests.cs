@@ -75,7 +75,7 @@ public sealed class ReportsEndpointsTests
     public async Task GetLookups_Success_ReturnsOk()
     {
         // Arrange
-        var lookups = new ReportLookupsResponse([], [], []);
+        var lookups = new ReportLookupsResponse([], [], [], []);
 
         // Act
         Results<Ok<ReportLookupsResponse>, ProblemHttpResult> result = await ReportsEndpoints.GetLookups(
@@ -106,12 +106,12 @@ public sealed class ReportsEndpointsTests
 
         // Act
         Results<Ok<ReportResponse>, ProblemHttpResult> result =
-            await ReportsEndpoints.Run("r03RoomsAgenda", Start, End, 5, 3, 20, handler.Object);
+            await ReportsEndpoints.Run("r03RoomsAgenda", Start, End, 5, 3, 20, handler.Object, 11);
 
         // Assert
         Assert.Same(Report, Assert.IsType<Ok<ReportResponse>>(result.Result).Value);
         handler.Verify(
-            h => h.Handle(new RunReportQuery("r03RoomsAgenda", new ReportParametersRequest(Start, End, 5, 3, 20)),
+            h => h.Handle(new RunReportQuery("r03RoomsAgenda", new ReportParametersRequest(Start, End, 5, 3, 20, 11)),
                 It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -149,7 +149,7 @@ public sealed class ReportsEndpointsTests
 
         // Act
         Results<FileContentHttpResult, ProblemHttpResult> result =
-            await ReportsEndpoints.Excel("r03RoomsAgenda", Start, End, 5, 3, 20, handler.Object);
+            await ReportsEndpoints.Excel("r03RoomsAgenda", Start, End, 5, 3, 20, handler.Object, 11);
 
         // Assert
         var fileResult = Assert.IsType<FileContentHttpResult>(result.Result);
@@ -157,7 +157,8 @@ public sealed class ReportsEndpointsTests
         Assert.Equal("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileResult.ContentType);
         Assert.Equal("r03RoomsAgenda_2026-10-02.xlsx", fileResult.FileDownloadName);
         handler.Verify(
-            h => h.Handle(new GetReportExcelQuery("r03RoomsAgenda", new ReportParametersRequest(Start, End, 5, 3, 20)),
+            h => h.Handle(
+                new GetReportExcelQuery("r03RoomsAgenda", new ReportParametersRequest(Start, End, 5, 3, 20, 11)),
                 It.IsAny<CancellationToken>()), Times.Once);
     }
 

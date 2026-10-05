@@ -15,7 +15,7 @@ public sealed class LessonsWithErrorsReportQueryHandler(IReportsRepository repos
     public async Task<Result<ReportTable>> Handle(LessonsWithErrorsReportQuery query,
         CancellationToken cancellationToken)
     {
-        List<LessonErrorRow> errors = await repository.GetLessonErrors(cancellationToken);
+        List<LessonErrorRow> errors = await repository.GetLessonErrors(query.AcademicYearId, cancellationToken);
         return LessonCheckReports.LessonsWithErrors(errors);
     }
 }

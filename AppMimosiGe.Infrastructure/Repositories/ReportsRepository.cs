@@ -86,7 +86,9 @@ public sealed class ReportsRepository(IMimosiGeDbContext context) : IReportsRepo
                 x.ScId, Name = x.StudentHuman.LastName + " " + x.StudentHuman.FirstName + " / " + x.ContractNumber
             }).OrderBy(x => x.Name).ThenBy(x => x.ScId).Select(x => new LookupItemResponse(x.ScId, x.Name))
             .ToListAsync(cancellationToken);
-        return new ReportLookupsResponse(teachers, courses, students);
+        List<LookupItemResponse> academicYears = await context.AcademicYears.AsNoTracking().OrderBy(x => x.StartDate)
+            .Select(x => new LookupItemResponse(x.AyId, x.AcademicYearName)).ToListAsync(cancellationToken);
+        return new ReportLookupsResponse(teachers, courses, students, academicYears);
     }
 
     //Access-ის vR11/vR12/vR34: მასწავლებელი და შემცვლელი "გვარი სახელი / ნომერი"-სთვის, დამსწრე მოსწავლე
@@ -121,21 +123,24 @@ public sealed class ReportsRepository(IMimosiGeDbContext context) : IReportsRepo
     }
 
     //Access-ის vR13LessonsWithErrors: ლოგი INNER JOIN Lessons (გაკვეთილი და ჯგუფი ერთმანეთს უნდა ემთხვეოდეს)
-    public Task<List<LessonErrorRow>> GetLessonErrors(CancellationToken cancellationToken = default)
+    public Task<List<LessonErrorRow>> GetLessonErrors(int? academicYearId,
+        CancellationToken cancellationToken = default)
     {
         return context.LessonsCheckCreateErrorLogs.AsNoTracking()
-            .Where(x => x.Lesson != null && x.Lesson.GroupId == x.GroupId).Select(x =>
+            .Where(x => x.Lesson != null && x.Lesson.GroupId == x.GroupId &&
+                        (academicYearId == null || x.Group.AcademicYearId == academicYearId)).Select(x =>
                 new LessonErrorRow(x.Id, x.Group.GroupCode, x.Lesson!.LessonDt, x.ErrorLogText.Text))
             .ToListAsync(cancellationToken);
     }
 
     //Access-ის vR22: Format(…, "hh:nn:ss") = "00:00:00", ანუ საათი, წუთი და წამი 0-ია (წამის ნაწილი არ ითვლება)
-    public async Task<List<TeoDatesLessonRow>> GetLessonsWithMidnightTeoDates(
+    public async Task<List<TeoDatesLessonRow>> GetLessonsWithMidnightTeoDates(int? academicYearId,
         CancellationToken cancellationToken = default)
     {
         var lessons = await context.Lessons.AsNoTracking().Where(l =>
-            l.TeoMinDate.Hour == 0 && l.TeoMinDate.Minute == 0 && l.TeoMinDate.Second == 0 ||
-            l.TeoMaxDate.Hour == 0 && l.TeoMaxDate.Minute == 0 && l.TeoMaxDate.Second == 0).Select(l => new
+            (academicYearId == null || l.Group.AcademicYearId == academicYearId) &&
+            (l.TeoMinDate.Hour == 0 && l.TeoMinDate.Minute == 0 && l.TeoMinDate.Second == 0 ||
+             l.TeoMaxDate.Hour == 0 && l.TeoMaxDate.Minute == 0 && l.TeoMaxDate.Second == 0)).Select(l => new
         {
             l.Id,
             l.Group.GroupCode,
@@ -215,18 +220,23 @@ public sealed class ReportsRepository(IMimosiGeDbContext context) : IReportsRepo
     }
 
     //ყველა ჯგუფი და სტრიქონი, თარიღების მიუხედავად; სახელები მხოლოდ სტრიქონების კონტრაქტებისა
-    public async Task<GroupRowsSnapshot> GetGroupRows(CancellationToken cancellationToken = default)
+    public async Task<GroupRowsSnapshot> GetGroupRows(int? academicYearId,
+        CancellationToken cancellationToken = default)
     {
         List<CheckGroup> groups = await context.Groups.AsNoTracking()
+            .Where(g => academicYearId == null || g.AcademicYearId == academicYearId)
             .Select(g => new CheckGroup(g.GrpId, g.GroupCode, g.CourseId, g.Course.CourseName, g.VoidDate))
             .ToListAsync(cancellationToken);
-        List<CheckStudentRow> students = await context.GroupsByStudents.AsNoTracking().Select(s =>
+        List<CheckStudentRow> students = await context.GroupsByStudents.AsNoTracking()
+            .Where(s => academicYearId == null || s.Group.AcademicYearId == academicYearId).Select(s =>
             new CheckStudentRow(s.GbsId, s.GroupId, s.StudentContractId, s.StartDate, s.EndDate, s.FourWeekHours,
                 s.FourWeekFee, s.OneHourFee, s.HoursCoefficient)).ToListAsync(cancellationToken);
         List<CheckTeacherRow> teachers = await context.GroupsByTeachers.AsNoTracking()
+            .Where(t => academicYearId == null || t.Group.AcademicYearId == academicYearId)
             .Select(t => new CheckTeacherRow(t.Id, t.GroupId, t.TeacherContractId, t.SalarySchemaId, t.StartDate,
                 t.EndDate)).ToListAsync(cancellationToken);
         List<CheckDayTimeRow> dayTimes = await context.GroupDayTimePlaces.AsNoTracking()
+            .Where(d => academicYearId == null || d.Group.AcademicYearId == academicYearId)
             .Select(d => new CheckDayTimeRow(d.GdtpId, d.GroupId, d.StartDate, d.EndDate, d.HoursCount))
             .ToListAsync(cancellationToken);
 
@@ -246,9 +256,10 @@ public sealed class ReportsRepository(IMimosiGeDbContext context) : IReportsRepo
                     x.SalarySchemaByHoursId), cancellationToken);
         Dictionary<int, string> salarySchemeNames = await context.TeacherSalarySchemes.AsNoTracking()
             .ToDictionaryAsync(s => s.Id, s => s.SchemaName, cancellationToken);
-        //Access-ის vMaxDate
-        DateTime? maxFinishDate =
-            await context.AcademicYears.MaxAsync(y => (DateTime?)y.FinishDate, cancellationToken);
+        //Access-ის vMaxDate; წლის ფილტრით ამ წლის დასასრული (ნაწილი 20)
+        DateTime? maxFinishDate = await context.AcademicYears
+            .Where(y => academicYearId == null || y.AyId == academicYearId)
+            .MaxAsync(y => (DateTime?)y.FinishDate, cancellationToken);
 
         return new GroupRowsSnapshot(groups, students, teachers, dayTimes, studentNames, teacherContracts,
             salarySchemeNames, maxFinishDate);

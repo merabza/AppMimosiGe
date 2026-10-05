@@ -217,7 +217,7 @@ public sealed class LessonAndCheckReportHandlersTests
     {
         // Arrange
         List<LessonErrorRow> errors = [new(1, "G1", StartDate, "error")];
-        _repository.Setup(r => r.GetLessonErrors(It.IsAny<CancellationToken>())).ReturnsAsync(errors);
+        _repository.Setup(r => r.GetLessonErrors(null, It.IsAny<CancellationToken>())).ReturnsAsync(errors);
 
         // Act
         Result<ReportTable> result = await new LessonsWithErrorsReportQueryHandler(_repository.Object)
@@ -232,7 +232,7 @@ public sealed class LessonAndCheckReportHandlersTests
     {
         // Arrange
         List<TeoDatesLessonRow> lessons = [new(1, "G1", Teacher, StartDate, StartDate, 8f, StartDate)];
-        _repository.Setup(r => r.GetLessonsWithMidnightTeoDates(It.IsAny<CancellationToken>())).ReturnsAsync(lessons);
+        _repository.Setup(r => r.GetLessonsWithMidnightTeoDates(null, It.IsAny<CancellationToken>())).ReturnsAsync(lessons);
 
         // Act
         Result<ReportTable> result = await new WrongWeekDayChangesReportQueryHandler(_repository.Object)
@@ -258,7 +258,7 @@ public sealed class LessonAndCheckReportHandlersTests
     {
         // Arrange
         GroupRowsSnapshot snapshot = BusyRows();
-        _repository.Setup(r => r.GetGroupRows(It.IsAny<CancellationToken>())).ReturnsAsync(snapshot);
+        _repository.Setup(r => r.GetGroupRows(query.AcademicYearId, It.IsAny<CancellationToken>())).ReturnsAsync(snapshot);
 
         // Act
         Result<ReportTable> result = await handler.Handle(query, CancellationToken.None);
@@ -267,7 +267,7 @@ public sealed class LessonAndCheckReportHandlersTests
         ReportTable expected = build(snapshot);
         Assert.NotEmpty(expected.Sections.SelectMany(s => s.Rows));
         AssertSameTable(expected, result);
-        _repository.Verify(r => r.GetGroupRows(It.IsAny<CancellationToken>()), Times.Once);
+        _repository.Verify(r => r.GetGroupRows(query.AcademicYearId, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     // every check report handler loads all group rows and builds its report from them

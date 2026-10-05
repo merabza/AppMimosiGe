@@ -313,6 +313,39 @@ public sealed class StudentContractsRepositoryTests : IDisposable
         Assert.Equal(expected, await _repository.ContractNumberExists(ayId, number, exceptScId));
     }
 
+    // part 20: a student has one contract in a year (student 1: contract 1 of 2026-2027, contract 4 of 2025-2026)
+    [Theory]
+    [InlineData(11, 1, 0, true)]
+    [InlineData(11, 1, 1, false)]
+    [InlineData(10, 1, 0, true)]
+    [InlineData(10, 1, 4, false)]
+    [InlineData(10, 3, 0, false)]
+    [InlineData(12, 1, 0, false)]
+    [InlineData(11, 4, 0, true)]
+    public async Task StudentHasContract_IsScopedToYearAndStudentAndExcludesSelf(int ayId, int studentHumanId,
+        int exceptScId, bool expected)
+    {
+        Assert.Equal(expected, await _repository.StudentHasContract(ayId, studentHumanId, exceptScId));
+    }
+
+    [Fact]
+    public async Task GetContractNumbers_AreTheNumbersOfTheYear()
+    {
+        Assert.Equal(["6.001", "6.002", "6.003"], (await _repository.GetContractNumbers(11)).Order());
+        Assert.Equal(["6.001"], await _repository.GetContractNumbers(10));
+        Assert.Empty(await _repository.GetContractNumbers(12));
+    }
+
+    [Fact]
+    public async Task GetAcademicYear_FindsTheYearById()
+    {
+        AcademicYear? year = await _repository.GetAcademicYear(11);
+
+        Assert.Equal(("2026-2027", new DateTime(2026, 9, 1, 0, 0, 0, DateTimeKind.Unspecified)),
+            (year!.AcademicYearName, year.StartDate));
+        Assert.Null(await _repository.GetAcademicYear(99));
+    }
+
     [Fact]
     public async Task IsInUse_DetectsEachLinkedTable()
     {

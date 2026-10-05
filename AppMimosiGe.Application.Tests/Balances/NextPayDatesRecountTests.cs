@@ -22,8 +22,16 @@ public sealed class NextPayDatesRecountTests
     private static DateTime At(int month, int day, int hour = 0) =>
         new(2026, month, day, hour, 0, 0, DateTimeKind.Unspecified);
 
-    private static StudentContract Contract(int scId, DateTime? nextPayDate) =>
-        new() { ScId = scId, ContractNumber = $"6.00{scId}", NextPayDate = nextPayDate, DirtyNextPayDate = true };
+    //every contract is its own student unless studentHumanId says otherwise (the student's account, part 20)
+    private static StudentContract Contract(int scId, DateTime? nextPayDate, int? studentHumanId = null) =>
+        new()
+        {
+            ScId = scId,
+            ContractNumber = $"6.00{scId}",
+            NextPayDate = nextPayDate,
+            DirtyNextPayDate = true,
+            StudentHumanId = studentHumanId ?? 100 + scId
+        };
 
     [Fact]
     public async Task Run_NoContracts_SavesNothing()
@@ -75,6 +83,33 @@ public sealed class NextPayDatesRecountTests
         Assert.Equal([At(9, 3, 15), null, null, At(9, 17, 15)], contracts.Select(c => c.NextPayDate));
         Assert.All(contracts, c => Assert.False(c.DirtyNextPayDate));
         _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    // part 20: the date is the student's, over every contract of the student, and every one of them gets it
+    [Fact]
+    public async Task Run_StudentWithTwoContracts_GetsOneDateOnBoth()
+    {
+        // Arrange: last year's contract 1 left a debt of 6 since 10.05, this year's contract 2 has a payment of 6 on
+        //01.09 and owes again from 03.09
+        StudentContract[] contracts = [Contract(1, null, 100), Contract(2, null, 100)];
+        _repository.Setup(r => r.GetStudentContractsForRecount(true, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([.. contracts]);
+        _repository.Setup(r => r.GetCharges(It.IsAny<IReadOnlyCollection<int>?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([
+                new ChargeData(31, 1, At(5, 10, 15), "English", 48m, 8f, 1f),
+                new ChargeData(32, 2, At(9, 3, 15), "English", 48m, 8f, 1f)
+            ]);
+        _repository.Setup(r => r.GetPayments(It.IsAny<IReadOnlyCollection<int>?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new PaymentData(7, 2, At(9, 1), null, 6m)]);
+
+        // Act
+        NextPayDatesRecountResult result = await NextPayDatesRecount.Run(_repository.Object, _unitOfWork.Object, true,
+            Today, CancellationToken.None);
+
+        // Assert: the payment covers the old debt, the new lesson opens a debt again
+        Assert.Equal(new NextPayDatesRecountResult(2, 2), result);
+        Assert.All(contracts, c => Assert.Equal(At(9, 3, 15), c.NextPayDate));
+        Assert.All(contracts, c => Assert.False(c.DirtyNextPayDate));
     }
 
     //without a payment the search runs until today: a contract that only has future lessons still gets the first one

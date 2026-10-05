@@ -30,10 +30,12 @@ public interface IReportsRepository
         CancellationToken cancellationToken = default);
 
     //გენერატორის ლოგის ჩანაწერები ამავე ჯგუფის გაკვეთილით (r13)
-    Task<List<LessonErrorRow>> GetLessonErrors(CancellationToken cancellationToken = default);
+    //academicYearId: ჯგუფის სასწავლო წელი, null: ყველა წელი (ასევე GetLessonsWithMidnightTeoDates და GetGroupRows)
+    Task<List<LessonErrorRow>> GetLessonErrors(int? academicYearId, CancellationToken cancellationToken = default);
 
     //გაკვეთილები, რომელთა TeoMinDate-ის ან TeoMaxDate-ის დრო 00:00:00-ია (r22)
-    Task<List<TeoDatesLessonRow>> GetLessonsWithMidnightTeoDates(CancellationToken cancellationToken = default);
+    Task<List<TeoDatesLessonRow>> GetLessonsWithMidnightTeoDates(int? academicYearId,
+        CancellationToken cancellationToken = default);
 
     //გაცდენების რაოდენობა მოსწავლის კონტრაქტით და საგნით: Present = false, სტატუსი "გაუქმდა"-ს გარდა, გაკვეთილის
     //დრო [from, to) შუალედში (r14)
@@ -46,7 +48,7 @@ public interface IReportsRepository
         CancellationToken cancellationToken = default);
 
     //ჯგუფების ყველა სტრიქონი შემოწმების რეპორტებისთვის (r26–r33)
-    Task<GroupRowsSnapshot> GetGroupRows(CancellationToken cancellationToken = default);
+    Task<GroupRowsSnapshot> GetGroupRows(int? academicYearId, CancellationToken cancellationToken = default);
 
     //აქტიური ჯგუფები date დღისთვის ზომით, სტატუსით და საგნით, მათი ამ დღეს მოქმედი მოსწავლის და მასწავლებლის
     //სტრიქონები და კონტრაქტების სახელები (r08, r09, r10, r23, r24)
