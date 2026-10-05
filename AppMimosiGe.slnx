@@ -46,7 +46,6 @@
     <Project Path="../SystemTools/SystemTools.TestApiContracts/SystemTools.TestApiContracts.csproj" />
   </Folder>
   <Folder Name="/WebSystemTools/">
-    <Project Path="../WebSystemTools/WebSystemTools.ConfigurationEncrypt/WebSystemTools.ConfigurationEncrypt.csproj" />
     <Project Path="../WebSystemTools/WebSystemTools.CorsTools/WebSystemTools.CorsTools.csproj" />
     <Project Path="../WebSystemTools/WebSystemTools.MediatorTools/WebSystemTools.MediatorTools.csproj" />
     <Project Path="../WebSystemTools/WebSystemTools.SerilogLogger/WebSystemTools.SerilogLogger.csproj" />

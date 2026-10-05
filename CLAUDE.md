@@ -60,10 +60,9 @@ The frontend's test setup follows AppGanmartebaGe, the other app built on ReactA
 
 ## Configuration
 
-`appsettings.json` holds placeholders only. The real values for the keys listed in `appsetenkeys.json` (DB connection string, JWT settings, log path, CORS origins, MediatR license key) come from `appsettingsEncoded.json`, which is gitignored. How `AddConfigurationEncryption` handles that file:
-- The file is required at startup.
-- It is decrypted with `appKey` (in `Program.cs`) plus the machine name, so an encoded file only works on the machine that produced it.
-- It is added as the last configuration source, so its values override user secrets and environment variables.
+The configuration is not encrypted. `appsettings.json` in the repo holds placeholders only; the real values (DB connection string, JWT settings, log path, CORS origins) come from the standard ASP.NET Core sources:
+- Locally (`Development`): user secrets of the host project (`UserSecretsId` in `AppMimosiGe.csproj`). Environment variables and command-line arguments override them.
+- Production (dl360): SupportTools "Program Updater" / "App Settings Updater" install the server's `appsettings.json` from `D:\1WorkSecurity\AppMimosiGe\dl360\appsettings.json` in place of the repo's placeholder file (`RedundantFileNames`).
 
 ## Architecture
 

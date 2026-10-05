@@ -18,7 +18,6 @@ using Microsoft.Extensions.Hosting;
 using MimosiGeDbPart.Db.DependencyInjection;
 using Serilog;
 using SystemTools.Application.Abstractions;
-using WebSystemTools.ConfigurationEncrypt;
 using WebSystemTools.CorsTools.DependencyInjection;
 using WebSystemTools.MediatorTools.DependencyInjection;
 using WebSystemTools.SerilogLogger;
@@ -35,7 +34,6 @@ try
     Console.WriteLine("Loading...");
 
     const string appName = "App.Mimosi.Ge";
-    const string appKey = "01e719dc51534a83988741c50da6a87b";
     const string myAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
     const int versionCount = 1;
@@ -54,7 +52,6 @@ try
     ILogger? debugLogger = debugMode ? logger : null;
 
     builder.Host.UseWindowsServiceOnWindows(debugLogger, args);
-    builder.Configuration.AddConfigurationEncryption(debugLogger, appKey);
 
     //if (!builder.InstallServices(debugMode, args, parameters,
 
