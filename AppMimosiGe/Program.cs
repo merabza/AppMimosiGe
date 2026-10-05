@@ -1,6 +1,7 @@
 using System;
 using System.Reflection;
 using AppMimosiGe.Infrastructure.DependencyInjection;
+using AppMimosiGe.Infrastructure.Time;
 using AppMimosiGe.WebApi.DependencyInjection;
 using AppMimosiGeRepositories.DependencyInjection;
 using BackendCarcass.Api;
@@ -108,8 +109,8 @@ try
         .AddMimosiGeDb(debugLogger, builder.Configuration);
     // @formatter:on
 
-    //მიმდინარე სასწავლო წლის დასადგენად (handler-ებს ტესტებში ყალბი დრო გადაეცემა)
-    builder.Services.AddSingleton(TimeProvider.System);
+    //„დღეს" და „ახლა" საქართველოს დროით, სერვერის დროის სარტყლის მიუხედავად (handler-ებს ტესტებში ყალბი დრო გადაეცემა)
+    builder.Services.AddSingleton<TimeProvider>(new GeorgiaTimeProvider());
 
     //ReSharper disable once using
     await using WebApplication app = builder.Build();
