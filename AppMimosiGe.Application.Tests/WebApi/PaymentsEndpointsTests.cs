@@ -320,7 +320,7 @@ public sealed class PaymentsEndpointsTests
         httpContext.Request.Method = HttpMethods.Put;
         httpContext.Request.RouteValues["paymentId"] = "5";
         httpContext.Request.ContentType = "application/json";
-        httpContext.Request.Body = new MemoryStream("""{"checked":true}"""u8.ToArray());
+        httpContext.Request.Body = new MemoryStream([.. """{"checked":true}"""u8]);
 
         // Act
         await endpoint(httpContext);
