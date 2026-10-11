@@ -7,6 +7,7 @@ using AppMimosiGe.Application.Payments.GetPayment;
 using AppMimosiGe.Application.Payments.GetPaymentFormLookups;
 using AppMimosiGe.Application.Payments.GetPaymentsRowsData;
 using AppMimosiGe.Application.Payments.GetPaymentStudentContracts;
+using AppMimosiGe.Application.Payments.SetPaymentChecked;
 using AppMimosiGe.Application.Payments.UpdatePayment;
 using AppMimosiGe.WebApi.Filters;
 using AppMimosiGeShared.Contracts.V1.Requests;
@@ -40,6 +41,8 @@ public static class PaymentsEndpoints
         group.MapGet(Routes.PaymentsRoute.GetOne, GetOne);
         group.MapPost(Routes.PaymentsRoute.Create, Create);
         group.MapPut(Routes.PaymentsRoute.Update, Update);
+        group.MapPut(Routes.PaymentsRoute.Checked, SetChecked)
+            .AddEndpointFilter<UserMustHaveCheckPaymentsRightFilter>();
         group.MapDelete(Routes.PaymentsRoute.Delete, Delete);
 
         debugLogger?.Information("{MethodName} Finished", nameof(UsePaymentsEndpoints));
@@ -104,6 +107,17 @@ public static class PaymentsEndpoints
         CancellationToken cancellationToken = default)
     {
         Result result = await handler.Handle(new UpdatePaymentCommand(paymentId, request), cancellationToken);
+        return result.Match<Results<Ok, ProblemHttpResult>>(() => TypedResults.Ok(),
+            failure => (ProblemHttpResult)CustomResults.Problem(failure));
+    }
+
+    // PUT api/v1/payments/{paymentId:int}/checked
+    internal static async Task<Results<Ok, ProblemHttpResult>> SetChecked([FromRoute] int paymentId,
+        [FromBody] PaymentCheckedRequest request, ICommandHandler<SetPaymentCheckedCommand> handler,
+        CancellationToken cancellationToken = default)
+    {
+        Result result = await handler.Handle(new SetPaymentCheckedCommand(paymentId, request.Checked),
+            cancellationToken);
         return result.Match<Results<Ok, ProblemHttpResult>>(() => TypedResults.Ok(),
             failure => (ProblemHttpResult)CustomResults.Problem(failure));
     }

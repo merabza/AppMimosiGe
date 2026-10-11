@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using AppMimosiGe.Application.AcademicYears.CloseAcademicYearGroups;
@@ -37,6 +38,7 @@ using AppMimosiGe.Application.Payments.GetPayment;
 using AppMimosiGe.Application.Payments.GetPaymentFormLookups;
 using AppMimosiGe.Application.Payments.GetPaymentsRowsData;
 using AppMimosiGe.Application.Payments.GetPaymentStudentContracts;
+using AppMimosiGe.Application.Payments.SetPaymentChecked;
 using AppMimosiGe.Application.Payments.UpdatePayment;
 using AppMimosiGe.Application.Reports.GetReportCatalog;
 using AppMimosiGe.Application.Reports.GetReportExcel;
@@ -88,10 +90,11 @@ using SystemTools.Application.Abstractions.Messaging;
 
 namespace AppMimosiGe.Application.Tests.WebApi;
 
-//an app to map the Mimosi endpoints on, to check their routes
+//an app to map the Mimosi endpoints on, to check their routes; a test that runs an endpoint adds or replaces the
+//services its filters and handler need
 internal static class EndpointsTestApp
 {
-    public static WebApplication Build()
+    public static WebApplication Build(Action<IServiceCollection>? configureServices = null)
     {
         WebApplicationBuilder builder = WebApplication.CreateSlimBuilder();
         //handlers are services; without them minimal APIs would bind them from the body
@@ -139,6 +142,7 @@ internal static class EndpointsTestApp
         builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetPaymentQuery, PaymentResponse>>());
         builder.Services.AddSingleton(Mock.Of<ICommandHandler<CreatePaymentCommand, int>>());
         builder.Services.AddSingleton(Mock.Of<ICommandHandler<UpdatePaymentCommand>>());
+        builder.Services.AddSingleton(Mock.Of<ICommandHandler<SetPaymentCheckedCommand>>());
         builder.Services.AddSingleton(Mock.Of<ICommandHandler<DeletePaymentCommand>>());
         builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetStatementQuery, StatementRowsDataResponse>>());
         builder.Services.AddSingleton(
@@ -190,6 +194,7 @@ internal static class EndpointsTestApp
         builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetAcademicYearsQuery, AcademicYearsResponse>>());
         builder.Services.AddSingleton(Mock
             .Of<ICommandHandler<CloseAcademicYearGroupsCommand, CloseAcademicYearGroupsResponse>>());
+        configureServices?.Invoke(builder.Services);
         return builder.Build();
     }
 

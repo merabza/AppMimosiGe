@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,21 +10,27 @@ using AppMimosiGe.Application.Payments.GetPayment;
 using AppMimosiGe.Application.Payments.GetPaymentFormLookups;
 using AppMimosiGe.Application.Payments.GetPaymentsRowsData;
 using AppMimosiGe.Application.Payments.GetPaymentStudentContracts;
+using AppMimosiGe.Application.Payments.SetPaymentChecked;
 using AppMimosiGe.Application.Payments.UpdatePayment;
 using AppMimosiGe.WebApi.DependencyInjection;
 using AppMimosiGe.WebApi.Endpoints.V1;
 using AppMimosiGeShared.Contracts.Errors;
 using AppMimosiGeShared.Contracts.V1.Requests;
 using AppMimosiGeShared.Contracts.V1.Responses;
+using BackendCarcass.Application.Identity;
+using BackendCarcass.Application.Rights;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Serilog;
 using SystemTools.Application.Abstractions.Messaging;
 using SystemTools.SharedKernel;
+using SystemTools.SystemToolsShared;
 using Xunit;
 
 namespace AppMimosiGe.Application.Tests.WebApi;
@@ -244,6 +251,86 @@ public sealed class PaymentsEndpointsTests
         AssertProblem(result.Result, StatusCodes.Status409Conflict);
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task SetChecked_Success_ReturnsOkAndPassesIdAndFlag(bool isChecked)
+    {
+        // Arrange
+        Mock<ICommandHandler<SetPaymentCheckedCommand>> handler =
+            CommandHandler<SetPaymentCheckedCommand>(Result.Success());
+
+        // Act
+        Results<Ok, ProblemHttpResult> result =
+            await PaymentsEndpoints.SetChecked(5, new PaymentCheckedRequest { Checked = isChecked }, handler.Object);
+
+        // Assert
+        Assert.IsType<Ok>(result.Result);
+        handler.Verify(h => h.Handle(new SetPaymentCheckedCommand(5, isChecked), It.IsAny<CancellationToken>()));
+    }
+
+    [Fact]
+    public async Task SetChecked_MissingPayment_Returns404Problem()
+    {
+        // Arrange
+        Mock<ICommandHandler<SetPaymentCheckedCommand>> handler =
+            CommandHandler<SetPaymentCheckedCommand>(Result.Failure(PaymentErrors.PaymentNotFound));
+
+        // Act
+        Results<Ok, ProblemHttpResult> result =
+            await PaymentsEndpoints.SetChecked(5, new PaymentCheckedRequest(), handler.Object);
+
+        // Assert
+        AssertProblem(result.Result, StatusCodes.Status404NotFound);
+    }
+
+    // the flag in the list is the special right's (D152): the mapped endpoint runs the group's payments menu filter,
+    // then the CheckPayments filter, which answers 403 before the handler runs
+    [Theory]
+    [InlineData(false, StatusCodes.Status403Forbidden, 0)]
+    [InlineData(true, StatusCodes.Status200OK, 1)]
+    public async Task SetChecked_RunsOnlyWithTheCheckPaymentsClaim(bool hasClaim, int statusCode, int handledTimes)
+    {
+        // Arrange
+        var rights = new Mock<IUserRightsRepository>();
+        rights.Setup(r => r.GetDataTypeIdByKey(It.IsAny<string?>(), It.IsAny<CancellationToken>())).ReturnsAsync(5);
+        rights.Setup(r => r.CheckMenuRight(5, "Accountant", 5, 5, "payments", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        rights.Setup(r => r.CheckRight(5, "Accountant", 5, "CheckPayments", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(hasClaim);
+        var databaseAbstraction = new Mock<IDatabaseAbstraction>();
+        databaseAbstraction.Setup(d => d.GetTableName<It.IsAnyType>()).Returns("AnyTable");
+        var currentUser = new Mock<ICurrentUser>();
+        currentUser.Setup(u => u.Roles).Returns(["Accountant"]);
+        Mock<ICommandHandler<SetPaymentCheckedCommand>> handler =
+            CommandHandler<SetPaymentCheckedCommand>(Result.Success());
+        await using WebApplication app = EndpointsTestApp.Build(services =>
+        {
+            services.AddSingleton(rights.Object);
+            services.AddSingleton(databaseAbstraction.Object);
+            services.AddSingleton(currentUser.Object);
+            services.AddSingleton(handler.Object);
+        });
+        app.UsePaymentsEndpoints(null);
+        RequestDelegate endpoint = EndpointsTestApp.MappedEndpoints(app)
+            .Single(e => e.RoutePattern.RawText?.TrimStart('/') == "api/v1/payments/{paymentId:int}/checked")
+            .RequestDelegate!;
+        var httpContext = new DefaultHttpContext { RequestServices = app.Services };
+        httpContext.Features.Set(Mock.Of<IHttpRequestBodyDetectionFeature>(f => f.CanHaveBody));
+        httpContext.Request.Method = HttpMethods.Put;
+        httpContext.Request.RouteValues["paymentId"] = "5";
+        httpContext.Request.ContentType = "application/json";
+        httpContext.Request.Body = new MemoryStream("""{"checked":true}"""u8.ToArray());
+
+        // Act
+        await endpoint(httpContext);
+
+        // Assert
+        Assert.Equal(statusCode, httpContext.Response.StatusCode);
+        handler.Verify(h => h.Handle(new SetPaymentCheckedCommand(5, true), It.IsAny<CancellationToken>()),
+            Times.Exactly(handledTimes));
+    }
+
     [Fact]
     public async Task Delete_Success_ReturnsOkAndPassesTheId()
     {
@@ -280,6 +367,7 @@ public sealed class PaymentsEndpointsTests
     [InlineData("api/v1/payments/{paymentId:int}", "GET")]
     [InlineData("api/v1/payments/", "POST")]
     [InlineData("api/v1/payments/{paymentId:int}", "PUT")]
+    [InlineData("api/v1/payments/{paymentId:int}/checked", "PUT")]
     [InlineData("api/v1/payments/{paymentId:int}", "DELETE")]
     public async Task UseAppMimosiGeApi_MapsPaymentsEndpoints(string pattern, string method)
     {
@@ -297,7 +385,7 @@ public sealed class PaymentsEndpointsTests
     }
 
     [Fact]
-    public async Task UsePaymentsEndpoints_MapsSevenEndpointsThatRequireAuthorization()
+    public async Task UsePaymentsEndpoints_MapsEightEndpointsThatRequireAuthorization()
     {
         // Arrange
         await using WebApplication app = EndpointsTestApp.Build();
@@ -307,7 +395,7 @@ public sealed class PaymentsEndpointsTests
 
         // Assert
         List<RouteEndpoint> endpoints = EndpointsTestApp.MappedEndpoints(app);
-        Assert.Equal(7, endpoints.Count);
+        Assert.Equal(8, endpoints.Count);
         Assert.All(endpoints, e => Assert.NotEmpty(e.Metadata.GetOrderedMetadata<IAuthorizeData>()));
     }
 

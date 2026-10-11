@@ -12,6 +12,7 @@ using AppMimosiGe.Application.Payments.GetPaymentFormLookups;
 using AppMimosiGe.Application.Payments.GetPaymentsRowsData;
 using AppMimosiGe.Application.Payments.GetPaymentStudentContracts;
 using AppMimosiGe.Application.Payments.Models;
+using AppMimosiGe.Application.Payments.SetPaymentChecked;
 using AppMimosiGe.Application.Payments.UpdatePayment;
 using AppMimosiGe.Application.Rights;
 using AppMimosiGe.Application.StudentContracts;
@@ -106,6 +107,12 @@ public sealed class PaymentHandlersTests
     {
         return new DeletePaymentCommandHandler(_repository.Object, _claimRights.Object, _unitOfWork.Object).Handle(
             new DeletePaymentCommand(5), CancellationToken.None);
+    }
+
+    private Task<Result> SetChecked(bool isChecked)
+    {
+        return new SetPaymentCheckedCommandHandler(_repository.Object, _unitOfWork.Object).Handle(
+            new SetPaymentCheckedCommand(5, isChecked), CancellationToken.None);
     }
 
     private void VerifySaved(Times times)
@@ -412,6 +419,54 @@ public sealed class PaymentHandlersTests
         Assert.True(result.IsSuccess);
         _repository.Verify(r => r.Remove(payment), Times.Once);
         VerifySaved(Times.Once());
+    }
+
+    // the flag from the list (D152): only the flag changes, in both directions
+    [Theory]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    public async Task SetChecked_ChangesOnlyTheFlag(bool wasChecked, bool isChecked)
+    {
+        // Arrange
+        Payment payment = WithExistingPayment(wasChecked);
+
+        // Act
+        Result result = await SetChecked(isChecked);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.Equal(isChecked, payment.Checked);
+        Assert.Equal(10, payment.StudentContractId);
+        Assert.Equal(PayDate, payment.PayDate);
+        Assert.Equal(300m, payment.Amount);
+        Assert.Equal("old", payment.Document);
+        Assert.Equal(1, payment.BankAccountId);
+        VerifySaved(Times.Once());
+    }
+
+    // the flag changes no balance and no next pay date, so no contract is marked dirty
+    [Fact]
+    public async Task SetChecked_MarksNoContractDirty()
+    {
+        // Arrange
+        WithExistingPayment(false);
+
+        // Act
+        await SetChecked(true);
+
+        // Assert
+        Assert.Empty(_requestedContractIds);
+    }
+
+    [Fact]
+    public async Task SetChecked_MissingPayment_IsNotFoundAndSavesNothing()
+    {
+        // Act
+        Result result = await SetChecked(true);
+
+        // Assert
+        AssertError(result, PaymentErrors.PaymentNotFound);
+        VerifySaved(Times.Never());
     }
 
     [Fact]
