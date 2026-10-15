@@ -312,7 +312,7 @@ public static class GroupLessonsPlanner
         //გაკვეთილის ველები სწორდება მაშინაც, როცა შეტანილი მონაცემი აქვს (შეცდომა 8 Access-შიც არ იწერებოდა)
         private void UpdateLesson(ExistingLesson lesson, MustLesson mustLesson)
         {
-            LessonValues? previousValues = lesson.Values == mustLesson.Values ? null : lesson.Values;
+            LessonValues? previousValues = lesson.Values.IsSameAs(mustLesson.Values) ? null : lesson.Values;
             List<PlannedStudentRow> studentRows = MergeStudents(lesson, mustLesson);
             if (previousValues is null && studentRows.Count == 0)
             {
@@ -349,7 +349,7 @@ public static class GroupLessonsPlanner
                 {
                     MustStudent mustStudent = must[mustIndex];
                     ExistingLessonStudent currentStudent = current[currentIndex];
-                    if (!currentStudent.HoursCount.Equals(mustStudent.HoursCount) ||
+                    if (GeneratorHours.AreDifferent(currentStudent.HoursCount, mustStudent.HoursCount) ||
                         currentStudent.GroupByStudentId != mustStudent.GbsId)
                     {
                         rows.Add(new PlannedStudentRow(EStudentRowChangeKind.Update, currentStudent.Id,

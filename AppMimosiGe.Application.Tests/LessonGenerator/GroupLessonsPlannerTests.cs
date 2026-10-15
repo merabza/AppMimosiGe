@@ -436,6 +436,42 @@ public sealed class GroupLessonsPlannerTests
         Assert.All(plan.Changes, c => Assert.Null(c.PreviousValues));
     }
 
+    //D153: the hours count as changed only above GeneratorHours.Tolerance
+    [Fact]
+    public void PlanGroup_HoursWithinTheTolerance_AreNotUpdated()
+    {
+        GroupLessonsPlan plan = Plan(Input(lessons:
+        [
+            Lesson(100, SeptemberMonday(7) with { FourWeekHours = 8.00005f }, LessonStudent(200)),
+            Lesson(101, SeptemberMonday(14), LessonStudent(201, hoursCount: 1.50005f)),
+            Lesson(102, SeptemberMonday(21) with { FourWeekHours = 7.99995f },
+                LessonStudent(202, hoursCount: 1.49995f)),
+            Lesson(103, SeptemberMonday(28), LessonStudent(203))
+        ]));
+
+        Assert.Empty(plan.Changes);
+        Assert.Empty(plan.DirtyStudentContractIds);
+    }
+
+    [Fact]
+    public void PlanGroup_HoursAboveTheTolerance_AreUpdated()
+    {
+        GroupLessonsPlan plan = Plan(Input(lessons:
+        [
+            Lesson(100, SeptemberMonday(7) with { FourWeekHours = 8.0002f }, LessonStudent(200)),
+            Lesson(101, SeptemberMonday(14), LessonStudent(201, hoursCount: 1.5002f)),
+            Lesson(102, SeptemberMonday(21), LessonStudent(202)),
+            Lesson(103, SeptemberMonday(28), LessonStudent(203))
+        ]));
+
+        Assert.Equal([100, 101], plan.Changes.Select(c => c.LessonId!.Value));
+        Assert.Equal(SeptemberMonday(7) with { FourWeekHours = 8.0002f }, plan.Changes[0].PreviousValues);
+        Assert.Empty(plan.Changes[0].Students);
+        Assert.Null(plan.Changes[1].PreviousValues);
+        Assert.Equal([new PlannedStudentRow(EStudentRowChangeKind.Update, 201, 10, 1, 1.5f)],
+            plan.Changes[1].Students);
+    }
+
     [Fact]
     public void PlanGroup_ExtraStudentWithoutEnteredData_IsDeleted()
     {

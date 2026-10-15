@@ -399,6 +399,24 @@ public sealed class LessonGeneratorMapperTests
         Assert.Equal(["teacherContractId"], sameTime.ChangedFields);
     }
 
+    //D153: the hours are a changed field only above GeneratorHours.Tolerance
+    [Fact]
+    public void ToResponse_FourWeekHours_IsAChangedFieldOnlyAboveTheTolerance()
+    {
+        GroupLessonsPlan plan = new([
+            new PlannedLessonChange(ELessonChangeKind.Update, 100, Values(Date(9, 7, 15), 6),
+                Values(Date(9, 7, 15)) with { FourWeekHours = 12.00005f }, []),
+            new PlannedLessonChange(ELessonChangeKind.Update, 101, Values(Date(9, 14, 15), 6),
+                Values(Date(9, 14, 15)) with { FourWeekHours = 12.0002f }, [])
+        ], [], [], true, null);
+
+        GroupLessonsGenerationResponse response = LessonGeneratorMapper.ToResponse(Group(), plan,
+            new Dictionary<int, string>(), new Dictionary<DateTime, Lesson>());
+
+        Assert.Equal(["teacherContractId"], response.Changes[0].ChangedFields);
+        Assert.Equal(["teacherContractId", "fourWeekHours"], response.Changes[1].ChangedFields);
+    }
+
     //the rows of a new or a deleted lesson never count, whatever their kind
     [Fact]
     public void ToResponse_CreatedAndDeletedLessons_CountNoStudentRowsAndNoFields()

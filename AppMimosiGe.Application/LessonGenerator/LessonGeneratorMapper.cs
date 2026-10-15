@@ -227,7 +227,7 @@ public static class LessonGeneratorMapper
             fields.Add(SalarySchemaIdField);
         }
 
-        if (!previous.FourWeekHours.Equals(current.FourWeekHours))
+        if (GeneratorHours.AreDifferent(previous.FourWeekHours, current.FourWeekHours))
         {
             fields.Add(FourWeekHoursField);
         }

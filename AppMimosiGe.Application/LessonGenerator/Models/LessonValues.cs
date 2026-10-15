@@ -12,4 +12,14 @@ public sealed record LessonValues(
     int SalarySchemaId,
     float FourWeekHours,
     DateTime TeoMinDate,
-    DateTime TeoMaxDate);
+    DateTime TeoMaxDate)
+{
+    //isOnlyLessonEqualTo: საათები ზღვრით შედარდება (GeneratorHours), დანარჩენი ველები ზუსტად
+    public bool IsSameAs(LessonValues other)
+    {
+        return LessonDt == other.LessonDt && TeacherContractId == other.TeacherContractId &&
+               SalarySchemaId == other.SalarySchemaId &&
+               !GeneratorHours.AreDifferent(FourWeekHours, other.FourWeekHours) && TeoMinDate == other.TeoMinDate &&
+               TeoMaxDate == other.TeoMaxDate;
+    }
+}
