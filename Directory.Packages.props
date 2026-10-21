@@ -13,6 +13,8 @@
     <PackageVersion Include="Moq" Version="4.20.72" />
     <PackageVersion Include="Serilog" Version="4.4.0" />
     <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.35.0.4138" />
+    <PackageVersion Include="SystemTools.Application.Abstractions" Version="1.0.9790.27014" />
+    <PackageVersion Include="SystemTools.Domain.Abstractions" Version="1.0.9790.27014" />
     <PackageVersion Include="xunit" Version="2.9.3" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.0" />
   </ItemGroup>
