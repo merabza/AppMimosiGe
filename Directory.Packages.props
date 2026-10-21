@@ -4,6 +4,8 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
+    <PackageVersion Include="BackendCarcass.Api" Version="1.0.9790.33744" />
+    <PackageVersion Include="BackendCarcass.Application" Version="1.0.9790.33744" />
     <PackageVersion Include="DocumentFormat.OpenXml" Version="3.5.1" />
     <PackageVersion Include="Figgle.Fonts" Version="0.6.6" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.5" />
@@ -13,17 +15,17 @@
     <PackageVersion Include="Moq" Version="4.20.72" />
     <PackageVersion Include="Serilog" Version="4.4.0" />
     <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.35.0.4138" />
-    <PackageVersion Include="SystemTools.Application.Abstractions" Version="1.0.9790.31339" />
-    <PackageVersion Include="SystemTools.Domain.Abstractions" Version="1.0.9790.31339" />
-    <PackageVersion Include="WebSystemTools.CorsTools" Version="1.0.9790.31491" />
-    <PackageVersion Include="WebSystemTools.MediatorTools" Version="1.0.9790.31491" />
-    <PackageVersion Include="WebSystemTools.SerilogLogger" Version="1.0.9790.31491" />
-    <PackageVersion Include="WebSystemTools.StaticFilesTools" Version="1.0.9790.31491" />
-    <PackageVersion Include="WebSystemTools.SwaggerTools" Version="1.0.9790.31491" />
-    <PackageVersion Include="WebSystemTools.TestToolsApi" Version="1.0.9790.31491" />
-    <PackageVersion Include="WebSystemTools.ValidationTools" Version="1.0.9790.31491" />
-    <PackageVersion Include="WebSystemTools.WebApi.Abstractions" Version="1.0.9790.31491" />
-    <PackageVersion Include="WebSystemTools.WindowsServiceTools" Version="1.0.9790.31491" />
+    <PackageVersion Include="SystemTools.Application.Abstractions" Version="1.0.9790.33334" />
+    <PackageVersion Include="SystemTools.Domain.Abstractions" Version="1.0.9790.33334" />
+    <PackageVersion Include="WebSystemTools.CorsTools" Version="1.0.9790.33710" />
+    <PackageVersion Include="WebSystemTools.MediatorTools" Version="1.0.9790.33710" />
+    <PackageVersion Include="WebSystemTools.SerilogLogger" Version="1.0.9790.33710" />
+    <PackageVersion Include="WebSystemTools.StaticFilesTools" Version="1.0.9790.33710" />
+    <PackageVersion Include="WebSystemTools.SwaggerTools" Version="1.0.9790.33710" />
+    <PackageVersion Include="WebSystemTools.TestToolsApi" Version="1.0.9790.33710" />
+    <PackageVersion Include="WebSystemTools.ValidationTools" Version="1.0.9790.33710" />
+    <PackageVersion Include="WebSystemTools.WebApi.Abstractions" Version="1.0.9790.33710" />
+    <PackageVersion Include="WebSystemTools.WindowsServiceTools" Version="1.0.9790.33710" />
     <PackageVersion Include="xunit" Version="2.9.3" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.0" />
   </ItemGroup>

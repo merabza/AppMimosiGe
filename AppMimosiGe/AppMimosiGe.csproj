@@ -1,5 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
     <ItemGroup>
+      <PackageReference Include="BackendCarcass.Api" />
       <PackageReference Include="Figgle.Fonts" />
       <PackageReference Include="WebSystemTools.CorsTools" />
       <PackageReference Include="WebSystemTools.MediatorTools" />
@@ -15,9 +16,8 @@
         <ProjectReference Include="..\AppMimosiGe.Infrastructure\AppMimosiGe.Infrastructure.csproj" />
         <ProjectReference Include="..\AppMimosiGe.WebApi\AppMimosiGe.WebApi.csproj" />
         <ProjectReference Include="..\AppMimosiGeRepositories\AppMimosiGeRepositories.csproj" />
-        <ProjectReference Include="..\..\BackendCarcass\BackendCarcass.Api\BackendCarcass.Api.csproj" />
-        <ProjectReference Include="..\..\BackendCarcass\BackendCarcass.Application\BackendCarcass.Application.csproj" />
         <ProjectReference Include="..\..\MimosiGeDbPart\MimosiGeDbPart.Db\MimosiGeDbPart.Db.csproj" />
+        <ProjectReference Include="..\..\BackendCarcass\BackendCarcass.Application\BackendCarcass.Application.csproj" />
     </ItemGroup>
     <PropertyGroup>
         <UserSecretsId>245797f3-a8f3-4898-bd90-48b87927e5fc</UserSecretsId>
