@@ -1,5 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <ItemGroup>
+        <PackageReference Include="BackendCarcass.Api" />
         <PackageReference Include="Serilog" />
         <PackageReference Include="SystemTools.Application.Abstractions" />
         <PackageReference Include="WebSystemTools.WebApi.Abstractions" />
@@ -9,7 +10,6 @@
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\..\AppMimosiGeShared\AppMimosiGeShared.Contracts\AppMimosiGeShared.Contracts.csproj" />
-        <ProjectReference Include="..\..\BackendCarcass\BackendCarcass.Api\BackendCarcass.Api.csproj" />
         <ProjectReference Include="..\AppMimosiGe.Application\AppMimosiGe.Application.csproj" />
     </ItemGroup>
 </Project>

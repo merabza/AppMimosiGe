@@ -12,13 +12,13 @@
     <ItemGroup>
         <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" />
+        <PackageReference Include="MimosiGeDbPart.Db" />
         <PackageReference Include="Moq" />
         <PackageReference Include="xunit" />
         <PackageReference Include="xunit.runner.visualstudio" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\MimosiGeDbPart\MimosiGeDbPart.Db\MimosiGeDbPart.Db.csproj" />
         <ProjectReference Include="..\AppMimosiGe.Application\AppMimosiGe.Application.csproj" />
         <ProjectReference Include="..\AppMimosiGe.Infrastructure\AppMimosiGe.Infrastructure.csproj" />
         <ProjectReference Include="..\AppMimosiGe.WebApi\AppMimosiGe.WebApi.csproj" />
