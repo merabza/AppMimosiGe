@@ -4,8 +4,9 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="BackendCarcass.Api" Version="1.0.9791.21140" />
-    <PackageVersion Include="BackendCarcass.Application" Version="1.0.9791.21140" />
+    <PackageVersion Include="BackendCarcass.Api" Version="1.0.9803.3" />
+    <PackageVersion Include="BackendCarcass.Application" Version="1.0.9803.3" />
+    <PackageVersion Include="BackendCarcass.Database" Version="1.0.9803.3" />
     <PackageVersion Include="DocumentFormat.OpenXml" Version="3.5.1" />
     <PackageVersion Include="Figgle.Fonts" Version="0.6.6" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.5" />

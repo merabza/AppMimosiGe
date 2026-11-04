@@ -51,6 +51,11 @@ public sealed class OpenXmlReportExcelWriterTests
         return worksheet.Descendants<Cell>().Single(c => c.CellReference?.Value == reference);
     }
 
+    private static Row RowAt(Worksheet worksheet, uint index)
+    {
+        return worksheet.Descendants<Row>().Single(r => r.RowIndex?.Value == index);
+    }
+
     private static string Text(Cell cell)
     {
         return cell.InlineString!.Text!.Text;
@@ -181,6 +186,191 @@ public sealed class OpenXmlReportExcelWriterTests
         }
     }
 
+    // a section marked NewPage (r01: every group after the first) starts a printed page: a manual row break above
+    // its first row across all columns (brk's Id is the previous row), and the breaks are counted; the sheet stays
+    // valid
+    [Fact]
+    public void Write_NewPageSections_BreakThePageAboveThem()
+    {
+        // Arrange: captions on row 4; A1 on rows 5-6, B1 with its total on rows 7-9, C1 on rows 10-11
+        ReportResponse report = Report(sections:
+        [
+            new ReportSectionResponse("ჯგუფი: A1", [["R1"]], null),
+            new ReportSectionResponse("ჯგუფი: B1", [["R2"]], ["ჯამი:"], true),
+            new ReportSectionResponse("ჯგუფი: C1", [["R3"]], null, true)
+        ]);
+
+        // Act
+        Worksheet worksheet = Read(new OpenXmlReportExcelWriter().Write(report), out SpreadsheetDocument document);
+
+        // Assert
+        using (document)
+        {
+            Assert.Equal("ჯგუფი: B1", Text(CellAt(worksheet, "A7")));
+            Assert.Equal("ჯგუფი: C1", Text(CellAt(worksheet, "A10")));
+            RowBreaks rowBreaks = worksheet.Elements<RowBreaks>().Single();
+            Assert.Equal(2u, rowBreaks.Count!.Value);
+            Assert.Equal(2u, rowBreaks.ManualBreakCount!.Value);
+            Assert.Equal([(6u, 16383u, true), (9u, 16383u, true)],
+                rowBreaks.Elements<Break>().Select(b => (b.Id!.Value, b.Max!.Value, b.ManualPageBreak!.Value)));
+            Assert.Empty(new OpenXmlValidator().Validate(document));
+        }
+    }
+
+    // without NewPage sections the sheet has no page breaks
+    [Fact]
+    public void Write_NoNewPageSections_HaveNoRowBreaks()
+    {
+        // Act
+        Worksheet worksheet = Read(new OpenXmlReportExcelWriter().Write(Report()), out SpreadsheetDocument document);
+
+        // Assert
+        using (document)
+        {
+            Assert.Empty(worksheet.Elements<RowBreaks>());
+        }
+    }
+
+    // the parameter line and the section headers span all the report's columns (merged), so a long text wraps inside
+    // the report's width instead of running past it onto an extra printed sheet; the sheet stays valid
+    [Fact]
+    public void Write_ParametersAndSectionHeaders_SpanAllTheColumns()
+    {
+        // Arrange: the parameters on row 2, the captions on row 4, A1 on rows 5-6, B1 on rows 7-8
+        ReportResponse report = Report(sections:
+        [
+            new ReportSectionResponse("ჯგუფი: A1", [["R1"]], null),
+            new ReportSectionResponse("ჯგუფი: B1", [["R2"]], null)
+        ]);
+
+        // Act
+        Worksheet worksheet = Read(new OpenXmlReportExcelWriter().Write(report), out SpreadsheetDocument document);
+
+        // Assert
+        using (document)
+        {
+            MergeCells mergeCells = worksheet.Elements<MergeCells>().Single();
+            Assert.Equal(3u, mergeCells.Count!.Value);
+            Assert.Equal(["A2:F2", "A5:F5", "A7:F7"],
+                mergeCells.Elements<MergeCell>().Select(m => m.Reference!.Value!));
+            Assert.Null(RowAt(worksheet, 5).Height);
+            Assert.Equal(14u, Style(CellAt(worksheet, "A5")));
+            Assert.Equal(14u, Style(CellAt(worksheet, "A7")));
+            Assert.Empty(new OpenXmlValidator().Validate(document));
+        }
+    }
+
+    // nothing is merged without a parameter line and section headers, nor in a one-column report
+    [Fact]
+    public void Write_NoTextRowsOrOneColumn_MergesNothing()
+    {
+        // Arrange
+        ReportResponse plain = Report() with { Parameters = [] };
+        ReportResponse oneColumn = Report(sections: [new ReportSectionResponse("ჯგუფი: A1", [["R1"]], null)],
+            footerRows: []) with { Columns = [Columns[0]] };
+
+        // Act
+        Worksheet plainSheet = Read(new OpenXmlReportExcelWriter().Write(plain), out SpreadsheetDocument plainDocument);
+        Worksheet oneColumnSheet =
+            Read(new OpenXmlReportExcelWriter().Write(oneColumn), out SpreadsheetDocument oneColumnDocument);
+
+        // Assert
+        using (plainDocument)
+        using (oneColumnDocument)
+        {
+            Assert.Empty(plainSheet.Elements<MergeCells>());
+            Assert.Empty(oneColumnSheet.Elements<MergeCells>());
+            Assert.Equal("ჯგუფი: A1", Text(CellAt(oneColumnSheet, "A5")));
+            Assert.Empty(new OpenXmlValidator().Validate(plainDocument));
+        }
+    }
+
+    // a parameter line or a header longer than the report's width gets the height of its lines (Excel does not size a
+    // merged row itself): its words go on a line while they fit in 90% of the width, a longer word is cut into lines;
+    // a short header keeps Excel's own height
+    [Fact]
+    public void Write_LongTextRows_GetTheHeightOfTheirLines()
+    {
+        // Arrange: two columns 20 wide (an 18 letter caption and the margin of 2), so a line holds 36: the parameter
+        // line "p:" and three words of 9, then 3 and 2 words; the header 3, 3 and 2 words; 120 letters 36, 36, 36, 12
+        List<ReportColumnResponse> columns =
+        [
+            new("a", new string('a', 18), ReportColumnTypes.Text), new("b", new string('b', 18), ReportColumnTypes.Text)
+        ];
+        string words = string.Join(' ', Enumerable.Repeat("123456789", 8));
+        var report = new ReportResponse("rTexts", "Texts",
+            [new ReportParameterValueResponse(ReportParameterNames.EndDate, "p", words)], columns,
+            [
+                new ReportSectionResponse(words, [["x", "y"]], null),
+                new ReportSectionResponse("short", [["x", "y"]], null),
+                new ReportSectionResponse(new string('z', 120), [["x", "y"]], null)
+            ], []);
+
+        // Act
+        Worksheet worksheet = Read(new OpenXmlReportExcelWriter().Write(report), out SpreadsheetDocument document);
+
+        // Assert: the parameters on row 2, the captions on row 4, the headers on rows 5, 7 and 9
+        using (document)
+        {
+            Assert.Equal(45d, RowAt(worksheet, 2).Height!.Value);
+            Assert.True(RowAt(worksheet, 2).CustomHeight!.Value);
+            Assert.Equal(45d, RowAt(worksheet, 5).Height!.Value);
+            Assert.True(RowAt(worksheet, 5).CustomHeight!.Value);
+            Assert.Null(RowAt(worksheet, 7).Height);
+            Assert.Null(RowAt(worksheet, 7).CustomHeight);
+            Assert.Equal(60d, RowAt(worksheet, 9).Height!.Value);
+            Assert.Null(RowAt(worksheet, 1).Height);
+        }
+    }
+
+    // printing: A4, one page wide and as many pages tall as needed (so the NewPage breaks stay), the captions repeated
+    // on every printed page (the sheet's Print_Titles)
+    [Fact]
+    public void Write_PrintsOnA4OnePageWideWithTheCaptionsOnEveryPage()
+    {
+        // Act
+        Worksheet worksheet = Read(new OpenXmlReportExcelWriter().Write(Report()), out SpreadsheetDocument document);
+
+        // Assert
+        using (document)
+        {
+            Assert.True(worksheet.SheetProperties!.PageSetupProperties!.FitToPage!.Value);
+            PageSetup pageSetup = worksheet.Elements<PageSetup>().Single();
+            Assert.Equal(9u, pageSetup.PaperSize!.Value);
+            Assert.Equal(1u, pageSetup.FitToWidth!.Value);
+            Assert.Equal(0u, pageSetup.FitToHeight!.Value);
+            DefinedName printTitles =
+                Assert.Single(document.WorkbookPart!.Workbook!.DefinedNames!.Elements<DefinedName>());
+            Assert.Equal("_xlnm.Print_Titles", printTitles.Name!.Value);
+            Assert.Equal(0u, printTitles.LocalSheetId!.Value);
+            Assert.Equal("'r03RoomsAgenda'!$4:$4", printTitles.Text);
+        }
+    }
+
+    // a report of more than 20 columns (r36) prints landscape, as on the web page
+    [Theory]
+    [InlineData(20, false)]
+    [InlineData(21, true)]
+    public void Write_WideReport_PrintsLandscape(int columnCount, bool landscape)
+    {
+        // Arrange
+        var report = new ReportResponse("rWide", "Wide", [],
+        [
+            .. Enumerable.Range(1, columnCount)
+                .Select(i => new ReportColumnResponse($"c{i}", $"C{i}", ReportColumnTypes.Text))
+        ], [], []);
+
+        // Act
+        Worksheet worksheet = Read(new OpenXmlReportExcelWriter().Write(report), out SpreadsheetDocument document);
+
+        // Assert
+        using (document)
+        {
+            Assert.Equal(landscape ? OrientationValues.Landscape : OrientationValues.Portrait,
+                worksheet.Elements<PageSetup>().Single().Orientation!.Value);
+        }
+    }
+
     // the captions stay on the screen while scrolling
     [Fact]
     public void Write_FreezesTheRowsUpToTheCaptions()
@@ -199,7 +389,7 @@ public sealed class OpenXmlReportExcelWriterTests
         }
     }
 
-    // a report without parameters has no parameter line
+    // a report without parameters has no parameter line; its captions print on every page from the third row
     [Fact]
     public void Write_NoParameters_CaptionsOnTheThirdRow()
     {
@@ -214,11 +404,33 @@ public sealed class OpenXmlReportExcelWriterTests
         {
             Assert.Equal("ოთახი", Text(CellAt(worksheet, "A3")));
             Assert.Equal(3d, worksheet.Descendants<Pane>().Single().VerticalSplit!.Value);
+            Assert.Equal("'r03RoomsAgenda'!$3:$3",
+                document.WorkbookPart!.Workbook!.DefinedNames!.Elements<DefinedName>().Single().Text);
+        }
+    }
+
+    // a Georgian letter of Sylfaen is 1.3 of Excel's width unit, other characters 1: "ოთახი 12" is 6.5 + 3, and the
+    // margin of 2
+    [Fact]
+    public void Write_GeorgianLettersAreWiderThanTheWidthUnit()
+    {
+        // Arrange
+        ReportResponse report = Report(sections: [new ReportSectionResponse(null, [["ოთახი 12"]], null)],
+            footerRows: []);
+
+        // Act
+        Worksheet worksheet = Read(new OpenXmlReportExcelWriter().Write(report), out SpreadsheetDocument document);
+
+        // Assert
+        using (document)
+        {
+            Assert.Equal(11.5, worksheet.Descendants<Column>().First().Width!.Value, 9);
         }
     }
 
     // widths by the longest text of a column, within limits; the title does not widen the first column;
-    // a number with two decimals, a whole number with its digits
+    // a number with two decimals, a whole number with its digits; the last caption "დრო და თარიღი" (11 Georgian
+    // letters) is wider than its date
     [Fact]
     public void Write_ColumnWidthsFollowTheTexts()
     {
@@ -236,7 +448,7 @@ public sealed class OpenXmlReportExcelWriterTests
         using (document)
         {
             List<Column> columns = [.. worksheet.Descendants<Column>()];
-            Assert.Equal([60d, 7d, 14d, 12d, 18d, 18d], columns.Select(c => c.Width!.Value));
+            Assert.Equal([60d, 7d, 14d, 12d, 18d, 18.3d], columns.Select(c => Math.Round(c.Width!.Value, 9)));
             Assert.Equal([1u, 2u, 3u, 4u, 5u, 6u], columns.Select(c => c.Min!.Value));
             Assert.All(columns, c => Assert.Equal(c.Min!.Value, c.Max!.Value));
             Assert.All(columns, c => Assert.True(c.CustomWidth!.Value));
@@ -365,7 +577,9 @@ public sealed class OpenXmlReportExcelWriterTests
         }
     }
 
-    // the cell formats: General, Number, Time, Date, DateTime, each normal and bold, then the title's
+    // the cell formats: the default (no cell uses it: Excel ignores its alignment), General, Number, Time, Date,
+    // DateTime, each normal and bold, the title's, the wrapped text's normal and bold, then the section header's; in a
+    // row of several lines the cells stand at its top, the section header at its bottom
     [Fact]
     public void Write_CellFormatsApplyTheirNumberFormatsAndFonts()
     {
@@ -377,16 +591,32 @@ public sealed class OpenXmlReportExcelWriterTests
         {
             List<CellFormat> formats =
                 [.. document.WorkbookPart!.WorkbookStylesPart!.Stylesheet!.CellFormats!.Elements<CellFormat>()];
-            Assert.Equal([0u, 0u, 2u, 2u, 164u, 164u, 165u, 165u, 166u, 166u, 0u],
+            Assert.Equal([0u, 0u, 0u, 2u, 2u, 164u, 164u, 165u, 165u, 166u, 166u, 0u, 0u, 0u, 0u],
                 formats.Select(f => f.NumberFormatId!.Value));
-            Assert.Equal([false, false, true, true, true, true, true, true, true, true, false],
+            Assert.Equal(
+                [false, false, false, true, true, true, true, true, true, true, true, false, false, false, false],
                 formats.Select(f => f.ApplyNumberFormat?.Value ?? false));
-            Assert.Equal([0u, 1u, 0u, 1u, 0u, 1u, 0u, 1u, 0u, 1u, 2u], formats.Select(f => f.FontId!.Value));
-            Assert.Equal([false, true, false, true, false, true, false, true, false, true, true],
+            Assert.Equal([0u, 0u, 1u, 0u, 1u, 0u, 1u, 0u, 1u, 0u, 1u, 2u, 0u, 1u, 1u],
+                formats.Select(f => f.FontId!.Value));
+            Assert.Equal(
+                [false, false, true, false, true, false, true, false, true, false, true, true, false, true, true],
                 formats.Select(f => f.ApplyFont?.Value ?? false));
             Assert.All(formats, f => Assert.Equal(0u, f.FillId!.Value));
             Assert.All(formats, f => Assert.Equal(0u, f.BorderId!.Value));
-            Assert.Equal(10u, Style(CellAt(worksheet, "A1")));
+            Assert.Equal(
+                [false, false, false, false, false, false, false, false, false, false, false, false, true, true, true],
+                formats.Select(f => f.Alignment?.WrapText?.Value ?? false));
+            Assert.Equal([false, true, true, true, true, true, true, true, true, true, true, false, true, true, false],
+                formats.Select(f => f.Alignment?.Vertical?.Value == VerticalAlignmentValues.Top));
+            Assert.Equal([false, true, true, true, true, true, true, true, true, true, true, false, true, true, true],
+                formats.Select(f => f.ApplyAlignment?.Value ?? false));
+            Assert.Equal(11u, Style(CellAt(worksheet, "A1")));
+            //the parameters, a caption, a text, a whole number and a time
+            Assert.Equal(12u, Style(CellAt(worksheet, "A2")));
+            Assert.Equal(13u, Style(CellAt(worksheet, "A4")));
+            Assert.Equal(12u, Style(CellAt(worksheet, "A5")));
+            Assert.Equal(1u, Style(CellAt(worksheet, "C5")));
+            Assert.Equal(5u, Style(CellAt(worksheet, "B5")));
         }
     }
 

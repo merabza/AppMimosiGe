@@ -19,9 +19,16 @@ public static class CommentReports
     //INNER JOIN). სექცია = გაკვეთილი (Access-ის ჯგუფისა და გაკვეთილის სათაურები): ჯგუფი, საგანი, მასწავლებელი, დრო,
     //აღდგენის თარიღი და შემცვლელი მასწავლებელი; სტრიქონები: მოსწავლეები ნომრით (თითო გაკვეთილში თავიდან, Access-ის
     //RunningSum) და კომენტარებით. Access-ში კომენტარის, აღდგენისა და შემცვლელის ადგილი ცარიელი იყო ხელით
-    //შესავსებად; ახლა შეტანილი მონაცემი ჩანს, შეუვსებელი კი ცარიელია. რიგი: ჯგუფი, დრო; მოსწავლის სახელი
+    //შესავსებად; ახლა შეტანილი მონაცემი ჩანს, შეუვსებელი კი ცარიელია. რიგი: ჯგუფი, დრო; მოსწავლის სახელი.
+    //ბეჭდვისას ყოველი ახალი ჯგუფი ახალი გვერდიდან იწყება (Access-ის ჯგუფის შემდეგ გვერდის წყვეტა, D154): ჯგუფის
+    //პირველი გაკვეთილის სექციას NewPage აქვს, პირველი ჯგუფის გარდა, რომ სათაური და პარამეტრები მასთან დარჩეს
     public static ReportTable DailyComments(IEnumerable<CommentLesson> lessons)
     {
+        List<CommentLesson> ordered =
+        [
+            .. lessons.OrderBy(l => l.GroupCode, StringComparer.Ordinal).ThenBy(l => l.LessonDt)
+                .ThenBy(l => l.LessonId)
+        ];
         return new ReportTable(
         [
             new ReportColumnResponse("number", "№", ReportColumnTypes.WholeNumber),
@@ -29,15 +36,14 @@ public static class CommentReports
             new ReportColumnResponse("teacherComment", "მასწავლებლის კომენტარი", ReportColumnTypes.Text),
             new ReportColumnResponse("studentComment", "მოსწავლის კომენტარი", ReportColumnTypes.Text)
         ], [
-            .. lessons.OrderBy(l => l.GroupCode, StringComparer.Ordinal).ThenBy(l => l.LessonDt)
-                .ThenBy(l => l.LessonId).Select(l => new ReportSectionResponse(Header(l), [
-                    .. l.Students.Select(s => (Name: s.Student.NameWithNumber, Row: s))
-                        .OrderBy(s => s.Name, StringComparer.Ordinal).ThenBy(s => s.Row.StudentContractId)
-                        .Select((s, index) => new List<object?>
-                        {
-                            index + 1, s.Name, s.Row.TeacherComment, s.Row.StudentComment
-                        })
-                ], null))
+            .. ordered.Select((l, lessonIndex) => new ReportSectionResponse(Header(l), [
+                .. l.Students.Select(s => (Name: s.Student.NameWithNumber, Row: s))
+                    .OrderBy(s => s.Name, StringComparer.Ordinal).ThenBy(s => s.Row.StudentContractId)
+                    .Select((s, index) => new List<object?>
+                    {
+                        index + 1, s.Name, s.Row.TeacherComment, s.Row.StudentComment
+                    })
+            ], null, lessonIndex > 0 && ordered[lessonIndex - 1].GroupCode != l.GroupCode))
         ], []);
     }
 

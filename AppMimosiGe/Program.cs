@@ -99,7 +99,8 @@ try
         .AddScopedAllCarcassApplicationServices(debugLogger)
         .AddApplication(debugLogger, typeof(BackendCarcass.Application.AssemblyReference),
             typeof(AppMimosiGe.Application.AssemblyReference))
-        .AddFluentValidation(debugLogger, AppMimosiGe.Application.AssemblyReference.Assembly)
+        .AddFluentValidation(debugLogger, AppMimosiGe.Application.AssemblyReference.Assembly,
+            BackendCarcass.Api.AssemblyReference.Assembly)
         //.AddCarcassDom(debugMode)
         .AddAppMimosiGeRepositories(debugLogger)
         .AddAppMimosiGeInfrastructure(debugLogger)
@@ -117,6 +118,7 @@ try
     app.UseDefaultAndStaticFiles(debugLogger);
     app.UseTestToolsApiEndpoints(debugLogger);
     app.UseCorsService(myAllowSpecificOrigins, debugLogger);
+    app.UseAuthenticationAndAuthorization(debugLogger);
     //BackendCarcass
     app.UseBackendCarcassApiEndpoints(myAllowSpecificOrigins, debugLogger);
 

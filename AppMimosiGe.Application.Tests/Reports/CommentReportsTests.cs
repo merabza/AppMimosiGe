@@ -37,7 +37,7 @@ public sealed class CommentReportsTests
 
     // a section per lesson by group code and time: group, course, teacher, time, the recovery date and the
     // substitute (blank to fill in by hand when there is none); the students numbered from 1 in each lesson, by name,
-    // with their comments
+    // with their comments; every group after the first starts a new printed page
     [Fact]
     public void DailyComments_ListsTheLessonsWithTheirStudents()
     {
@@ -72,6 +72,7 @@ public sealed class CommentReportsTests
             ["1|SLast1 S / 6.001||"]
         ], table.Sections.Select(s => s.Rows.Select(Text).ToArray()));
         Assert.All(table.Sections, s => Assert.Null(s.Footer));
+        Assert.Equal([false, false, true], table.Sections.Select(s => s.NewPage));
         Assert.Empty(table.FooterRows);
     }
 
