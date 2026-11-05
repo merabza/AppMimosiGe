@@ -4,18 +4,18 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="BackendCarcass.Api" Version="1.0.9805.30960" />
-    <PackageVersion Include="BackendCarcass.Application" Version="1.0.9805.30960" />
-    <PackageVersion Include="BackendCarcass.Database" Version="1.0.9805.30960" />
+    <PackageVersion Include="BackendCarcass.Api" Version="1.0.9805.34891" />
+    <PackageVersion Include="BackendCarcass.Application" Version="1.0.9805.34891" />
+    <PackageVersion Include="BackendCarcass.Database" Version="1.0.9805.34891" />
     <PackageVersion Include="DocumentFormat.OpenXml" Version="3.5.1" />
     <PackageVersion Include="Figgle.Fonts" Version="0.6.6" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.5" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.12" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.13" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.10.0" />
-    <PackageVersion Include="MimosiGeCore.Application.Abstractions" Version="0.0.9805.31045" />
-    <PackageVersion Include="MimosiGeCore.Domain" Version="0.0.9805.31045" />
-    <PackageVersion Include="MimosiGeDbPart.Db" Version="1.0.9805.31059" />
+    <PackageVersion Include="MimosiGeCore.Application.Abstractions" Version="0.0.9805.35020" />
+    <PackageVersion Include="MimosiGeCore.Domain" Version="0.0.9805.35020" />
+    <PackageVersion Include="MimosiGeDbPart.Db" Version="1.0.9805.35039" />
     <PackageVersion Include="Moq" Version="4.20.72" />
     <PackageVersion Include="Serilog" Version="4.4.0" />
     <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.35.0.4138" />
