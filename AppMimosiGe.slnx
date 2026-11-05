@@ -47,7 +47,6 @@
   </Folder>
   <Folder Name="/WebSystemTools/">
     <Project Path="../WebSystemTools/WebSystemTools.CorsTools/WebSystemTools.CorsTools.csproj" />
-    <Project Path="../WebSystemTools/WebSystemTools.MediatorTools/WebSystemTools.MediatorTools.csproj" />
     <Project Path="../WebSystemTools/WebSystemTools.SerilogLogger/WebSystemTools.SerilogLogger.csproj" />
     <Project Path="../WebSystemTools/WebSystemTools.SwaggerTools/WebSystemTools.SwaggerTools.csproj" />
     <Project Path="../WebSystemTools/WebSystemTools.TestToolsApi/WebSystemTools.TestToolsApi.csproj" />

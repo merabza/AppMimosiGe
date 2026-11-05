@@ -27,8 +27,6 @@ using WebSystemTools.TestToolsApi.DependencyInjection;
 using WebSystemTools.ValidationTools.DependencyInjection;
 using WebSystemTools.WindowsServiceTools;
 
-//using AssemblyReference = CarcassRepositories.AssemblyReference;
-
 try
 {
     Console.WriteLine("Loading...");
@@ -52,42 +50,6 @@ try
     ILogger? debugLogger = debugMode ? logger : null;
 
     builder.Host.UseWindowsServiceOnWindows(debugLogger, args);
-
-    //if (!builder.InstallServices(debugMode, args, parameters,
-
-    //        //BackendCarcass
-    //        AssemblyReference.Assembly, BackendCarcassApi.AssemblyReference.Assembly,
-    //        CarcassDom.AssemblyReference.Assembly, CarcassIdentity.AssemblyReference.Assembly,
-
-    //        //AppMimosiGeDbPart
-    //        MimosiGeDb.AssemblyReference.Assembly, AppMimosiGeRepositories.AssemblyReference.Assembly,
-
-    //        //WebSystemTools
-    //        ApiExceptionHandler.AssemblyReference.Assembly, ConfigurationEncrypt.AssemblyReference.Assembly,
-    //        CorsTools.AssemblyReference.Assembly, SerilogLogger.AssemblyReference.Assembly,
-    //        StaticFilesTools.AssemblyReference.Assembly, SwaggerTools.AssemblyReference.Assembly,
-    //        TestToolsApi.AssemblyReference.Assembly, WindowsServiceTools.AssemblyReference.Assembly))
-    //    return 2;
-
-    //var mediatRSettings = builder.Configuration.GetSection("MediatRLicenseKey");
-
-    //var mediatRLicenseKey = mediatRSettings.Get<string>();
-
-    //builder.Services.AddMediatR(cfg =>
-    //{
-    //    cfg.LicenseKey = mediatRLicenseKey;
-    //    //BackendCarcass
-    //    cfg.RegisterServicesFromAssembly(BackendCarcassApi.AssemblyReference.Assembly);
-    //    //AppMimosiGe
-    //});
-
-    ////FluentValidationInstaller
-
-    //builder.Services.InstallValidation(
-    //    //BackendCarcass
-    //    BackendCarcassApi.AssemblyReference.Assembly
-    //    //AppMimosiGe
-    //);
 
     // @formatter:off
     builder.Services
