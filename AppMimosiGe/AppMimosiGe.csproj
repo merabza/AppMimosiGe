@@ -23,11 +23,13 @@
     <PropertyGroup>
         <UserSecretsId>245797f3-a8f3-4898-bd90-48b87927e5fc</UserSecretsId>
         <SpaRoot>..\..\AppMimosiGeFront\appmimosigefrontend\</SpaRoot>
+        <!-- Vite-ის mode, რომლითაც ფრონტი იბილდება (.env.{mode}); SupportTools-ი სერვერის SpaEnvMode-ს /p:SpaMode-ით აძლევს -->
+        <SpaMode Condition="'$(SpaMode)' == ''">production</SpaMode>
     </PropertyGroup>
     <!-- publish-ის დროს React-ის ფრონტი იბილდება და მისი dist ფოლდერი პაკეტში wwwroot-ის სახით ხვდება -->
     <Target Name="PublishSpa" AfterTargets="ComputeFilesToPublish">
         <Exec WorkingDirectory="$(SpaRoot)" Command="npm install" />
-        <Exec WorkingDirectory="$(SpaRoot)" Command="npm run build" />
+        <Exec WorkingDirectory="$(SpaRoot)" Command="npm run build -- --mode $(SpaMode)" />
         <ItemGroup>
             <SpaDistFiles Include="$(SpaRoot)dist\**" />
             <ResolvedFileToPublish Include="@(SpaDistFiles->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
