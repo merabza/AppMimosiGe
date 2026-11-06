@@ -10,13 +10,13 @@
     <PackageVersion Include="DocumentFormat.OpenXml" Version="3.5.1" />
     <PackageVersion Include="Figgle.Fonts" Version="0.6.6" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.5" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.12" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.13" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.10.0" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.14" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.14" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
     <PackageVersion Include="MimosiGeCore.Application.Abstractions" Version="0.0.9805.35020" />
     <PackageVersion Include="MimosiGeCore.Domain" Version="0.0.9805.35020" />
     <PackageVersion Include="MimosiGeDbPart.Db" Version="1.0.9805.35039" />
-    <PackageVersion Include="Moq" Version="4.20.72" />
+    <PackageVersion Include="Moq" Version="4.21.0" />
     <PackageVersion Include="Serilog" Version="4.4.0" />
     <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.35.0.4138" />
     <PackageVersion Include="SystemTools.Application.Abstractions" Version="1.0.9791.20931" />
@@ -31,6 +31,6 @@
     <PackageVersion Include="WebSystemTools.WebApi.Abstractions" Version="1.0.9791.21126" />
     <PackageVersion Include="WebSystemTools.WindowsServiceTools" Version="1.0.9791.21126" />
     <PackageVersion Include="xunit" Version="2.9.3" />
-    <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.0" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.1" />
   </ItemGroup>
 </Project>
