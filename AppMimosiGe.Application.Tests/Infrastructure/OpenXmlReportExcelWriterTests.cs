@@ -347,10 +347,10 @@ public sealed class OpenXmlReportExcelWriterTests
         }
     }
 
-    // a report of more than 20 columns (r36) prints landscape, as on the web page
+    // a report of more than 12 columns (r30, r36) prints landscape, as on the web page
     [Theory]
-    [InlineData(20, false)]
-    [InlineData(21, true)]
+    [InlineData(12, false)]
+    [InlineData(13, true)]
     public void Write_WideReport_PrintsLandscape(int columnCount, bool landscape)
     {
         // Arrange

@@ -39,8 +39,9 @@ public sealed class OpenXmlReportExcelWriter : IReportExcelWriter
     //ხაზებად დაყოფისას უჯრის სიგანის ეს წილი ითვლება: მარაგი ეკრანისა და პრინტერის შრიფტის სიგანეების სხვაობისთვის
     private const double WrapWidthShare = 0.9;
 
-    //ამაზე მეტი სვეტის რეპორტი ლანდშაფტზე იბეჭდება, როგორც ვებ-გვერდზე (ReportView-ის wideReportColumns)
-    private const int WideReportColumns = 20;
+    //ამაზე მეტი სვეტის რეპორტი (მაგ. r30, r36) ლანდშაფტზე იბეჭდება, როგორც ვებ-გვერდზე (ReportView-ის
+    //wideReportColumns)
+    private const int WideReportColumns = 12;
 
     //Excel-ის ქაღალდის ზომა A4
     private const uint A4PaperSize = 9;
