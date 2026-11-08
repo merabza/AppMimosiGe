@@ -10,8 +10,10 @@
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="BackendCarcass.Database" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" />
+        <PackageReference Include="MimosiGeDbPart.Db" />
         <PackageReference Include="Moq" />
         <PackageReference Include="xunit" />
         <PackageReference Include="xunit.runner.visualstudio" />
@@ -21,8 +23,6 @@
         <ProjectReference Include="..\AppMimosiGe.Application\AppMimosiGe.Application.csproj" />
         <ProjectReference Include="..\AppMimosiGe.Infrastructure\AppMimosiGe.Infrastructure.csproj" />
         <ProjectReference Include="..\AppMimosiGe.WebApi\AppMimosiGe.WebApi.csproj" />
-        <ProjectReference Include="..\..\BackendCarcass\BackendCarcass.Database\BackendCarcass.Database.csproj" />
-        <ProjectReference Include="..\..\MimosiGeDbPart\MimosiGeDbPart.Db\MimosiGeDbPart.Db.csproj" />
     </ItemGroup>
 
 </Project>
