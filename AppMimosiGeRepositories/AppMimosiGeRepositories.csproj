@@ -5,6 +5,6 @@
       <Folder Include="Installers\" />
     </ItemGroup>
     <ItemGroup>
-      <PackageReference Include="MimosiGeDbPart.Db" />
+      <ProjectReference Include="..\..\MimosiGeDbPart\MimosiGeDbPart.Db\MimosiGeDbPart.Db.csproj" />
     </ItemGroup>
 </Project>
