@@ -18,6 +18,7 @@ public static class AppMimosiGeApiDependencyInjection
         endpoints.UseLessonGeneratorEndpoints(debugLogger);
         endpoints.UseLessonsEndpoints(debugLogger);
         endpoints.UsePaymentsEndpoints(debugLogger);
+        endpoints.UseBankTransactionsEndpoints(debugLogger);
         endpoints.UseChargesAndPaymentsEndpoints(debugLogger);
         endpoints.UseDepositsEndpoints(debugLogger);
         endpoints.UseCrmCallsEndpoints(debugLogger);

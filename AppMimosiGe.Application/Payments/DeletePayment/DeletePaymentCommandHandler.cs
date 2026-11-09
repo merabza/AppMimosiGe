@@ -23,6 +23,12 @@ public sealed class DeletePaymentCommandHandler(
             return Result.Failure(PaymentErrors.PaymentNotFound);
         }
 
+        //ბანკის ჩარიცხვის განაწილება ჩარიცხვების გვერდზე იცვლება (D164)
+        if (payment.BankTransactionId is not null)
+        {
+            return Result.Failure(BankTransactionErrors.PaymentBelongsToBankTransaction);
+        }
+
         //შემოწმებული გადახდის წაშლა მხოლოდ გადახდების შემოწმების უფლებით შეიძლება (D77)
         if (payment.Checked && !await claimRights.HasClaim(PaymentClaims.CheckPayments, cancellationToken))
         {

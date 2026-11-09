@@ -1,5 +1,8 @@
 using AppMimosiGe.Application.AcademicYears;
+using System;
+using System.Net.Http;
 using AppMimosiGe.Application.Balances;
+using AppMimosiGe.Application.BankTransactions;
 using AppMimosiGe.Application.CrmCalls;
 using AppMimosiGe.Application.Groups;
 using AppMimosiGe.Application.LessonGenerator;
@@ -11,6 +14,7 @@ using AppMimosiGe.Application.Salary;
 using AppMimosiGe.Application.StudentContracts;
 using AppMimosiGe.Application.TeacherContracts;
 using AppMimosiGe.Application.WorkHours;
+using AppMimosiGe.Infrastructure.BankTransactions.TbcBis;
 using AppMimosiGe.Infrastructure.Reports;
 using AppMimosiGe.Infrastructure.Repositories;
 using AppMimosiGe.Infrastructure.Rights;
@@ -22,8 +26,9 @@ namespace AppMimosiGe.Infrastructure.DependencyInjection;
 // ReSharper disable once UnusedType.Global
 public static class AppMimosiGeInfrastructureDependencyInjection
 {
+    //tbcBisSettings: კონფიგურაციის სექცია "TbcBis" (ჰოსტი კითხულობს); null: ინტეგრაცია არ არის კონფიგურირებული
     public static IServiceCollection AddAppMimosiGeInfrastructure(this IServiceCollection services,
-        ILogger? debugLogger)
+        ILogger? debugLogger, TbcBisSettings? tbcBisSettings = null)
     {
         debugLogger?.Information("{MethodName} Started", nameof(AddAppMimosiGeInfrastructure));
 
@@ -41,6 +46,15 @@ public static class AppMimosiGeInfrastructureDependencyInjection
         services.AddScoped<IAcademicYearsRepository, AcademicYearsRepository>();
         services.AddSingleton<IReportExcelWriter, OpenXmlReportExcelWriter>();
         services.AddScoped<IUserClaimRights, UserClaimRights>();
+        services.AddScoped<IBankTransactionsRepository, BankTransactionsRepository>();
+
+        //ერთი კლიენტი მთელი პროცესისთვის: ტოკენი ინახება და გამოიყენება, სანამ ვადა არ გასდის
+        TbcBisSettings settings = tbcBisSettings ?? new TbcBisSettings();
+        services.AddSingleton<IBankMovementsClient>(sp => new TbcBisClient(
+            new HttpClient(new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(15) })
+            {
+                Timeout = TimeSpan.FromSeconds(60)
+            }, settings, sp.GetRequiredService<TimeProvider>()));
 
         debugLogger?.Information("{MethodName} Finished", nameof(AddAppMimosiGeInfrastructure));
 

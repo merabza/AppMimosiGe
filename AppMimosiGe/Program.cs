@@ -1,5 +1,6 @@
 using System;
 using System.Reflection;
+using AppMimosiGe.Infrastructure.BankTransactions.TbcBis;
 using AppMimosiGe.Infrastructure.DependencyInjection;
 using AppMimosiGe.Infrastructure.Time;
 using AppMimosiGe.WebApi.DependencyInjection;
@@ -13,6 +14,7 @@ using BackendCarcassShared.Contracts.V1.Routes;
 using Figgle.Fonts;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using MimosiGeDbPart.Db.DependencyInjection;
@@ -65,7 +67,8 @@ try
             BackendCarcass.Api.AssemblyReference.Assembly)
         //.AddCarcassDom(debugMode)
         .AddAppMimosiGeRepositories(debugLogger)
-        .AddAppMimosiGeInfrastructure(debugLogger)
+        .AddAppMimosiGeInfrastructure(debugLogger,
+            builder.Configuration.GetSection(TbcBisSettings.SectionName).Get<TbcBisSettings>())
         .AddMimosiGeDb(debugLogger, builder.Configuration);
     // @formatter:on
 

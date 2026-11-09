@@ -32,6 +32,12 @@ using AppMimosiGe.Application.Lessons.GetLesson;
 using AppMimosiGe.Application.Lessons.GetLessonFormLookups;
 using AppMimosiGe.Application.Lessons.GetLessonsRowsData;
 using AppMimosiGe.Application.Lessons.UpdateLesson;
+using AppMimosiGe.Application.BankTransactions.GetBankTransaction;
+using AppMimosiGe.Application.BankTransactions.GetBankTransactions;
+using AppMimosiGe.Application.BankTransactions.GetBankTransactionStudentContracts;
+using AppMimosiGe.Application.BankTransactions.ImportBankTransactions;
+using AppMimosiGe.Application.BankTransactions.SetBankTransactionAllocation;
+using AppMimosiGe.Application.BankTransactions.SetBankTransactionIgnored;
 using AppMimosiGe.Application.Payments.CreatePayment;
 using AppMimosiGe.Application.Payments.DeletePayment;
 using AppMimosiGe.Application.Payments.GetPayment;
@@ -144,6 +150,15 @@ internal static class EndpointsTestApp
         builder.Services.AddSingleton(Mock.Of<ICommandHandler<UpdatePaymentCommand>>());
         builder.Services.AddSingleton(Mock.Of<ICommandHandler<SetPaymentCheckedCommand>>());
         builder.Services.AddSingleton(Mock.Of<ICommandHandler<DeletePaymentCommand>>());
+        builder.Services.AddSingleton(
+            Mock.Of<IQueryHandler<GetBankTransactionsQuery, List<BankTransactionRowResponse>>>());
+        builder.Services.AddSingleton(
+            Mock.Of<IQueryHandler<GetBankTransactionStudentContractsQuery, List<LookupItemResponse>>>());
+        builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetBankTransactionQuery, BankTransactionResponse>>());
+        builder.Services.AddSingleton(
+            Mock.Of<ICommandHandler<ImportBankTransactionsCommand, ImportBankTransactionsResponse>>());
+        builder.Services.AddSingleton(Mock.Of<ICommandHandler<SetBankTransactionAllocationCommand>>());
+        builder.Services.AddSingleton(Mock.Of<ICommandHandler<SetBankTransactionIgnoredCommand>>());
         builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetStatementQuery, StatementRowsDataResponse>>());
         builder.Services.AddSingleton(
             Mock.Of<IQueryHandler<GetBalancesFormLookupsQuery, BalancesFormLookupsResponse>>());

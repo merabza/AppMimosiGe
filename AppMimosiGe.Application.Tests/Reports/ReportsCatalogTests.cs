@@ -67,7 +67,7 @@ public sealed class ReportsCatalogTests
         "r11WrongStatuseLessons", "r12LessonsWithWrongVoidStatus", "r14Missings", "r34TeacherMissAndSubstitutes"
     ];
 
-    private static readonly string[] NoParameterKeys = ["r15BlackList"];
+    private static readonly string[] NoParameterKeys = ["r15BlackList", "r40UnallocatedBankTransactions"];
 
     //Access's reports without RepFltNames that check every group row or lesson: an optional academic year (part 20)
     private static readonly string[] AcademicYearKeys =
@@ -102,7 +102,8 @@ public sealed class ReportsCatalogTests
             "r19StudentOver", "r20StudentDoubleCources", "r21TeacherDoubleGroups", "r22", "r23GroupSizesAnalize",
             "r24GroupsOptimization", "r25TecherSalaryByGroups", "r26StudMissDate", "r27TeacherMissDate",
             "r28DayTimesMissDate", "r29TeacherMissSalary", "r30StudentMissFees", "r31StudSameStartEndDate",
-            "r32TeachSameStartEndDate", "r33DTPSameStartEndDate", "r34TeacherMissAndSubstitutes", "r36");
+            "r32TeachSameStartEndDate", "r33DTPSameStartEndDate", "r34TeacherMissAndSubstitutes", "r36",
+            "r40UnallocatedBankTransactions");
     }
 
     [Fact]

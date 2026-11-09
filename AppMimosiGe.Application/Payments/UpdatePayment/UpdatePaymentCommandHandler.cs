@@ -27,6 +27,12 @@ public sealed class UpdatePaymentCommandHandler(
             return Result.Failure(PaymentErrors.PaymentNotFound);
         }
 
+        //ბანკის ჩარიცხვის განაწილება ჩარიცხვების გვერდზე იცვლება (D164)
+        if (payment.BankTransactionId is not null)
+        {
+            return Result.Failure(BankTransactionErrors.PaymentBelongsToBankTransaction);
+        }
+
         //შემოწმებული გადახდის შეცვლა და ალმის დასმა მხოლოდ გადახდების შემოწმების უფლებით შეიძლება (D77)
         if ((payment.Checked || request.Checked) &&
             !await claimRights.HasClaim(PaymentClaims.CheckPayments, cancellationToken))

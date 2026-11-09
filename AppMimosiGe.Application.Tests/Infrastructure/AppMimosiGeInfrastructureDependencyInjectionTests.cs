@@ -1,5 +1,7 @@
 using AppMimosiGe.Application.AcademicYears;
+using System;
 using AppMimosiGe.Application.Balances;
+using AppMimosiGe.Application.BankTransactions;
 using AppMimosiGe.Application.CrmCalls;
 using AppMimosiGe.Application.Groups;
 using AppMimosiGe.Application.LessonGenerator;
@@ -11,6 +13,7 @@ using AppMimosiGe.Application.Salary;
 using AppMimosiGe.Application.StudentContracts;
 using AppMimosiGe.Application.TeacherContracts;
 using AppMimosiGe.Application.WorkHours;
+using AppMimosiGe.Infrastructure.BankTransactions.TbcBis;
 using AppMimosiGe.Infrastructure.DependencyInjection;
 using AppMimosiGe.Infrastructure.Reports;
 using AppMimosiGe.Infrastructure.Repositories;
@@ -116,6 +119,51 @@ public sealed class AppMimosiGeInfrastructureDependencyInjectionTests
         ServiceDescriptor descriptor = Assert.Single(services, s => s.ServiceType == typeof(IPaymentsRepository));
         Assert.Equal(typeof(PaymentsRepository), descriptor.ImplementationType);
         Assert.Equal(ServiceLifetime.Scoped, descriptor.Lifetime);
+    }
+
+    [Fact]
+    public void AddAppMimosiGeInfrastructure_RegistersBankTransactionsRepositoryAsScoped()
+    {
+        var services = new ServiceCollection();
+
+        services.AddAppMimosiGeInfrastructure(null);
+
+        ServiceDescriptor descriptor =
+            Assert.Single(services, s => s.ServiceType == typeof(IBankTransactionsRepository));
+        Assert.Equal(typeof(BankTransactionsRepository), descriptor.ImplementationType);
+        Assert.Equal(ServiceLifetime.Scoped, descriptor.Lifetime);
+    }
+
+    // one TBC client for the process (it keeps the token), built from the host's settings
+    [Fact]
+    public void AddAppMimosiGeInfrastructure_RegistersTheTbcClientAsSingleton()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton(TimeProvider.System);
+        DateTime startDate = new(2026, 11, 1, 0, 0, 0, DateTimeKind.Unspecified);
+
+        services.AddAppMimosiGeInfrastructure(null, new TbcBisSettings { BankAccountId = 4, StartDate = startDate });
+
+        Assert.Equal(ServiceLifetime.Singleton,
+            Assert.Single(services, s => s.ServiceType == typeof(IBankMovementsClient)).Lifetime);
+        using ServiceProvider provider = services.BuildServiceProvider();
+        IBankMovementsClient client = provider.GetRequiredService<IBankMovementsClient>();
+        Assert.IsType<TbcBisClient>(client);
+        Assert.Same(client, provider.GetRequiredService<IBankMovementsClient>());
+        Assert.Equal(new IntegratedBankAccount(4, startDate), client.Account);
+    }
+
+    // without the host's settings the client is there, but not configured
+    [Fact]
+    public void AddAppMimosiGeInfrastructure_WithoutTbcSettings_HasNoIntegratedAccount()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton(TimeProvider.System);
+
+        services.AddAppMimosiGeInfrastructure(null);
+
+        using ServiceProvider provider = services.BuildServiceProvider();
+        Assert.Null(provider.GetRequiredService<IBankMovementsClient>().Account);
     }
 
     [Fact]

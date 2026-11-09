@@ -12,6 +12,7 @@ using AppMimosiGe.Application.Reports.Checks.TeacherSchemeMismatches;
 using AppMimosiGe.Application.Reports.Comments.DailyComments;
 using AppMimosiGe.Application.Reports.Finance.BlackList;
 using AppMimosiGe.Application.Reports.Finance.TeacherSalaryByGroups;
+using AppMimosiGe.Application.Reports.Finance.UnallocatedBankTransactions;
 using AppMimosiGe.Application.Reports.Groups.GroupList;
 using AppMimosiGe.Application.Reports.Groups.GroupSizesAnalysis;
 using AppMimosiGe.Application.Reports.Groups.GroupsOptimization;
@@ -239,7 +240,12 @@ public static class ReportsCatalog
             "თანამშრომლების ნამუშევარი საათები თვის დღეების მიხედვით: ჩატარებული გაკვეთილები (გაუქმებულის გარდა, " +
             "აღდგენილი — აღდგენის დღეს) და სამუშაო საათების დასრულებული ჩანაწერები; ერთდროული დრო ერთხელ ითვლება. " +
             "თითო თვე ცალკე, თვის ნახევრების, დღეებისა და საათების ჯამებით.", [], Period,
-            p => new TimeSheetReportQuery(p.StartDate!.Value, p.EndDate!.Value))
+            p => new TimeSheetReportQuery(p.StartDate!.Value, p.EndDate!.Value)),
+        //Access-ში არ იყო: ბანკთან ინტეგრაცია (TBC_INTEGRATION.md, D164)
+        ReportDefinition.Create("r40UnallocatedBankTransactions", "ბოლომდე გაუნაწილებელი ჩარიცხვები",
+            "ბანკიდან მიღებული ჩარიცხვები, რომლებიც მოსწავლეებზე სრულად არ არის განაწილებული (სულ გაუნაწილებელიც): " +
+            "ჩარიცხული, განაწილებული და ნაშთი. „არ არის მოსწავლის გადახდად\" მონიშნული ჩარიცხვები არ ჩანს.",
+            [FinanceCategoryKey], NoParameters, _ => new UnallocatedBankTransactionsReportQuery())
     ];
 
     //გასაღები რეგისტრის მიუხედავად (Access-ში r34-ს რეპორტში "R34" ეწერა, ცხრილში "r34")

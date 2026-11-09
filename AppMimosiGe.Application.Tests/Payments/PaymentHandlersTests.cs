@@ -378,6 +378,24 @@ public sealed class PaymentHandlersTests
         VerifySaved(Times.Once());
     }
 
+    // D164: a bank transaction's allocation is changed on the bank transactions page only
+    [Fact]
+    public async Task UpdateAndDelete_PaymentOfABankTransaction_IsRefused()
+    {
+        // Arrange
+        WithExistingPayment(false).BankTransactionId = 7;
+
+        // Act
+        Result updated = await Update(Request());
+        Result deleted = await Delete();
+
+        // Assert
+        AssertError(updated, BankTransactionErrors.PaymentBelongsToBankTransaction);
+        AssertError(deleted, BankTransactionErrors.PaymentBelongsToBankTransaction);
+        _repository.Verify(r => r.Remove(It.IsAny<Payment>()), Times.Never);
+        VerifySaved(Times.Never());
+    }
+
     [Fact]
     public async Task Delete_MissingPayment_IsNotFound()
     {

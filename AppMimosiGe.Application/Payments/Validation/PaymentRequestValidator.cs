@@ -1,3 +1,4 @@
+using AppMimosiGe.Application.BankTransactions;
 using AppMimosiGeShared.Contracts.Errors;
 using AppMimosiGeShared.Contracts.V1.Requests;
 using FluentValidation;
@@ -16,7 +17,8 @@ public sealed class PaymentRequestValidator : AbstractValidator<PaymentRequest>
     //თანხის ათწილადები: Access-ის მონაცემებში 2-ზე მეტი არ არის
     public const int AmountDecimals = 2;
 
-    public PaymentRequestValidator(IPaymentsRepository repository)
+    //integratedAccount: ბანკთან ინტეგრირებული ანგარიში (D167); null, თუ ინტეგრაცია არ არის
+    public PaymentRequestValidator(IPaymentsRepository repository, IntegratedBankAccount? integratedAccount)
     {
         RuleFor(x => x.StudentContractId).MustAsync((id, ct) => repository.StudentContractExists(id, ct))
             .WithErrorCode(PaymentErrors.StudentContractNotFound.Code)
@@ -42,6 +44,15 @@ public sealed class PaymentRequestValidator : AbstractValidator<PaymentRequest>
         RuleFor(x => x.BankAccountId).MustAsync((id, ct) => repository.BankAccountExists(id!.Value, ct))
             .When(x => x.BankAccountId is not null).WithErrorCode(PaymentErrors.BankAccountNotFound.Code)
             .WithMessage(PaymentErrors.BankAccountNotFound.Description);
+
+        //ინტეგრირებული ანგარიშის გადახდები გადასვლის დღიდან მხოლოდ ბანკიდან შემოდის (D164, D167); მანამდელი
+        //(ისტორიული) გადახდები იცვლება როგორც ადრე
+        RuleFor(x => x.BankAccountId)
+            .Must((request, bankAccountId) => integratedAccount is null ||
+                                              bankAccountId != integratedAccount.BankAccountId ||
+                                              request.PayDate.Date < integratedAccount.StartDate.Date)
+            .WithErrorCode(BankTransactionErrors.ManualPaymentOnIntegratedAccount.Code)
+            .WithMessage(BankTransactionErrors.ManualPaymentOnIntegratedAccount.Description);
     }
 
     public static bool HasAllowedDecimals(decimal amount)
