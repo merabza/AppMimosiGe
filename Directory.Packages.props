@@ -13,9 +13,9 @@
     <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.14" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.14" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
-    <PackageVersion Include="MimosiGeCore.Application.Abstractions" Version="0.0.9809.42792" />
-    <PackageVersion Include="MimosiGeCore.Domain" Version="0.0.9809.42792" />
-    <PackageVersion Include="MimosiGeDbPart.Db" Version="1.0.9809.42809" />
+    <PackageVersion Include="MimosiGeCore.Application.Abstractions" Version="0.0.9810.225" />
+    <PackageVersion Include="MimosiGeCore.Domain" Version="0.0.9810.225" />
+    <PackageVersion Include="MimosiGeDbPart.Db" Version="1.0.9810.238" />
     <PackageVersion Include="Moq" Version="4.21.0" />
     <PackageVersion Include="Serilog" Version="4.4.0" />
     <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.35.0.4138" />
