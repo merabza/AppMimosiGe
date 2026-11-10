@@ -14,6 +14,6 @@ public sealed class CreatePaymentCommandValidator : AbstractValidator<CreatePaym
             .WithMessage(CrudApiErrors.UploadedInformationCouldNotBeDecrypted.Description);
 
         When(x => x.Request is not null,
-            () => RuleFor(x => x.Request!).SetValidator(new PaymentRequestValidator(repository, bankClient.Account)));
+            () => RuleFor(x => x.Request!).SetValidator(new PaymentRequestValidator(repository, bankClient)));
     }
 }

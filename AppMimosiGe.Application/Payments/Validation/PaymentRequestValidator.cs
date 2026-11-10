@@ -17,9 +17,12 @@ public sealed class PaymentRequestValidator : AbstractValidator<PaymentRequest>
     //თანხის ათწილადები: Access-ის მონაცემებში 2-ზე მეტი არ არის
     public const int AmountDecimals = 2;
 
-    //integratedAccount: ბანკთან ინტეგრირებული ანგარიში (D167); null, თუ ინტეგრაცია არ არის
-    public PaymentRequestValidator(IPaymentsRepository repository, IntegratedBankAccount? integratedAccount)
+    //bankClient.Account: ბანკთან ინტეგრირებული ანგარიში (D167); null, თუ ინტეგრაცია არ არის. AddFluentValidation ამ
+    //კლასსაც DI-ში არეგისტრირებს, ამიტომ კონსტრუქტორი მხოლოდ რეგისტრირებულ სერვისებს იღებს
+    public PaymentRequestValidator(IPaymentsRepository repository, IBankMovementsClient bankClient)
     {
+        IntegratedBankAccount? integratedAccount = bankClient.Account;
+
         RuleFor(x => x.StudentContractId).MustAsync((id, ct) => repository.StudentContractExists(id, ct))
             .WithErrorCode(PaymentErrors.StudentContractNotFound.Code)
             .WithMessage(PaymentErrors.StudentContractNotFound.Description);
