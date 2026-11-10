@@ -34,6 +34,7 @@ public sealed class BankTransactionHandlersTests
 
     private readonly Mock<IBalancesRepository> _balances = new();
     private readonly Mock<IBankMovementsClient> _bankClient = new();
+    private readonly List<IBankMovementsClient> _bankClients = [];
     private readonly List<int> _dirtyContracts = [];
     private readonly Mock<IPaymentsRepository> _payments = new();
     private readonly Mock<IBankTransactionsRepository> _repository = new();
@@ -44,6 +45,9 @@ public sealed class BankTransactionHandlersTests
     public BankTransactionHandlersTests()
     {
         _bankClient.Setup(c => c.Account).Returns(new IntegratedBankAccount(4, StartDate));
+        _bankClients.Add(_bankClient.Object);
+        _repository.Setup(r => r.GetBankNames(It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<int, string> { [1] = "საქართველოს ბანკი", [4] = "თიბისი" });
         _timeProvider.Setup(t => t.GetUtcNow()).Returns(new DateTimeOffset(Today.AddHours(9), TimeSpan.Zero));
         _timeProvider.Setup(t => t.LocalTimeZone).Returns(TimeZoneInfo.Utc);
         _repository.Setup(r => r.Add(It.IsAny<BankTransaction>())).Callback<BankTransaction>(_saved.Add);
@@ -98,9 +102,21 @@ public sealed class BankTransactionHandlersTests
     private Task<Result<ImportBankTransactionsResponse>> Import(DateTime? from = null, DateTime? to = null,
         bool dryRun = false)
     {
-        return new ImportBankTransactionsCommandHandler(_bankClient.Object, _repository.Object, _balances.Object,
+        return new ImportBankTransactionsCommandHandler(_bankClients, _repository.Object, _balances.Object,
                 _payments.Object, _timeProvider.Object, _unitOfWork.Object)
             .Handle(new ImportBankTransactionsCommand(from, to, dryRun), CancellationToken.None);
+    }
+
+    private static ImportBankAccountResponse Only(Result<ImportBankTransactionsResponse> result)
+    {
+        return Assert.Single(result.Value.Accounts);
+    }
+
+    private static ImportBankAccountResponse Tbc(DateTime from, DateTime to, int received, int alreadyImported,
+        int imported, int allocated, int unallocated, string? error = null)
+    {
+        return new ImportBankAccountResponse(4, "თიბისი", from, to, received, alreadyImported, imported, allocated,
+            unallocated, error);
     }
 
     [Fact]
@@ -111,7 +127,8 @@ public sealed class BankTransactionHandlersTests
 
         Result<ImportBankTransactionsResponse> result = await Import();
 
-        Assert.Equal(new ImportBankTransactionsResponse(StartDate, Today, 3, 1, 2, 1, 1, false), result.Value);
+        Assert.Equal(Tbc(StartDate, Today, 3, 1, 2, 1, 1), Only(result));
+        Assert.False(result.Value.DryRun);
         // by date, then the bank id
         Assert.Equal(["1", "2"], _saved.Select(t => t.MovementId));
         BankTransaction unallocated = _saved[0];
@@ -143,7 +160,7 @@ public sealed class BankTransactionHandlersTests
 
         Result<ImportBankTransactionsResponse> result = await Import();
 
-        Assert.Equal(StartDate.AddDays(expectedFromDay), result.Value.PeriodFrom);
+        Assert.Equal(StartDate.AddDays(expectedFromDay), Only(result).PeriodFrom);
         _bankClient.Verify(c => c.GetIncomingPayments(DateOnly.FromDateTime(StartDate.AddDays(expectedFromDay)),
             DateOnly.FromDateTime(Today), It.IsAny<CancellationToken>()));
         _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
@@ -156,7 +173,7 @@ public sealed class BankTransactionHandlersTests
 
         Result<ImportBankTransactionsResponse> result = await Import(StartDate.AddDays(-10), Today.AddDays(-2));
 
-        Assert.Equal((StartDate, Today.AddDays(-2)), (result.Value.PeriodFrom, result.Value.PeriodTo));
+        Assert.Equal((StartDate, Today.AddDays(-2)), (Only(result).PeriodFrom, Only(result).PeriodTo));
     }
 
     // a period wholly before the start date asks the bank nothing
@@ -165,8 +182,7 @@ public sealed class BankTransactionHandlersTests
     {
         Result<ImportBankTransactionsResponse> result = await Import(StartDate.AddDays(-10), StartDate.AddDays(-5));
 
-        Assert.Equal(new ImportBankTransactionsResponse(StartDate, StartDate.AddDays(-5), 0, 0, 0, 0, 0, false),
-            result.Value);
+        Assert.Equal(Tbc(StartDate, StartDate.AddDays(-5), 0, 0, 0, 0, 0), Only(result));
         _bankClient.Verify(c => c.GetIncomingPayments(It.IsAny<DateOnly>(), It.IsAny<DateOnly>(),
             It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -178,7 +194,8 @@ public sealed class BankTransactionHandlersTests
 
         Result<ImportBankTransactionsResponse> result = await Import(dryRun: true);
 
-        Assert.Equal(new ImportBankTransactionsResponse(StartDate, Today, 1, 0, 1, 1, 0, true), result.Value);
+        Assert.Equal(Tbc(StartDate, Today, 1, 0, 1, 1, 0), Only(result));
+        Assert.True(result.Value.DryRun);
         Assert.Empty(_saved);
         _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -191,7 +208,10 @@ public sealed class BankTransactionHandlersTests
         _bankClient.Setup(c => c.GetIncomingPayments(It.IsAny<DateOnly>(), It.IsAny<DateOnly>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Failure<IReadOnlyList<BankMovement>>(BankTransactionErrors.BankIsUnreachable));
-        Assert.Equal(BankTransactionErrors.BankIsUnreachable.Code, (await Import()).Error.Code);
+        // the bank's failure is the account's result, not the import's
+        Assert.Equal(Tbc(StartDate, Today, 0, 0, 0, 0, 0, BankTransactionErrors.BankIsUnreachable.Description),
+            Only(await Import()));
+        _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
 
         _bankClient.Setup(c => c.Account).Returns((IntegratedBankAccount?)null);
         Assert.Equal(BankTransactionErrors.BankIsNotConfigured.Code, (await Import()).Error.Code);
@@ -215,6 +235,64 @@ public sealed class BankTransactionHandlersTests
         Assert.True((await Import()).IsSuccess);
     }
 
+    private Mock<IBankMovementsClient> AddBogClient(Result<IReadOnlyList<BankMovement>> received)
+    {
+        Mock<IBankMovementsClient> bog = new();
+        bog.Setup(c => c.Account).Returns(new IntegratedBankAccount(1, StartDate.AddDays(2)));
+        bog.Setup(c => c.GetIncomingPayments(It.IsAny<DateOnly>(), It.IsAny<DateOnly>(),
+            It.IsAny<CancellationToken>())).ReturnsAsync(received);
+        _repository.Setup(r => r.GetExistingMovementIds(1, It.IsAny<IReadOnlyCollection<string>>(),
+            It.IsAny<CancellationToken>())).ReturnsAsync([]);
+        _bankClients.Add(bog.Object);
+        return bog;
+    }
+
+    // D173: every integrated account in turn, from its own start date; a failing bank stops no other, and a bank
+    // without an integrated account is not asked
+    [Fact]
+    public async Task Import_EveryIntegratedAccountInTurn_AFailureStopsNoOther()
+    {
+        Mock<IBankMovementsClient> notIntegrated = new();
+        _bankClients.Insert(0, notIntegrated.Object);
+        Mock<IBankMovementsClient> bog = AddBogClient(
+            Result.Failure<IReadOnlyList<BankMovement>>(BankTransactionErrors.BankRateLimitExceeded(42)));
+        BankReturns(Movement("2", 40m, "სწავლა", "01001000100"));
+
+        Result<ImportBankTransactionsResponse> result = await Import();
+
+        Assert.Equal([
+            Tbc(StartDate, Today, 1, 0, 1, 1, 0),
+            new ImportBankAccountResponse(1, "საქართველოს ბანკი", StartDate.AddDays(2), Today, 0, 0, 0, 0, 0,
+                BankTransactionErrors.BankRateLimitExceeded(42).Description)
+        ], result.Value.Accounts);
+        bog.Verify(c => c.GetIncomingPayments(DateOnly.FromDateTime(StartDate.AddDays(2)),
+            DateOnly.FromDateTime(Today), It.IsAny<CancellationToken>()));
+        notIntegrated.Verify(c => c.GetIncomingPayments(It.IsAny<DateOnly>(), It.IsAny<DateOnly>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+        _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    // each account is saved apart with its own account, and the next account's balances are read after that save
+    [Fact]
+    public async Task Import_SavesEachAccountApart()
+    {
+        List<string> calls = [];
+        _unitOfWork.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).Callback(() => calls.Add("save"))
+            .Returns(Task.CompletedTask);
+        _balances.Setup(b => b.GetPayments(It.IsAny<IReadOnlyCollection<int>?>(), It.IsAny<CancellationToken>()))
+            .Callback(() => calls.Add("payments")).ReturnsAsync([]);
+        AddBogClient(Result.Success<IReadOnlyList<BankMovement>>([Movement("b1", 10m, "ნინო ბერიძე")]));
+        BankReturns(Movement("t1", 10m, "გიორგი ბერიძე"));
+
+        Result<ImportBankTransactionsResponse> result = await Import();
+
+        Assert.Equal([4, 1], result.Value.Accounts.Select(a => a.BankAccountId));
+        Assert.Equal([("t1", 4, 12, 4), ("b1", 1, 11, 1)], _saved.Select(t => (t.MovementId, t.BankAccountId,
+            Assert.Single(t.Payments).StudentContractId, t.Payments.Single().BankAccountId)));
+        Assert.Equal(["payments", "save", "payments", "save"], calls);
+        _repository.Verify(r => r.GetLastTransactionDate(1, It.IsAny<CancellationToken>()));
+    }
+
     // no current academic year: nobody is found, every transaction stays unallocated
     [Fact]
     public async Task Import_WithoutAcademicYears_LeavesEverythingUnallocated()
@@ -224,7 +302,7 @@ public sealed class BankTransactionHandlersTests
 
         Result<ImportBankTransactionsResponse> result = await Import();
 
-        Assert.Equal((1, 0, 1), (result.Value.Imported, result.Value.Allocated, result.Value.Unallocated));
+        Assert.Equal((1, 0, 1), (Only(result).Imported, Only(result).Allocated, Only(result).Unallocated));
         _balances.Verify(b => b.GetCharges(It.IsAny<IReadOnlyCollection<int>?>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
@@ -431,7 +509,7 @@ public sealed class BankTransactionHandlersTests
     [Fact]
     public async Task GetOne_FoundOrNotFound()
     {
-        BankTransactionResponse response = new(7, Today, 10m, "GEL", null, null, null, null, null, null, null, 0,
+        BankTransactionResponse response = new(7, "თიბისი", Today, 10m, "GEL", null, null, null, null, null, null, null, 0,
             false, false, []);
         _repository.Setup(r => r.GetOne(7, It.IsAny<CancellationToken>())).ReturnsAsync(response);
         GetBankTransactionQueryHandler handler = new(_repository.Object);
@@ -459,7 +537,7 @@ public sealed class BankTransactionHandlersTests
     {
         _repository.Setup(r => r.GetRows(null, null, EBankTransactionsFilter.Unallocated,
             It.IsAny<CancellationToken>())).ReturnsAsync([
-            new BankTransactionRowResponse(1, Today, 10m, "p", "s", 0, false, false, 0m, false)
+            new BankTransactionRowResponse(1, "თიბისი", Today, 10m, "p", "s", 0, false, false, 0m, false)
         ]);
 
         Result<ReportTable> result = await new UnallocatedBankTransactionsReportQueryHandler(_repository.Object)

@@ -90,7 +90,7 @@ public sealed class BankTransactionsEndpointsTests
     [Fact]
     public async Task GetOne_OkOrNotFound()
     {
-        BankTransactionResponse response = new(7, Day, 10m, "GEL", null, null, null, null, null, null, null, 0, false,
+        BankTransactionResponse response = new(7, "თიბისი", Day, 10m, "GEL", null, null, null, null, null, null, null, 0, false,
             false, []);
         var handler = QueryHandler<GetBankTransactionQuery, BankTransactionResponse>(response);
 
@@ -108,7 +108,8 @@ public sealed class BankTransactionsEndpointsTests
     [Fact]
     public async Task Import_PassesThePeriodAndDryRun()
     {
-        ImportBankTransactionsResponse response = new(Day, Day, 1, 0, 1, 1, 0, true);
+        ImportBankTransactionsResponse response = new([new ImportBankAccountResponse(4, "თიბისი", Day, Day, 1, 0, 1, 1, 0,
+            null)], true);
         var handler = new Mock<ICommandHandler<ImportBankTransactionsCommand, ImportBankTransactionsResponse>>();
         handler.Setup(h => h.Handle(It.IsAny<ImportBankTransactionsCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(response);

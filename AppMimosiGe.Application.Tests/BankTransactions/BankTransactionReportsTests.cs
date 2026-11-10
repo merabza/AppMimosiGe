@@ -14,7 +14,7 @@ public sealed class BankTransactionReportsTests
     private static BankTransactionRowResponse Row(int id, int day, decimal amount, decimal allocated,
         bool ignored = false)
     {
-        return new BankTransactionRowResponse(id, Day.AddDays(day), amount, $"payer {id}", $"purpose {id}", 0, false,
+        return new BankTransactionRowResponse(id, $"bank {id}", Day.AddDays(day), amount, $"payer {id}", $"purpose {id}", 0, false,
             ignored, allocated, false);
     }
 
@@ -27,19 +27,19 @@ public sealed class BankTransactionReportsTests
             Row(2, 1, 20m, 0m)
         ]);
 
-        Assert.Equal(["transactionDate", "partnerName", "purpose", "amount", "allocated", "remainder"],
+        Assert.Equal(["transactionDate", "bankName", "partnerName", "purpose", "amount", "allocated", "remainder"],
             table.Columns.ConvertAll(c => c.Name));
-        Assert.Equal([ReportColumnTypes.Date, ReportColumnTypes.Text, ReportColumnTypes.Text,
+        Assert.Equal([ReportColumnTypes.Date, ReportColumnTypes.Text, ReportColumnTypes.Text, ReportColumnTypes.Text,
             ReportColumnTypes.Number, ReportColumnTypes.Number, ReportColumnTypes.Number
         ], table.Columns.ConvertAll(c => c.Type));
         List<List<object?>> expected =
         [
-            [Day.Date, "payer 3", "purpose 3", 50m, 0m, 50m],
-            [Day.Date.AddDays(1), "payer 2", "purpose 2", 20m, 0m, 20m],
-            [Day.Date.AddDays(1), "payer 5", "purpose 5", 100m, 40m, 60m]
+            [Day.Date, "bank 3", "payer 3", "purpose 3", 50m, 0m, 50m],
+            [Day.Date.AddDays(1), "bank 2", "payer 2", "purpose 2", 20m, 0m, 20m],
+            [Day.Date.AddDays(1), "bank 5", "payer 5", "purpose 5", 100m, 40m, 60m]
         ];
         Assert.Equal(expected, Assert.Single(table.Sections).Rows);
-        List<List<object?>> footers = [[ReportFooters.TotalCaption, 3, null, 170m, 40m, 130m]];
+        List<List<object?>> footers = [[ReportFooters.TotalCaption, 3, null, null, 170m, 40m, 130m]];
         Assert.Equal(footers, table.FooterRows);
     }
 }

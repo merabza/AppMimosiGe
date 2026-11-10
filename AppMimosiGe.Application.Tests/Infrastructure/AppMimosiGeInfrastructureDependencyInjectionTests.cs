@@ -1,5 +1,6 @@
 using AppMimosiGe.Application.AcademicYears;
 using System;
+using System.Linq;
 using AppMimosiGe.Application.Balances;
 using AppMimosiGe.Application.BankTransactions;
 using AppMimosiGe.Application.CrmCalls;
@@ -13,6 +14,7 @@ using AppMimosiGe.Application.Salary;
 using AppMimosiGe.Application.StudentContracts;
 using AppMimosiGe.Application.TeacherContracts;
 using AppMimosiGe.Application.WorkHours;
+using AppMimosiGe.Infrastructure.BankTransactions.BogBonline;
 using AppMimosiGe.Infrastructure.BankTransactions.TbcBis;
 using AppMimosiGe.Infrastructure.DependencyInjection;
 using AppMimosiGe.Infrastructure.Reports;
@@ -134,28 +136,31 @@ public sealed class AppMimosiGeInfrastructureDependencyInjectionTests
         Assert.Equal(ServiceLifetime.Scoped, descriptor.Lifetime);
     }
 
-    // one TBC client for the process (it keeps the token), built from the host's settings
+    // one client per bank for the process (each keeps its token), TBC first, built from the host's settings
     [Fact]
-    public void AddAppMimosiGeInfrastructure_RegistersTheTbcClientAsSingleton()
+    public void AddAppMimosiGeInfrastructure_RegistersTheBankClientsAsSingletons()
     {
         var services = new ServiceCollection();
         services.AddSingleton(TimeProvider.System);
-        DateTime startDate = new(2026, 11, 1, 0, 0, 0, DateTimeKind.Unspecified);
+        DateTime tbcStart = new(2026, 11, 1, 0, 0, 0, DateTimeKind.Unspecified);
+        DateTime bogStart = new(2026, 11, 10, 0, 0, 0, DateTimeKind.Unspecified);
 
-        services.AddAppMimosiGeInfrastructure(null, new TbcBisSettings { BankAccountId = 4, StartDate = startDate });
+        services.AddAppMimosiGeInfrastructure(null, new TbcBisSettings { BankAccountId = 4, StartDate = tbcStart },
+            new BogBonlineSettings { BankAccountId = 1, StartDate = bogStart });
 
-        Assert.Equal(ServiceLifetime.Singleton,
-            Assert.Single(services, s => s.ServiceType == typeof(IBankMovementsClient)).Lifetime);
+        Assert.All(services.Where(s => s.ServiceType == typeof(IBankMovementsClient)),
+            s => Assert.Equal(ServiceLifetime.Singleton, s.Lifetime));
         using ServiceProvider provider = services.BuildServiceProvider();
-        IBankMovementsClient client = provider.GetRequiredService<IBankMovementsClient>();
-        Assert.IsType<TbcBisClient>(client);
-        Assert.Same(client, provider.GetRequiredService<IBankMovementsClient>());
-        Assert.Equal(new IntegratedBankAccount(4, startDate), client.Account);
+        IBankMovementsClient[] clients = [.. provider.GetServices<IBankMovementsClient>()];
+        Assert.Equal([typeof(TbcBisClient), typeof(BogBonlineClient)], clients.Select(c => c.GetType()));
+        Assert.Equal(clients, provider.GetServices<IBankMovementsClient>());
+        Assert.Equal([new IntegratedBankAccount(4, tbcStart), new IntegratedBankAccount(1, bogStart)],
+            clients.Select(c => c.Account));
     }
 
-    // without the host's settings the client is there, but not configured
+    // without the host's settings the clients are there, but not configured
     [Fact]
-    public void AddAppMimosiGeInfrastructure_WithoutTbcSettings_HasNoIntegratedAccount()
+    public void AddAppMimosiGeInfrastructure_WithoutBankSettings_HasNoIntegratedAccount()
     {
         var services = new ServiceCollection();
         services.AddSingleton(TimeProvider.System);
@@ -163,7 +168,7 @@ public sealed class AppMimosiGeInfrastructureDependencyInjectionTests
         services.AddAppMimosiGeInfrastructure(null);
 
         using ServiceProvider provider = services.BuildServiceProvider();
-        Assert.Null(provider.GetRequiredService<IBankMovementsClient>().Account);
+        Assert.Equal([null, null], provider.GetServices<IBankMovementsClient>().Select(c => c.Account));
     }
 
     [Fact]

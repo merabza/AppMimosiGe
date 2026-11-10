@@ -12,7 +12,7 @@ public static class BankTransactionReports
 {
     //r40UnallocatedBankTransactions: ჩარიცხვები, რომელთა განაწილებული ჯამი ჩარიცხულზე ნაკლებია (სულ გაუნაწილებელიც),
     //„არ არის მოსწავლის გადახდის“ გარდა; ნაშთი = ჩარიცხული − განაწილებული. რიგი: თარიღი (ძველი პირველი), ID. ბოლოს
-    //ჩარიცხვების რაოდენობა და თანხების ჯამები
+    //ჩარიცხვების რაოდენობა და თანხების ჯამები. ბანკი: რომელ ინტეგრირებულ ანგარიშზე შემოვიდა (D173)
     public static ReportTable Unallocated(IEnumerable<BankTransactionRowResponse> rows)
     {
         List<BankTransactionRowResponse> ordered =
@@ -23,6 +23,7 @@ public static class BankTransactionReports
         List<ReportColumnResponse> columns =
         [
             new("transactionDate", "თარიღი", ReportColumnTypes.Date),
+            new("bankName", "ბანკი", ReportColumnTypes.Text),
             new("partnerName", "გადამხდელი", ReportColumnTypes.Text),
             new("purpose", "დანიშნულება", ReportColumnTypes.Text),
             new("amount", "ჩარიცხული", ReportColumnTypes.Number),
@@ -33,13 +34,13 @@ public static class BankTransactionReports
         [
             .. ordered.Select(r => new List<object?>
             {
-                r.TransactionDate.Date, r.PartnerName, r.Purpose, r.Amount, r.AllocatedAmount,
+                r.TransactionDate.Date, r.BankName, r.PartnerName, r.Purpose, r.Amount, r.AllocatedAmount,
                 r.Amount - r.AllocatedAmount
             })
         ];
         List<object?> footer =
         [
-            ReportFooters.TotalCaption, ordered.Count, null, ordered.Sum(r => r.Amount),
+            ReportFooters.TotalCaption, ordered.Count, null, null, ordered.Sum(r => r.Amount),
             ordered.Sum(r => r.AllocatedAmount), ordered.Sum(r => r.Amount - r.AllocatedAmount)
         ];
         return ReportTable.Flat(columns, tableRows, [footer]);

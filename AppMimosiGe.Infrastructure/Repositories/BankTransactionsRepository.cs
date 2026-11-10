@@ -19,6 +19,13 @@ public sealed class BankTransactionsRepository(IMimosiGeDbContext context) : IBa
         return context.AcademicYears.AsNoTracking().ToListAsync(cancellationToken);
     }
 
+    public Task<Dictionary<int, string>> GetBankNames(IReadOnlyCollection<int> bankAccountIds,
+        CancellationToken cancellationToken = default)
+    {
+        return context.BankAccounts.AsNoTracking().Where(x => bankAccountIds.Contains(x.BaId))
+            .ToDictionaryAsync(x => x.BaId, x => x.BankName, cancellationToken);
+    }
+
     public Task<DateTime?> GetLastTransactionDate(int bankAccountId, CancellationToken cancellationToken = default)
     {
         return context.BankTransactions.AsNoTracking().Where(x => x.BankAccountId == bankAccountId)
@@ -83,7 +90,7 @@ public sealed class BankTransactionsRepository(IMimosiGeDbContext context) : IBa
         };
 
         return query.OrderByDescending(x => x.TransactionDate).ThenByDescending(x => x.Id)
-            .Select(x => new BankTransactionRowResponse(x.Id, x.TransactionDate, x.Amount, x.PartnerName, x.Purpose,
+            .Select(x => new BankTransactionRowResponse(x.Id, x.BankAccount.BankName, x.TransactionDate, x.Amount, x.PartnerName, x.Purpose,
                 x.MatchStep, x.AllocatedManually, x.Ignored, x.Payments.Sum(p => p.Amount),
                 x.Payments.Any(p => p.Checked))).ToListAsync(cancellationToken);
     }
@@ -95,6 +102,7 @@ public sealed class BankTransactionsRepository(IMimosiGeDbContext context) : IBa
             .Select(x => new
             {
                 x.Id,
+                x.BankAccount.BankName,
                 x.TransactionDate,
                 x.Amount,
                 x.Currency,
@@ -121,7 +129,8 @@ public sealed class BankTransactionsRepository(IMimosiGeDbContext context) : IBa
                 p.StudentContract.ContractNumber, p.StudentContract.AcademicYearId, p.Amount, p.Checked))
             .ToListAsync(cancellationToken);
 
-        return new BankTransactionResponse(bankTransaction.Id, bankTransaction.TransactionDate,
+        return new BankTransactionResponse(bankTransaction.Id, bankTransaction.BankName,
+            bankTransaction.TransactionDate,
             bankTransaction.Amount, bankTransaction.Currency, bankTransaction.Purpose,
             bankTransaction.AdditionalInformation, bankTransaction.AdditionalDescription,
             bankTransaction.DocumentNumber, bankTransaction.PartnerName, bankTransaction.PartnerAccountIban,

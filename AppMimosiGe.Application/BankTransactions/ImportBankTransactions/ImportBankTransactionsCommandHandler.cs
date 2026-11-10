@@ -20,12 +20,13 @@ namespace AppMimosiGe.Application.BankTransactions.ImportBankTransactions;
 /// <summary>
 ///     ბანკიდან ახალი ჩარიცხვების მიღება და ავტომატური განაწილება (D161, D164): ჩარიცხვა ინახება ბანკის
 ///     იდენტიფიკატორით (უკვე შენახული გამოტოვდება), ნაპოვნ მოსწავლეებზე კი მაშინვე იქმნება დაუდასტურებელი გადახდები
-///     მიმდინარე წლის კონტრაქტზე. გადასვლის დღემდე (StartDate) არაფერი მოდის. ყველაფერი ერთი SaveChanges-ით ინახება;
-///     ერთდროულად მხოლოდ ერთი მიღება მუშაობს
+///     მიმდინარე წლის კონტრაქტზე. გადასვლის დღემდე (StartDate) არაფერი მოდის. ყველა ინტეგრირებული ანგარიში რიგრიგობით
+///     (D173): თითო ანგარიში ერთი SaveChanges-ით ინახება, შემდეგი ანგარიშის ბალანსები მის გადახდებს უკვე ხედავს, და ერთი
+///     ანგარიშის შეცდომა (მაგ. ბანკის ლიმიტი) სხვებს არ აჩერებს. ერთდროულად მხოლოდ ერთი მიღება მუშაობს
 /// </summary>
 // ReSharper disable once ClassNeverInstantiated.Global
 public sealed class ImportBankTransactionsCommandHandler(
-    IBankMovementsClient bankClient,
+    IEnumerable<IBankMovementsClient> bankClients,
     IBankTransactionsRepository repository,
     IBalancesRepository balancesRepository,
     IPaymentsRepository paymentsRepository,
@@ -42,8 +43,12 @@ public sealed class ImportBankTransactionsCommandHandler(
     public async Task<Result<ImportBankTransactionsResponse>> Handle(ImportBankTransactionsCommand command,
         CancellationToken cancellationToken)
     {
-        IntegratedBankAccount? account = bankClient.Account;
-        if (account is null)
+        List<(IBankMovementsClient Client, IntegratedBankAccount Account)> accounts =
+        [
+            .. bankClients.Select(client => (Client: client, client.Account)).Where(x => x.Account is not null)
+                .Select(x => (x.Client, x.Account!))
+        ];
+        if (accounts.Count == 0)
         {
             return BankTransactionErrors.BankIsNotConfigured;
         }
@@ -60,7 +65,16 @@ public sealed class ImportBankTransactionsCommandHandler(
 
         try
         {
-            return await Import(command, account, cancellationToken);
+            Dictionary<int, string> bankNames =
+                await repository.GetBankNames([.. accounts.Select(x => x.Account.BankAccountId)], cancellationToken);
+            List<ImportBankAccountResponse> results = [];
+            foreach ((IBankMovementsClient client, IntegratedBankAccount account) in accounts)
+            {
+                results.Add(await Import(command, client, account,
+                    bankNames.GetValueOrDefault(account.BankAccountId, string.Empty), cancellationToken));
+            }
+
+            return new ImportBankTransactionsResponse(results, command.DryRun);
         }
         finally
         {
@@ -68,8 +82,9 @@ public sealed class ImportBankTransactionsCommandHandler(
         }
     }
 
-    private async Task<Result<ImportBankTransactionsResponse>> Import(ImportBankTransactionsCommand command,
-        IntegratedBankAccount account, CancellationToken cancellationToken)
+    private async Task<ImportBankAccountResponse> Import(ImportBankTransactionsCommand command,
+        IBankMovementsClient bankClient, IntegratedBankAccount account, string bankName,
+        CancellationToken cancellationToken)
     {
         DateTime today = timeProvider.GetLocalNow().Date;
         DateTime startDate = account.StartDate.Date;
@@ -84,14 +99,16 @@ public sealed class ImportBankTransactionsCommandHandler(
 
         if (periodFrom > periodTo)
         {
-            return new ImportBankTransactionsResponse(periodFrom, periodTo, 0, 0, 0, 0, 0, command.DryRun);
+            return new ImportBankAccountResponse(account.BankAccountId, bankName, periodFrom, periodTo, 0, 0, 0, 0,
+                0, null);
         }
 
         Result<IReadOnlyList<BankMovement>> received = await bankClient.GetIncomingPayments(
             DateOnly.FromDateTime(periodFrom), DateOnly.FromDateTime(periodTo), cancellationToken);
         if (received.IsFailure)
         {
-            return Result.Failure<ImportBankTransactionsResponse>(received.Error);
+            return new ImportBankAccountResponse(account.BankAccountId, bankName, periodFrom, periodTo, 0, 0, 0, 0,
+                0, received.Error.Description);
         }
 
         IReadOnlyList<BankMovement> movements = received.Value;
@@ -115,8 +132,8 @@ public sealed class ImportBankTransactionsCommandHandler(
         }
 
         int allocated = plan.Count(p => p.Shares.Count > 0);
-        return new ImportBankTransactionsResponse(periodFrom, periodTo, movements.Count,
-            movements.Count - newMovements.Count, plan.Count, allocated, plan.Count - allocated, command.DryRun);
+        return new ImportBankAccountResponse(account.BankAccountId, bankName, periodFrom, periodTo, movements.Count,
+            movements.Count - newMovements.Count, plan.Count, allocated, plan.Count - allocated, null);
     }
 
     private async Task<ImportPlanInput> LoadPlanInput(DateTime today, CancellationToken cancellationToken)

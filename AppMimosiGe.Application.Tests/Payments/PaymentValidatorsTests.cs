@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -22,10 +23,12 @@ public sealed class PaymentValidatorsTests
     private static readonly DateTime PayDate = new(2026, 9, 15, 0, 0, 0, DateTimeKind.Unspecified);
 
     private readonly Mock<IBankMovementsClient> _bankClient = new();
+    private readonly List<IBankMovementsClient> _bankClients = [];
     private readonly Mock<IPaymentsRepository> _repository = new();
 
     public PaymentValidatorsTests()
     {
+        _bankClients.Add(_bankClient.Object);
         _repository.Setup(r => r.StudentContractExists(10, It.IsAny<CancellationToken>())).ReturnsAsync(true);
         _repository.Setup(r => r.BankAccountExists(It.IsInRange(1, 9, Range.Inclusive), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
@@ -47,7 +50,7 @@ public sealed class PaymentValidatorsTests
     private async Task<string[]> CreateErrorCodes(PaymentRequest? request)
     {
         ValidationResult result =
-            await new CreatePaymentCommandValidator(_repository.Object, _bankClient.Object).ValidateAsync(
+            await new CreatePaymentCommandValidator(_repository.Object, _bankClients).ValidateAsync(
                 new CreatePaymentCommand(request));
         return [.. result.Errors.Select(e => e.ErrorCode)];
     }
@@ -55,7 +58,7 @@ public sealed class PaymentValidatorsTests
     private async Task<string[]> UpdateErrorCodes(PaymentRequest? request)
     {
         ValidationResult result =
-            await new UpdatePaymentCommandValidator(_repository.Object, _bankClient.Object).ValidateAsync(
+            await new UpdatePaymentCommandValidator(_repository.Object, _bankClients).ValidateAsync(
                 new UpdatePaymentCommand(5, request));
         return [.. result.Errors.Select(e => e.ErrorCode)];
     }
@@ -75,6 +78,23 @@ public sealed class PaymentValidatorsTests
         Assert.Empty(await CreateErrorCodes(Request(bankAccountId: 5)));
         _bankClient.Setup(c => c.Account).Returns((IntegratedBankAccount?)null);
         Assert.Empty(await CreateErrorCodes(Request(bankAccountId: 4)));
+    }
+
+    // D167 holds for every integrated account, each from its own start date
+    [Fact]
+    public async Task EveryIntegratedAccount_IsNotEnteredByHandFromItsStartDate()
+    {
+        _bankClient.Setup(c => c.Account).Returns(new IntegratedBankAccount(4, PayDate.AddDays(5)));
+        Mock<IBankMovementsClient> bog = new();
+        bog.Setup(c => c.Account).Returns(new IntegratedBankAccount(1, PayDate));
+        _bankClients.Add(bog.Object);
+
+        Assert.Equal([BankTransactionErrors.ManualPaymentOnIntegratedAccount.Code],
+            await CreateErrorCodes(Request(bankAccountId: 1)));
+        Assert.Empty(await CreateErrorCodes(Request(bankAccountId: 4)));
+        Assert.Equal([BankTransactionErrors.ManualPaymentOnIntegratedAccount.Code],
+            await CreateErrorCodes(Request(payDate: PayDate.AddDays(5), bankAccountId: 4)));
+        Assert.Empty(await CreateErrorCodes(Request(payDate: PayDate.AddDays(-1), bankAccountId: 1)));
     }
 
     [Fact]

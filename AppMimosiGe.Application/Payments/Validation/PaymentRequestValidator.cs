@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using AppMimosiGe.Application.BankTransactions;
 using AppMimosiGeShared.Contracts.Errors;
 using AppMimosiGeShared.Contracts.V1.Requests;
@@ -17,11 +19,11 @@ public sealed class PaymentRequestValidator : AbstractValidator<PaymentRequest>
     //თანხის ათწილადები: Access-ის მონაცემებში 2-ზე მეტი არ არის
     public const int AmountDecimals = 2;
 
-    //bankClient.Account: ბანკთან ინტეგრირებული ანგარიში (D167); null, თუ ინტეგრაცია არ არის. AddFluentValidation ამ
-    //კლასსაც DI-ში არეგისტრირებს, ამიტომ კონსტრუქტორი მხოლოდ რეგისტრირებულ სერვისებს იღებს
-    public PaymentRequestValidator(IPaymentsRepository repository, IBankMovementsClient bankClient)
+    //bankClients: ბანკების კლიენტები, მათი Account ბანკთან ინტეგრირებული ანგარიშია (D167; null, თუ ინტეგრაცია არ არის).
+    //AddFluentValidation ამ კლასსაც DI-ში არეგისტრირებს, ამიტომ კონსტრუქტორი მხოლოდ რეგისტრირებულ სერვისებს იღებს
+    public PaymentRequestValidator(IPaymentsRepository repository, IEnumerable<IBankMovementsClient> bankClients)
     {
-        IntegratedBankAccount? integratedAccount = bankClient.Account;
+        List<IntegratedBankAccount> integratedAccounts = [.. bankClients.Select(c => c.Account).OfType<IntegratedBankAccount>()];
 
         RuleFor(x => x.StudentContractId).MustAsync((id, ct) => repository.StudentContractExists(id, ct))
             .WithErrorCode(PaymentErrors.StudentContractNotFound.Code)
@@ -51,9 +53,8 @@ public sealed class PaymentRequestValidator : AbstractValidator<PaymentRequest>
         //ინტეგრირებული ანგარიშის გადახდები გადასვლის დღიდან მხოლოდ ბანკიდან შემოდის (D164, D167); მანამდელი
         //(ისტორიული) გადახდები იცვლება როგორც ადრე
         RuleFor(x => x.BankAccountId)
-            .Must((request, bankAccountId) => integratedAccount is null ||
-                                              bankAccountId != integratedAccount.BankAccountId ||
-                                              request.PayDate.Date < integratedAccount.StartDate.Date)
+            .Must((request, bankAccountId) => !integratedAccounts.Exists(account =>
+                account.BankAccountId == bankAccountId && request.PayDate.Date >= account.StartDate.Date))
             .WithErrorCode(BankTransactionErrors.ManualPaymentOnIntegratedAccount.Code)
             .WithMessage(BankTransactionErrors.ManualPaymentOnIntegratedAccount.Description);
     }

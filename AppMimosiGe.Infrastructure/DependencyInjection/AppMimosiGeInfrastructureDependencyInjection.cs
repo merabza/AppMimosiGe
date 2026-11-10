@@ -14,6 +14,7 @@ using AppMimosiGe.Application.Salary;
 using AppMimosiGe.Application.StudentContracts;
 using AppMimosiGe.Application.TeacherContracts;
 using AppMimosiGe.Application.WorkHours;
+using AppMimosiGe.Infrastructure.BankTransactions.BogBonline;
 using AppMimosiGe.Infrastructure.BankTransactions.TbcBis;
 using AppMimosiGe.Infrastructure.Reports;
 using AppMimosiGe.Infrastructure.Repositories;
@@ -26,9 +27,10 @@ namespace AppMimosiGe.Infrastructure.DependencyInjection;
 // ReSharper disable once UnusedType.Global
 public static class AppMimosiGeInfrastructureDependencyInjection
 {
-    //tbcBisSettings: კონფიგურაციის სექცია "TbcBis" (ჰოსტი კითხულობს); null: ინტეგრაცია არ არის კონფიგურირებული
+    //tbcBisSettings, bogBonlineSettings: კონფიგურაციის სექციები "TbcBis" და "BogBonline" (ჰოსტი კითხულობს); null:
+    //ამ ბანკთან ინტეგრაცია არ არის კონფიგურირებული
     public static IServiceCollection AddAppMimosiGeInfrastructure(this IServiceCollection services,
-        ILogger? debugLogger, TbcBisSettings? tbcBisSettings = null)
+        ILogger? debugLogger, TbcBisSettings? tbcBisSettings = null, BogBonlineSettings? bogBonlineSettings = null)
     {
         debugLogger?.Information("{MethodName} Started", nameof(AddAppMimosiGeInfrastructure));
 
@@ -48,13 +50,20 @@ public static class AppMimosiGeInfrastructureDependencyInjection
         services.AddScoped<IUserClaimRights, UserClaimRights>();
         services.AddScoped<IBankTransactionsRepository, BankTransactionsRepository>();
 
-        //ერთი კლიენტი მთელი პროცესისთვის: ტოკენი ინახება და გამოიყენება, სანამ ვადა არ გასდის
-        TbcBisSettings settings = tbcBisSettings ?? new TbcBisSettings();
+        //თითო ბანკს ერთი კლიენტი მთელი პროცესისთვის: ტოკენი ინახება და გამოიყენება, სანამ ვადა არ გასდის. ორივე
+        //IBankMovementsClient-ია (IEnumerable): ინტეგრირებულია ის, ვისაც ანგარიში და გადასვლის დღე აქვს (D173)
+        TbcBisSettings tbcSettings = tbcBisSettings ?? new TbcBisSettings();
         services.AddSingleton<IBankMovementsClient>(sp => new TbcBisClient(
             new HttpClient(new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(15) })
             {
                 Timeout = TimeSpan.FromSeconds(60)
-            }, settings, sp.GetRequiredService<TimeProvider>()));
+            }, tbcSettings, sp.GetRequiredService<TimeProvider>()));
+        BogBonlineSettings bogSettings = bogBonlineSettings ?? new BogBonlineSettings();
+        services.AddSingleton<IBankMovementsClient>(sp => new BogBonlineClient(
+            new HttpClient(new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(15) })
+            {
+                Timeout = TimeSpan.FromSeconds(60)
+            }, bogSettings, sp.GetRequiredService<TimeProvider>()));
 
         debugLogger?.Information("{MethodName} Finished", nameof(AddAppMimosiGeInfrastructure));
 

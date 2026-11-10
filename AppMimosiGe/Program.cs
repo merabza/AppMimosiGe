@@ -1,5 +1,6 @@
 using System;
 using System.Reflection;
+using AppMimosiGe.Infrastructure.BankTransactions.BogBonline;
 using AppMimosiGe.Infrastructure.BankTransactions.TbcBis;
 using AppMimosiGe.Infrastructure.DependencyInjection;
 using AppMimosiGe.Infrastructure.Time;
@@ -68,7 +69,8 @@ try
         //.AddCarcassDom(debugMode)
         .AddAppMimosiGeRepositories(debugLogger)
         .AddAppMimosiGeInfrastructure(debugLogger,
-            builder.Configuration.GetSection(TbcBisSettings.SectionName).Get<TbcBisSettings>())
+            builder.Configuration.GetSection(TbcBisSettings.SectionName).Get<TbcBisSettings>(),
+            builder.Configuration.GetSection(BogBonlineSettings.SectionName).Get<BogBonlineSettings>())
         .AddMimosiGeDb(debugLogger, builder.Configuration);
     // @formatter:on
 

@@ -16,6 +16,10 @@ public interface IBankTransactionsRepository
 {
     Task<List<AcademicYear>> GetAcademicYears(CancellationToken cancellationToken = default);
 
+    //ანგარიშების ბანკის სახელები (BankAccounts.BankName) ID-ით
+    Task<Dictionary<int, string>> GetBankNames(IReadOnlyCollection<int> bankAccountIds,
+        CancellationToken cancellationToken = default);
+
     //ანგარიშის ბოლო ჩარიცხვის თარიღი; null, თუ ჩარიცხვა ჯერ არ არის
     Task<DateTime?> GetLastTransactionDate(int bankAccountId, CancellationToken cancellationToken = default);
 
