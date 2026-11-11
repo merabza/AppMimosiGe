@@ -4,31 +4,31 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="BackendCarcass.Api" Version="1.0.9811.36586" />
-    <PackageVersion Include="BackendCarcass.Application" Version="1.0.9811.36586" />
+    <PackageVersion Include="BackendCarcass.Api" Version="1.0.9811.42574" />
+    <PackageVersion Include="BackendCarcass.Application" Version="1.0.9811.42574" />
     <PackageVersion Include="DocumentFormat.OpenXml" Version="3.5.1" />
     <PackageVersion Include="Figgle.Fonts" Version="0.6.6" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="11.0.0" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="11.0.0" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="11.0.0" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
-    <PackageVersion Include="MimosiGeCore.Application.Abstractions" Version="0.0.9811.36670" />
-    <PackageVersion Include="MimosiGeCore.Domain" Version="0.0.9811.36670" />
-    <PackageVersion Include="MimosiGeDbPart.Db" Version="1.0.9811.36685" />
+    <PackageVersion Include="MimosiGeCore.Application.Abstractions" Version="0.0.9811.42677" />
+    <PackageVersion Include="MimosiGeCore.Domain" Version="0.0.9811.42677" />
+    <PackageVersion Include="MimosiGeDbPart.Db" Version="1.0.9811.42692" />
     <PackageVersion Include="Moq" Version="4.21.0" />
     <PackageVersion Include="Serilog" Version="4.4.0" />
     <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.35.0.4138" />
-    <PackageVersion Include="SystemTools.Application.Abstractions" Version="1.0.9808.33287" />
-    <PackageVersion Include="SystemTools.Domain.Abstractions" Version="1.0.9808.33287" />
-    <PackageVersion Include="WebSystemTools.CorsTools" Version="1.0.9808.42799" />
-    <PackageVersion Include="WebSystemTools.MediatorTools" Version="1.0.9808.42799" />
-    <PackageVersion Include="WebSystemTools.SerilogLogger" Version="1.0.9808.42799" />
-    <PackageVersion Include="WebSystemTools.StaticFilesTools" Version="1.0.9808.42799" />
-    <PackageVersion Include="WebSystemTools.SwaggerTools" Version="1.0.9808.42799" />
-    <PackageVersion Include="WebSystemTools.TestToolsApi" Version="1.0.9808.42799" />
-    <PackageVersion Include="WebSystemTools.ValidationTools" Version="1.0.9808.42799" />
-    <PackageVersion Include="WebSystemTools.WebApi.Abstractions" Version="1.0.9808.42799" />
-    <PackageVersion Include="WebSystemTools.WindowsServiceTools" Version="1.0.9808.42799" />
+    <PackageVersion Include="SystemTools.Application.Abstractions" Version="1.0.9811.42356" />
+    <PackageVersion Include="SystemTools.Domain.Abstractions" Version="1.0.9811.42356" />
+    <PackageVersion Include="WebSystemTools.CorsTools" Version="1.0.9811.42557" />
+    <PackageVersion Include="WebSystemTools.MediatorTools" Version="1.0.9811.42557" />
+    <PackageVersion Include="WebSystemTools.SerilogLogger" Version="1.0.9811.42557" />
+    <PackageVersion Include="WebSystemTools.StaticFilesTools" Version="1.0.9811.42557" />
+    <PackageVersion Include="WebSystemTools.SwaggerTools" Version="1.0.9811.42557" />
+    <PackageVersion Include="WebSystemTools.TestToolsApi" Version="1.0.9811.42557" />
+    <PackageVersion Include="WebSystemTools.ValidationTools" Version="1.0.9811.42557" />
+    <PackageVersion Include="WebSystemTools.WebApi.Abstractions" Version="1.0.9811.42557" />
+    <PackageVersion Include="WebSystemTools.WindowsServiceTools" Version="1.0.9811.42557" />
     <PackageVersion Include="xunit" Version="2.9.3" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.1" />
   </ItemGroup>
