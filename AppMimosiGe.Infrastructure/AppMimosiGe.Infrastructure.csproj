@@ -2,7 +2,6 @@
     <ItemGroup>
         <PackageReference Include="BackendCarcass.Application" />
         <PackageReference Include="DocumentFormat.OpenXml" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
         <PackageReference Include="MimosiGeCore.Application.Abstractions" />
         <PackageReference Include="Serilog" />
     </ItemGroup>
