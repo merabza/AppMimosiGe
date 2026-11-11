@@ -2,7 +2,6 @@
     <ItemGroup>
       <PackageReference Include="BackendCarcass.Api" />
       <PackageReference Include="BackendCarcass.Application" />
-      <PackageReference Include="BackendCarcass.Database" />
       <PackageReference Include="Figgle.Fonts" />
       <PackageReference Include="MimosiGeDbPart.Db" />
       <PackageReference Include="WebSystemTools.CorsTools" />
