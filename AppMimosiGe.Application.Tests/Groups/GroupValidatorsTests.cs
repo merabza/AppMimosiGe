@@ -38,12 +38,12 @@ public sealed class GroupValidatorsTests
 
     private CreateGroupCommandValidator CreateValidator()
     {
-        return new CreateGroupCommandValidator(_repository.Object, _studentContracts.Object, _teacherContracts.Object);
+        return [with(_repository.Object, _studentContracts.Object, _teacherContracts.Object)];
     }
 
     private UpdateGroupCommandValidator UpdateValidator()
     {
-        return new UpdateGroupCommandValidator(_repository.Object, _studentContracts.Object, _teacherContracts.Object);
+        return [with(_repository.Object, _studentContracts.Object, _teacherContracts.Object)];
     }
 
     [Fact]
