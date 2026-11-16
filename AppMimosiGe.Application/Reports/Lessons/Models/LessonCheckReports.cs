@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using AppMimosiGe.Application.Lessons.Models;
 using AppMimosiGe.Application.Reports.Models;
 using AppMimosiGeShared.Contracts.V1.Responses;
 
@@ -29,7 +30,7 @@ public static class LessonCheckReports
     public static ReportTable LessonsWithWrongVoidStatus(IEnumerable<PeriodLessonRow> lessons)
     {
         return LessonsList(lessons.Where(l =>
-            l.LessonStatusId != ReportLessonStatuses.NotCancelled && (l.HasPresentStudent || l.HasRecoverDate)));
+            LessonVoidStatusRule.IsBroken(l.LessonStatusId, l.HasPresentStudent, l.HasRecoverDate)));
     }
 
     //r13LessonsWithErrors (vR13LessonsWithErrors): გენერატორის ლოგის ჩანაწერები, რომლებსაც ამავე ჯგუფის გაკვეთილი

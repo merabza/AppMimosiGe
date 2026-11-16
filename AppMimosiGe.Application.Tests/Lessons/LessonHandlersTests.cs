@@ -110,12 +110,13 @@ public sealed class LessonHandlersTests
     {
         // Arrange
         Lesson lesson = WithExistingLesson();
+        lesson.LessonStatusId = 3;
         DateTime recoverDate = new(2026, 10, 5, 0, 0, 0, DateTimeKind.Unspecified);
 
         // Act
         Result result = await Update(new LessonRequest
         {
-            LessonStatusId = 3,
+            LessonStatusId = 1,
             SubstituteTeacherContractId = 5,
             TeacherLateMinutes = 12,
             RecoverDate = recoverDate.AddHours(10),
@@ -124,7 +125,7 @@ public sealed class LessonHandlersTests
 
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.Equal(3, lesson.LessonStatusId);
+        Assert.Equal(1, lesson.LessonStatusId);
         Assert.Equal(5, lesson.SubstituteTeacherContractId);
         Assert.Equal(12, lesson.TeacherLateMinutes);
         Assert.Equal(recoverDate, lesson.RecoverDate);
@@ -244,12 +245,89 @@ public sealed class LessonHandlersTests
         WithExistingLesson();
 
         // Act
-        await Update(new LessonRequest { LessonStatusId = 2 });
+        await Update(new LessonRequest { LessonStatusId = 1 });
 
         // Assert
         _repository.Verify(r => r.GetStudentContractsForChange(7, 9, It.IsAny<CancellationToken>()), Times.Once);
         Assert.Equal(2, _loadedContracts.Count);
         Assert.All(_loadedContracts, c => Assert.True(c.DirtyNextPayDate));
+        VerifySaved(Times.Once());
+    }
+
+    // r12: a cancelled lesson (status 2 or 3) has no recover date
+    [Theory]
+    [InlineData(2)]
+    [InlineData(3)]
+    public async Task Update_NotHeldLessonWithRecoverDate_IsAnErrorAndChangesNothing(int statusId)
+    {
+        // Arrange
+        Lesson lesson = WithExistingLesson();
+
+        // Act
+        Result result = await Update(new LessonRequest
+        {
+            LessonStatusId = statusId,
+            RecoverDate = LessonDt.AddDays(3),
+            Students = [new LessonStudentRequest { Id = 21 }]
+        });
+
+        // Assert
+        Assert.True(result.IsFailure);
+        Assert.Equal(LessonErrors.NotHeldLessonCannotHaveRecoverDate.Code, result.Error.Code);
+        Assert.Equal(1, lesson.LessonStatusId);
+        Assert.Null(lesson.RecoverDate);
+        Assert.True(Assert.Single(lesson.LessonsByStudents, s => s.Id == 21).Present);
+        VerifySaved(Times.Never());
+    }
+
+    // r12: a cancelled lesson has no present student, in the request or in a row left out of it
+    [Theory]
+    [InlineData(2, false, true)]
+    [InlineData(3, false, true)]
+    [InlineData(2, true, false)]
+    [InlineData(3, true, false)]
+    public async Task Update_NotHeldLessonWithPresentStudent_IsAnErrorAndChangesNothing(int statusId,
+        bool leaveOutThePresentRow, bool markTheOtherRowPresent)
+    {
+        // Arrange
+        Lesson lesson = WithExistingLesson();
+        List<LessonStudentRequest> students = [new() { Id = 22, Present = markTheOtherRowPresent }];
+        if (!leaveOutThePresentRow)
+        {
+            students.Add(new LessonStudentRequest { Id = 21 });
+        }
+
+        // Act
+        Result result = await Update(new LessonRequest { LessonStatusId = statusId, Students = students });
+
+        // Assert
+        Assert.True(result.IsFailure);
+        Assert.Equal(LessonErrors.NotHeldLessonCannotHavePresentStudents.Code, result.Error.Code);
+        Assert.Equal(1, lesson.LessonStatusId);
+        Assert.True(Assert.Single(lesson.LessonsByStudents, s => s.Id == 21).Present);
+        Assert.False(Assert.Single(lesson.LessonsByStudents, s => s.Id == 22).Present);
+        VerifySaved(Times.Never());
+    }
+
+    // cancelling a lesson clears its attendance in the same request
+    [Fact]
+    public async Task Update_NotHeldLessonWithoutAttendanceAndRecoverDate_IsSaved()
+    {
+        // Arrange
+        Lesson lesson = WithExistingLesson();
+        lesson.RecoverDate = LessonDt;
+
+        // Act
+        Result result = await Update(new LessonRequest
+        {
+            LessonStatusId = 2, Students = [new LessonStudentRequest { Id = 21, Theme = "theme" }]
+        });
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.Equal(2, lesson.LessonStatusId);
+        Assert.Null(lesson.RecoverDate);
+        Assert.All(lesson.LessonsByStudents, s => Assert.False(s.Present));
         VerifySaved(Times.Once());
     }
 

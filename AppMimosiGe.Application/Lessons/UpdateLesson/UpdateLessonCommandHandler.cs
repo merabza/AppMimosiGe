@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using AppMimosiGe.Application.Lessons.Models;
 using AppMimosiGeShared.Contracts.Errors;
 using AppMimosiGeShared.Contracts.V1.Requests;
 using MimosiGeCore.Domain.Models;
@@ -29,6 +30,22 @@ public sealed class UpdateLessonCommandHandler(ILessonsRepository repository, IU
         if (request.Students.Any(x => !rows.ContainsKey(x.Id)))
         {
             return Result.Failure(LessonErrors.StudentRowNotFound);
+        }
+
+        //გაუქმებული გაკვეთილი დამსწრე მოსწავლით ან აღდგენის თარიღით არ ინახება (რეპორტი r12). დასწრება მოწმდება
+        //შენახვის შემდგომი მდგომარეობით: მოთხოვნიდან გამოტოვებული სტრიქონი თავის მნიშვნელობას ინარჩუნებს
+        if (!LessonVoidStatusRule.AllowsPresentStudentsAndRecoverDate(request.LessonStatusId))
+        {
+            if (request.RecoverDate is not null)
+            {
+                return Result.Failure(LessonErrors.NotHeldLessonCannotHaveRecoverDate);
+            }
+
+            Dictionary<int, bool> requestPresent = request.Students.ToDictionary(x => x.Id, x => x.Present);
+            if (rows.Values.Any(row => requestPresent.GetValueOrDefault(row.Id, row.Present)))
+            {
+                return Result.Failure(LessonErrors.NotHeldLessonCannotHavePresentStudents);
+            }
         }
 
         LessonMapper.ApplyFields(lesson, request);
