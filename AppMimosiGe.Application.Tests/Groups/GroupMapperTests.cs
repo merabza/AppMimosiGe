@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using AppMimosiGe.Application.Groups.Models;
 using AppMimosiGe.Application.Groups.Validation;
 using AppMimosiGe.Application.LessonGenerator.Models;
 using AppMimosiGeShared.Contracts.V1.Requests;
@@ -74,5 +75,36 @@ public sealed class GroupMapperTests
             LessonStartTimes);
 
         Assert.Null(input.VoidDate);
+    }
+
+    //D178: the group as ApplyFields and ApplyRows save it (code trimmed, dates without time), with the start times
+    [Fact]
+    public void ToTeacherSchedule_TakesTheRequestsVoidDateTeachersAndSchedule()
+    {
+        // Arrange
+        GroupRequest request = ValidRequest(" 1011 ", new DateTime(2026, 12, 20, 13, 45, 0, DateTimeKind.Unspecified),
+            [Teacher(100, endDate: OtherDate.AddHours(10)), Teacher(teacherContractId: 6, startDate: OtherDate)],
+            dayTimePlaces: [DayTimePlace(300, 1, 17, 2f, endDate: OtherDate), DayTimePlace(0, 3, 18)]);
+
+        // Act
+        TeacherScheduleGroup scheduleGroup = GroupMapper.ToTeacherSchedule(42, request, LessonStartTimes);
+
+        // Assert
+        Assert.Equal(42, scheduleGroup.GrpId);
+        Assert.Equal("1011", scheduleGroup.GroupCode);
+        Assert.Equal(new DateTime(2026, 12, 20, 0, 0, 0, DateTimeKind.Unspecified), scheduleGroup.VoidDate);
+        Assert.Equal(
+            [new TeacherScheduleTeacher(5, StartDate, OtherDate), new TeacherScheduleTeacher(6, OtherDate, null)],
+            scheduleGroup.Teachers);
+        Assert.Equal([
+            new TeacherScheduleDayTime(1, new TimeOnly(15, 0), 2f, StartDate, OtherDate),
+            new TeacherScheduleDayTime(3, new TimeOnly(17, 30), 1.5f, StartDate, null)
+        ], scheduleGroup.DayTimes);
+    }
+
+    [Fact]
+    public void ToTeacherSchedule_RequestWithoutVoidDate_HasNone()
+    {
+        Assert.Null(GroupMapper.ToTeacherSchedule(0, ValidRequest(), LessonStartTimes).VoidDate);
     }
 }

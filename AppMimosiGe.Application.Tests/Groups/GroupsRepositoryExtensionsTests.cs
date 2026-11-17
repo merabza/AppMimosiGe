@@ -4,8 +4,12 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using AppMimosiGe.Application.Groups;
+using AppMimosiGe.Application.Groups.Models;
+using AppMimosiGeShared.Contracts.Errors;
+using AppMimosiGeShared.Contracts.V1.Responses;
 using MimosiGeCore.Domain.Models;
 using Moq;
+using SystemTools.SharedKernel;
 using Xunit;
 using static AppMimosiGe.Application.Tests.Groups.GroupTestData;
 
@@ -111,5 +115,68 @@ public sealed class GroupsRepositoryExtensionsTests
         _repository.Verify(
             r => r.GetStudentContractsForChange(It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<CancellationToken>()),
             Times.Never);
+    }
+
+    private static DateTime Day(int month, int day) => new(2026, month, day, 0, 0, 0, DateTimeKind.Unspecified);
+
+    //group 42: contract 5 until 01.10 and again since 01.11, contract 6 in between; Mondays 15:00–16:30
+    private static TeacherScheduleGroup ScheduleGroup() =>
+        new(42, "1001", null, [
+            new TeacherScheduleTeacher(5, StartDate, Day(10, 1)), new TeacherScheduleTeacher(6, Day(10, 1), Day(11, 1)),
+            new TeacherScheduleTeacher(5, Day(11, 1), null)
+        ], [new TeacherScheduleDayTime(1, new TimeOnly(15, 0), 1.5f, StartDate, null)]);
+
+    //group 7 ("1002"), where contract 5 teaches on Mondays at the given time until 01.10
+    private void WithOtherGroup(TimeOnly mondayStartTime)
+    {
+        _repository.Setup(r => r.GetTeacherSchedules(It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<int>(),
+            It.IsAny<CancellationToken>())).ReturnsAsync([
+            new TeacherScheduleGroup(7, "1002", null, [new TeacherScheduleTeacher(5, Day(9, 1), Day(10, 1))],
+                [new TeacherScheduleDayTime(1, mondayStartTime, 1.5f, Day(9, 1), null)])
+        ]);
+    }
+
+    //D178: the other groups of the teachers (each contract once, the group itself excepted)
+    [Fact]
+    public async Task FindTeacherTimesOverlap_NoOverlap_IsNullWithoutLoadingNames()
+    {
+        // Arrange
+        WithOtherGroup(new TimeOnly(16, 30));
+
+        // Act
+        Error? error = await _repository.Object.FindTeacherTimesOverlap(ScheduleGroup(), CancellationToken.None);
+
+        // Assert
+        Assert.Null(error);
+        _repository.Verify(
+            r => r.GetTeacherSchedules(
+                It.Is<IReadOnlyCollection<int>>(ids => ids.Count == 2 && ids.Contains(5) && ids.Contains(6)), 42,
+                It.IsAny<CancellationToken>()), Times.Once);
+        _repository.Verify(r => r.GetTeacherContracts(It.IsAny<CancellationToken>()), Times.Never);
+        _repository.Verify(r => r.GetWeekDays(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task FindTeacherTimesOverlap_Overlap_IsConflictWithTheNamesOfTheTeacherAndTheWeekDay()
+    {
+        // Arrange
+        WithOtherGroup(new TimeOnly(16, 0));
+        _repository.Setup(r => r.GetTeacherContracts(It.IsAny<CancellationToken>())).ReturnsAsync([
+            new GroupTeacherContractLookupResponse(6, "Beta Bob / T6", null),
+            new GroupTeacherContractLookupResponse(5, "Alpha Ann / T5", 8)
+        ]);
+        _repository.Setup(r => r.GetWeekDays(It.IsAny<CancellationToken>())).ReturnsAsync([
+            new LookupItemResponse(1, "ორშაბათი"), new LookupItemResponse(3, "ოთხშაბათი")
+        ]);
+
+        // Act
+        Error? error = await _repository.Object.FindTeacherTimesOverlap(ScheduleGroup(), CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(error);
+        Assert.Equal(nameof(GroupErrors.TeacherTimesOverlap), error.Code);
+        Assert.Equal(ErrorType.Conflict, error.Type);
+        Assert.Contains(": Alpha Ann / T5 — ჯგუფი 1002, ორშაბათი 16:00–17:30, 15.09.2026–01.10.2026. ",
+            error.Description, StringComparison.Ordinal);
     }
 }

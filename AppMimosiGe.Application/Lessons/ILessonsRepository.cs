@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -39,4 +40,10 @@ public interface ILessonsRepository
     //მოსწავლეების "გვარი სახელი" კონტრაქტის ID-ით (შეცდომის ტექსტისთვის)
     Task<Dictionary<int, string>> GetStudentNames(IReadOnlyCollection<int> scIds,
         CancellationToken cancellationToken = default);
+
+    //მასწავლებლის დროების შესამოწმებლად (D178): ჩასატარებელი გაკვეთილები (სტატუსი "არ გაუქმებულა", მოსწავლეებით),
+    //რომლებსაც ეს კონტრაქტი ატარებს (შემცვლელად, ან მასწავლებლად შემცვლელის გარეშე) და რომელთა ფაქტობრივი დღე
+    //(აღდგენის თარიღი, თუ აქვს) [fromDay, toDay)-შია, exceptLessonId-ის გარდა
+    Task<List<TeacherLesson>> GetTeacherLessons(int teacherContractId, DateTime fromDay, DateTime toDay,
+        int exceptLessonId, CancellationToken cancellationToken = default);
 }

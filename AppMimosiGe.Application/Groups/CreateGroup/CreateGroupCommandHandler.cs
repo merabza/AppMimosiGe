@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -27,6 +28,15 @@ public sealed class CreateGroupCommandHandler(IGroupsRepository repository, IUni
         if (!GroupMapper.RowsBelongToGroup(group, request))
         {
             return Result.Failure<int>(GroupErrors.RowNotFound);
+        }
+
+        //მასწავლებელს სხვა ჯგუფთან დროების გადაფარვა არ ექნება (რეპორტი r18, D178)
+        Dictionary<int, TimeOnly> lessonStartTimes = await repository.GetLessonStartTimesById(cancellationToken);
+        Error? teacherTimesOverlap = await repository.FindTeacherTimesOverlap(
+            GroupMapper.ToTeacherSchedule(group.GrpId, request, lessonStartTimes), cancellationToken);
+        if (teacherTimesOverlap is not null)
+        {
+            return Result.Failure<int>(teacherTimesOverlap);
         }
 
         Dictionary<int, int> defaultSalarySchemes =

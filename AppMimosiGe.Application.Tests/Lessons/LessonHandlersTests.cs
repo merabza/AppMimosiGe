@@ -49,6 +49,26 @@ public sealed class LessonHandlersTests
         _lessonGenerator.Setup(r => r.GetLastOperationMonth(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new DateTime(2026, 12, 1, 0, 0, 0, DateTimeKind.Unspecified));
         WithSavedGroup(SavedGroup());
+        //by default no teacher has another lesson at the lesson's time
+        _repository.Setup(r => r.GetTeacherLessons(It.IsAny<int>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(),
+            It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
+        _repository.Setup(r => r.GetTeacherContracts(It.IsAny<CancellationToken>())).ReturnsAsync([
+            new LookupItemResponse(3, "Alpha Ann / T3"), new LookupItemResponse(5, "Beta Bob / T5")
+        ]);
+    }
+
+    //the held lessons of the teacher contract in the searched days
+    private void WithTeacherLessons(int teacherContractId, params TeacherLesson[] lessons)
+    {
+        _repository.Setup(r => r.GetTeacherLessons(teacherContractId, It.IsAny<DateTime>(), It.IsAny<DateTime>(),
+            It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync([.. lessons]);
+    }
+
+    private void VerifyTeacherLessonsNotLoaded()
+    {
+        _repository.Verify(
+            r => r.GetTeacherLessons(It.IsAny<int>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<int>(),
+                It.IsAny<CancellationToken>()), Times.Never);
     }
 
     //group 7 as the lesson generator loads it: teacher contract 3, students 31 (contract 10) and 32 (contract 11) and
@@ -508,6 +528,154 @@ public sealed class LessonHandlersTests
         Assert.Equal("new", lesson.Note);
         Assert.Equal("new theme", Assert.Single(lesson.LessonsByStudents, s => s.Id == 21).Theme);
         VerifySaved(Times.Once());
+    }
+
+    //D178: substitute 5 teaches group 1002 on 30.09 14:00–15:30, and this lesson is 15:00–16:30
+    [Fact]
+    public async Task Update_NewSubstituteWithAnotherLessonAtThisTime_IsConflictAndChangesNothing()
+    {
+        // Arrange
+        Lesson lesson = WithExistingLesson();
+        WithTeacherLessons(5, new TeacherLesson(77, "1002", LessonDt.AddHours(-1), 1.5f));
+
+        // Act
+        Result result = await Update(new LessonRequest
+        {
+            LessonStatusId = 1, SubstituteTeacherContractId = 5, Note = "new"
+        });
+
+        // Assert
+        Assert.Equal(nameof(LessonErrors.TeacherHasAnotherLessonAtThisTime), result.Error.Code);
+        Assert.Equal(ErrorType.Conflict, result.Error.Type);
+        Assert.StartsWith(
+            "Beta Bob / T5 ამ გაკვეთილის დროს სხვა გაკვეთილს ატარებს: ჯგუფი 1002, 30.09.2026 14:00–15:30. ",
+            result.Error.Description, StringComparison.Ordinal);
+        Assert.Null(lesson.SubstituteTeacherContractId);
+        Assert.Equal("old", lesson.Note);
+        Assert.Empty(_loadedContracts);
+        _repository.Verify(
+            r => r.GetTeacherLessons(5, LessonDt.Date.AddDays(-1), LessonDt.Date.AddDays(1), 9,
+                It.IsAny<CancellationToken>()), Times.Once);
+        VerifySaved(Times.Never());
+    }
+
+    //the lesson lasts as long as its longest student row: 1.5 hours, so 16:30, though student 22 has 1 hour
+    [Fact]
+    public async Task Update_NewSubstitute_LessonLastsAsLongAsItsLongestStudentRow()
+    {
+        Lesson lesson = WithExistingLesson();
+        Assert.Single(lesson.LessonsByStudents, s => s.Id == 22).HoursCount = 1f;
+        WithTeacherLessons(5, new TeacherLesson(77, "1002", LessonDt.AddHours(1), 1f));
+
+        Result result = await Update(new LessonRequest { LessonStatusId = 1, SubstituteTeacherContractId = 5 });
+
+        Assert.Equal(nameof(LessonErrors.TeacherHasAnotherLessonAtThisTime), result.Error.Code);
+        VerifySaved(Times.Never());
+    }
+
+    //the substitute's other lesson ends when this one starts
+    [Fact]
+    public async Task Update_NewSubstituteFreeAtThisTime_IsSaved()
+    {
+        Lesson lesson = WithExistingLesson();
+        WithTeacherLessons(5, new TeacherLesson(77, "1002", LessonDt.AddHours(-2), 2f));
+
+        Result result = await Update(new LessonRequest { LessonStatusId = 1, SubstituteTeacherContractId = 5 });
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(5, lesson.SubstituteTeacherContractId);
+        VerifySaved(Times.Once());
+    }
+
+    //the saved substitute already had the overlap (report it, don't block the attendance): nothing is checked again
+    [Fact]
+    public async Task Update_SavedSubstituteWithAnOverlap_DoesNotStopOtherChanges()
+    {
+        Lesson lesson = WithExistingLesson();
+        lesson.SubstituteTeacherContractId = 5;
+        WithTeacherLessons(5, new TeacherLesson(77, "1002", LessonDt, 1.5f));
+
+        Result result = await Update(new LessonRequest
+        {
+            LessonStatusId = 1, SubstituteTeacherContractId = 5, Note = "new"
+        });
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("new", lesson.Note);
+        VerifyTeacherLessonsNotLoaded();
+        VerifySaved(Times.Once());
+    }
+
+    //without the substitute the lesson's own teacher 3 teaches it, who substitutes in group 1003 at that time
+    [Fact]
+    public async Task Update_RemovingTheSubstitute_ChecksTheLessonsTeacher()
+    {
+        Lesson lesson = WithExistingLesson();
+        lesson.SubstituteTeacherContractId = 5;
+        WithTeacherLessons(3, new TeacherLesson(78, "1003", LessonDt.AddMinutes(30), 1f));
+
+        Result result = await Update(new LessonRequest { LessonStatusId = 1 });
+
+        Assert.Equal(nameof(LessonErrors.TeacherHasAnotherLessonAtThisTime), result.Error.Code);
+        Assert.StartsWith(
+            "Alpha Ann / T3 ამ გაკვეთილის დროს სხვა გაკვეთილს ატარებს: ჯგუფი 1003, 30.09.2026 15:30–16:30. ",
+            result.Error.Description, StringComparison.Ordinal);
+        Assert.Equal(5, lesson.SubstituteTeacherContractId);
+        VerifySaved(Times.Never());
+    }
+
+    //a cancelled lesson takes nobody's time
+    [Fact]
+    public async Task Update_CancelledLessonWithASubstitute_IsNotChecked()
+    {
+        Lesson lesson = WithExistingLesson();
+        WithTeacherLessons(5, new TeacherLesson(77, "1002", LessonDt, 1.5f));
+
+        Result result = await Update(new LessonRequest
+        {
+            LessonStatusId = 2,
+            SubstituteTeacherContractId = 5,
+            Students = [new LessonStudentRequest { Id = 21, Present = false }]
+        });
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(5, lesson.SubstituteTeacherContractId);
+        VerifyTeacherLessonsNotLoaded();
+    }
+
+    //the saved cancelled lesson had substitute 5; held again, the substitute's time is taken
+    [Fact]
+    public async Task Update_CancelledLessonHeldAgain_IsChecked()
+    {
+        Lesson lesson = WithExistingLesson();
+        lesson.LessonStatusId = 2;
+        lesson.SubstituteTeacherContractId = 5;
+        WithTeacherLessons(5, new TeacherLesson(77, "1002", LessonDt, 1.5f));
+
+        Result result = await Update(new LessonRequest { LessonStatusId = 1, SubstituteTeacherContractId = 5 });
+
+        Assert.Equal(nameof(LessonErrors.TeacherHasAnotherLessonAtThisTime), result.Error.Code);
+        Assert.Equal(2, lesson.LessonStatusId);
+        VerifySaved(Times.Never());
+    }
+
+    //recovered on 05.10, the lesson is held at 15:00 that day, when teacher 3 has group 1002
+    [Fact]
+    public async Task Update_RecoverDateOnAnotherLessonOfTheTeacher_IsConflict()
+    {
+        Lesson lesson = WithExistingLesson();
+        var recoverDay = new DateTime(2026, 10, 5, 0, 0, 0, DateTimeKind.Unspecified);
+        WithTeacherLessons(3, new TeacherLesson(79, "1002", recoverDay.AddHours(15.5), 1.5f));
+
+        Result result = await Update(new LessonRequest { LessonStatusId = 1, RecoverDate = recoverDay.AddHours(10) });
+
+        Assert.Equal(nameof(LessonErrors.TeacherHasAnotherLessonAtThisTime), result.Error.Code);
+        Assert.Contains(": ჯგუფი 1002, 05.10.2026 15:30–17:00. ", result.Error.Description, StringComparison.Ordinal);
+        Assert.Null(lesson.RecoverDate);
+        _repository.Verify(
+            r => r.GetTeacherLessons(3, recoverDay.AddDays(-1), recoverDay.AddDays(1), 9,
+                It.IsAny<CancellationToken>()), Times.Once);
+        VerifySaved(Times.Never());
     }
 
     [Fact]

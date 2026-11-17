@@ -51,6 +51,9 @@ public sealed class GroupHandlersTests
         WithSavedGroup(SavedGroup());
         _repository.Setup(r => r.GetLessonStartTimesById(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<int, TimeOnly> { [17] = new(15, 0) });
+        //by default the teachers teach in no other group
+        _repository.Setup(r => r.GetTeacherSchedules(It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<int>(),
+            It.IsAny<CancellationToken>())).ReturnsAsync([]);
 
         _repository.Setup(r =>
                 r.GetStudentContractsForChange(It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<CancellationToken>()))
@@ -186,6 +189,28 @@ public sealed class GroupHandlersTests
             .ReturnsAsync(group);
     }
 
+    //group 7 ("1002"), where teacher contract 5 teaches on Mondays 15:30–17:00 since 01.09, and the names of the error
+    private void WithOtherGroupOfTeacher5()
+    {
+        var september1 = new DateTime(2026, 9, 1, 0, 0, 0, DateTimeKind.Unspecified);
+        _repository.Setup(r => r.GetTeacherSchedules(It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<int>(),
+            It.IsAny<CancellationToken>())).ReturnsAsync([
+            new TeacherScheduleGroup(7, "1002", null, [new TeacherScheduleTeacher(5, september1, null)],
+                [new TeacherScheduleDayTime(1, new TimeOnly(15, 30), 1.5f, september1, null)])
+        ]);
+        _repository.Setup(r => r.GetTeacherContracts(It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new GroupTeacherContractLookupResponse(5, "Alpha Ann / T5", 8)]);
+        _repository.Setup(r => r.GetWeekDays(It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new LookupItemResponse(1, "ორშაბათი")]);
+    }
+
+    private void VerifyTeacherSchedulesOfContract5Except(int grpId)
+    {
+        _repository.Verify(
+            r => r.GetTeacherSchedules(It.Is<IReadOnlyCollection<int>>(ids => ids.Count == 1 && ids.Contains(5)), grpId,
+                It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     private UpdateGroupCommandHandler UpdateHandler()
     {
         return new UpdateGroupCommandHandler(_repository.Object, _lessonGenerator.Object, _unitOfWork.Object,
@@ -301,6 +326,41 @@ public sealed class GroupHandlersTests
         _repository.Verify(
             r => r.GetStudentContractsForChange(It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<CancellationToken>()),
             Times.Never);
+        VerifySaved(Times.Once());
+    }
+
+    //D178: the new group's Monday 15:00–16:30 since 15.09 overlaps group 7 of the same teacher
+    [Fact]
+    public async Task Create_TeacherBusyInAnotherGroup_IsConflictAndNothingIsAdded()
+    {
+        // Arrange
+        WithOtherGroupOfTeacher5();
+        var handler = new CreateGroupCommandHandler(_repository.Object, _unitOfWork.Object);
+
+        // Act
+        Result<int> result = await handler.Handle(new CreateGroupCommand(ValidRequest()), CancellationToken.None);
+
+        // Assert
+        Assert.Equal(nameof(GroupErrors.TeacherTimesOverlap), result.Error.Code);
+        Assert.Equal(ErrorType.Conflict, result.Error.Type);
+        Assert.Contains(": Alpha Ann / T5 — ჯგუფი 1002, ორშაბათი 15:30–17:00, 15.09.2026-დან. ",
+            result.Error.Description, StringComparison.Ordinal);
+        VerifyTeacherSchedulesOfContract5Except(0);
+        _repository.Verify(r => r.Add(It.IsAny<Group>()), Times.Never);
+        Assert.Empty(_loadedContracts);
+        VerifySaved(Times.Never());
+    }
+
+    [Fact]
+    public async Task Create_TeacherFreeAtThatTime_IsSaved()
+    {
+        WithOtherGroupOfTeacher5();
+        var handler = new CreateGroupCommandHandler(_repository.Object, _unitOfWork.Object);
+
+        Result<int> result = await handler.Handle(
+            new CreateGroupCommand(ValidRequest(dayTimePlaces: [DayTimePlace(weekDayId: 3)])), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
         VerifySaved(Times.Once());
     }
 
@@ -514,6 +574,49 @@ public sealed class GroupHandlersTests
 
         Assert.True(result.IsSuccess);
         Assert.Equal(Monday21, group.VoidDate);
+        VerifySaved(Times.Once());
+    }
+
+    //D178: the saved group already overlapped group 7 on Mondays; any save of it is refused until that is fixed
+    [Fact]
+    public async Task Update_TeacherTimesOverlap_IsConflictWithoutChangesEvenWhenItWasAlreadySaved()
+    {
+        // Arrange
+        Group group = ExistingGroup();
+        WithExistingGroup(group);
+        WithOtherGroupOfTeacher5();
+        GroupRequest request = ValidRequest("1002", teachers: [Teacher(100)],
+            students: [Student(200), Student(201, 21)], dayTimePlaces: [DayTimePlace(300)]);
+
+        // Act
+        Result result = await UpdateHandler().Handle(new UpdateGroupCommand(42, request), CancellationToken.None);
+
+        // Assert
+        Assert.Equal(nameof(GroupErrors.TeacherTimesOverlap), result.Error.Code);
+        Assert.Contains(": Alpha Ann / T5 — ჯგუფი 1002, ორშაბათი 15:30–17:00, 15.09.2026-დან. ",
+            result.Error.Description, StringComparison.Ordinal);
+        VerifyTeacherSchedulesOfContract5Except(42);
+        Assert.Equal("1001", group.GroupCode);
+        Assert.False(group.DirtyLessons);
+        Assert.Empty(_loadedContracts);
+        _repository.Verify(r => r.RemoveRows(It.IsAny<GroupRemovedRows>()), Times.Never);
+        VerifySaved(Times.Never());
+    }
+
+    //the request's schedule is checked, not the saved one: the lesson moves to Wednesdays, when group 7 has none
+    [Fact]
+    public async Task Update_ScheduleMovedAwayFromTheOtherGroup_IsSaved()
+    {
+        Group group = ExistingGroup();
+        WithExistingGroup(group);
+        WithOtherGroupOfTeacher5();
+        GroupRequest request = ValidRequest(teachers: [Teacher(100)], students: [Student(200), Student(201, 21)],
+            dayTimePlaces: [DayTimePlace(300, 3)]);
+
+        Result result = await UpdateHandler().Handle(new UpdateGroupCommand(42, request), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(3, Assert.Single(group.GroupDayTimePlaces).WeekDayId);
         VerifySaved(Times.Once());
     }
 

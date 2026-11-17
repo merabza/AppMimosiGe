@@ -17,6 +17,12 @@ public sealed class GroupErrorsTests
     private const string LessonsWithErrorsEnd =
         ". შეასწორეთ თარიღები ან ჯერ ჟურნალში გაასუფთავეთ ამ გაკვეთილების მონაცემები";
 
+    private const string TeacherTimesOverlapStart =
+        "ჯგუფი არ შეინახება: მის მასწავლებელს იმავე დროს სხვა ჯგუფშიც აქვს გაკვეთილი (რეპორტი „მასწავლებლების " +
+        "დროების გადაფარვა\"): ";
+
+    private const string TeacherTimesOverlapEnd = ". შეასწორეთ მასწავლებლების ან განრიგის თარიღები, დრო ან კვირის დღე";
+
     //every error property of the group editor with its type and the exact text the user sees
     public static readonly TheoryData<Error, ErrorType, string> FixedErrors = new()
     {
@@ -147,5 +153,36 @@ public sealed class GroupErrorsTests
         Assert.Equal(
             LessonsWithErrorsStart + string.Join(", ", Enumerable.Range(1, 10).Select(d => $"{d:00}.11.2026 15:00")) +
             " და სხვა, სულ 11" + LessonsWithErrorsEnd, error.Description);
+    }
+
+    //D178: the overlaps in the given order, separated by semicolons
+    [Fact]
+    public void TeacherTimesOverlap_ListsTheOverlaps()
+    {
+        Error error = GroupErrors.TeacherTimesOverlap(["first", "second"]);
+
+        Assert.Equal(nameof(GroupErrors.TeacherTimesOverlap), error.Code);
+        Assert.Equal(ErrorType.Conflict, error.Type);
+        Assert.Equal(TeacherTimesOverlapStart + "first; second" + TeacherTimesOverlapEnd, error.Description);
+    }
+
+    [Fact]
+    public void TeacherTimesOverlap_TenOverlaps_ListsThemAllWithoutACount()
+    {
+        Error error = GroupErrors.TeacherTimesOverlap([.. Enumerable.Range(1, 10).Select(i => $"o{i}")]);
+
+        Assert.Equal(
+            TeacherTimesOverlapStart + string.Join("; ", Enumerable.Range(1, 10).Select(i => $"o{i}")) +
+            TeacherTimesOverlapEnd, error.Description);
+    }
+
+    [Fact]
+    public void TeacherTimesOverlap_MoreThanTenOverlaps_ListsTheFirstTenAndTheCount()
+    {
+        Error error = GroupErrors.TeacherTimesOverlap([.. Enumerable.Range(1, 12).Select(i => $"o{i}")]);
+
+        Assert.Equal(
+            TeacherTimesOverlapStart + string.Join("; ", Enumerable.Range(1, 10).Select(i => $"o{i}")) +
+            " და სხვა, სულ 12" + TeacherTimesOverlapEnd, error.Description);
     }
 }

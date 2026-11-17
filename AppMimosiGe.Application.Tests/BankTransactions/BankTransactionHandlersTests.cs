@@ -350,16 +350,14 @@ public sealed class BankTransactionHandlersTests
     private Task<Result> Allocate(params (int ScId, decimal Amount)[] shares)
     {
         return new SetBankTransactionAllocationCommandHandler(_repository.Object, _payments.Object, _unitOfWork.Object)
-            .Handle(
-                new SetBankTransactionAllocationCommand(7,
-                    new BankTransactionAllocationRequest
-                    {
-                        Shares =
-                        [
-                            .. shares.Select(s =>
-                                new BankTransactionShareRequest { StudentContractId = s.ScId, Amount = s.Amount })
-                        ]
-                    }), CancellationToken.None);
+            .Handle(new SetBankTransactionAllocationCommand(7, new BankTransactionAllocationRequest
+            {
+                Shares =
+                [
+                    .. shares.Select(s =>
+                        new BankTransactionShareRequest { StudentContractId = s.ScId, Amount = s.Amount })
+                ]
+            }), CancellationToken.None);
     }
 
     // a share of the same contract changes the payment's amount, a missing one is deleted, a new one is added; the

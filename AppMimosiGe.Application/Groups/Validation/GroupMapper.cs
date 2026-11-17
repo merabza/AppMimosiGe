@@ -114,6 +114,22 @@ public static class GroupMapper
         };
     }
 
+    /// <summary>
+    ///     ჯგუფი შენახვის შემდეგ, როგორც მას ApplyFields და ApplyRows შეინახავს, მასწავლებლების დროების შესამოწმებლად
+    ///     (TeacherScheduleOverlapsRule, D178). grpId: 0 ახალი ჯგუფისთვის; lessonStartTimes: განრიგის დაწყების დრო ID-ით
+    /// </summary>
+    public static TeacherScheduleGroup ToTeacherSchedule(int grpId, GroupRequest request,
+        IReadOnlyDictionary<int, TimeOnly> lessonStartTimes)
+    {
+        return new TeacherScheduleGroup(grpId, request.GroupCode!.Trim(), request.VoidDate?.Date, [
+            .. request.Teachers.Select(row =>
+                new TeacherScheduleTeacher(row.TeacherContractId, row.StartDate.Date, row.EndDate?.Date))
+        ], [
+            .. request.DayTimePlaces.Select(row => new TeacherScheduleDayTime(row.WeekDayId,
+                lessonStartTimes[row.LessonStartTimeId], row.HoursCount, row.StartDate.Date, row.EndDate?.Date))
+        ]);
+    }
+
     private static bool AllKnown(IEnumerable<int> requestedIds, IEnumerable<int> existingIds)
     {
         HashSet<int> existing = [.. existingIds];

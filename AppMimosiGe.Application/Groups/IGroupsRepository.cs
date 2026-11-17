@@ -50,8 +50,14 @@ public interface IGroupsRepository
     Task<List<LookupItemResponse>> GetLessonStartTimes(CancellationToken cancellationToken = default);
     Task<List<LookupItemResponse>> GetRooms(CancellationToken cancellationToken = default);
 
-    //განრიგის დაწყების დროები ID-ით: მოთხოვნის განრიგი გაკვეთილების გენერატორის შემავალ მონაცემებად (D177)
+    //განრიგის დაწყების დროები ID-ით: მოთხოვნის განრიგი გაკვეთილების გენერატორის შემავალ მონაცემებად (D177) და
+    //მასწავლებლების დროების შესამოწმებლად (D178)
     Task<Dictionary<int, TimeOnly>> GetLessonStartTimesById(CancellationToken cancellationToken = default);
+
+    //მასწავლებლების დროების შესამოწმებლად (D178): ჯგუფები exceptGrpId-ის გარდა, სადაც ეს კონტრაქტები ასწავლის, მხოლოდ
+    //ამ კონტრაქტების მასწავლებლის სტრიქონებით და ჯგუფის მთელი განრიგით
+    Task<List<TeacherScheduleGroup>> GetTeacherSchedules(IReadOnlyCollection<int> teacherContractIds, int exceptGrpId,
+        CancellationToken cancellationToken = default);
 
     //dirty ალმის დასაყენებლად, EF-ის თვალყურის დევნებით
     Task<List<StudentContract>> GetStudentContractsForChange(IReadOnlyCollection<int> scIds,

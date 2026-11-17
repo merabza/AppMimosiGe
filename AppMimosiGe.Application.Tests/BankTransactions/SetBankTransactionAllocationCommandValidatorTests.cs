@@ -26,15 +26,14 @@ public sealed class SetBankTransactionAllocationCommandValidatorTests
     {
         ValidationResult result =
             await new SetBankTransactionAllocationCommandValidator(_repository.Object).ValidateAsync(
-                new SetBankTransactionAllocationCommand(7,
-                    new BankTransactionAllocationRequest
-                    {
-                        Shares =
-                        [
-                            .. shares.Select(s =>
-                                new BankTransactionShareRequest { StudentContractId = s.ScId, Amount = s.Amount })
-                        ]
-                    }));
+                new SetBankTransactionAllocationCommand(7, new BankTransactionAllocationRequest
+                {
+                    Shares =
+                    [
+                        .. shares.Select(s =>
+                            new BankTransactionShareRequest { StudentContractId = s.ScId, Amount = s.Amount })
+                    ]
+                }));
         return [.. result.Errors.Select(e => e.ErrorCode)];
     }
 

@@ -516,4 +516,71 @@ public sealed class LessonsRepositoryTests : IDisposable
         Assert.Equal(new Dictionary<int, string> { [10] = "Gamma Gia", [12] = "Epsilon Eva" }, result);
         Assert.Empty(_context.ChangeTracker.Entries());
     }
+
+    private async Task<List<TeacherLesson>> TeacherLessons(int teacherContractId, DateTime fromDay, DateTime toDay,
+        int exceptLessonId = 0)
+    {
+        return
+        [
+            .. (await _repository.GetTeacherLessons(teacherContractId, fromDay, toDay, exceptLessonId)).OrderBy(l =>
+                l.LessonId)
+        ];
+    }
+
+    //D178: teacher 1's held lessons 100 and 101 with their 1.5 hours; 102 is on the first day after, 103 is cancelled
+    [Fact]
+    public async Task GetTeacherLessons_ReturnsTheHeldLessonsOfTheTeacherInTheDays()
+    {
+        Assert.Equal([
+            new TeacherLesson(100, "1001", At(9, 29, 15), 1.5f), new TeacherLesson(101, "1001", At(9, 30, 15), 1.5f)
+        ], await TeacherLessons(1, At(9, 29), At(10, 1)));
+        Assert.Empty(_context.ChangeTracker.Entries());
+    }
+
+    [Fact]
+    public async Task GetTeacherLessons_LeavesOutTheGivenLesson()
+    {
+        Assert.Equal([100, 102], (await TeacherLessons(1, At(9, 29), At(10, 2), 101)).Select(l => l.LessonId));
+    }
+
+    //lesson 104 of teacher 1 is taught by substitute 2 for the longest of its students' hours; lesson 200 of teacher 2
+    //has no students
+    [Fact]
+    public async Task GetTeacherLessons_TheSubstituteTeachesTheLesson()
+    {
+        AddAndSave(Lesson(104, 1, At(9, 30, 12), 1, 2),
+            new LessonByStudent { Id = 7, LessonId = 104, StudentContractId = 10, HoursCount = 2f },
+            new LessonByStudent { Id = 8, LessonId = 104, StudentContractId = 11, HoursCount = 1f });
+
+        Assert.Equal([new TeacherLesson(104, "1001", At(9, 30, 12), 2f)],
+            await TeacherLessons(2, At(9, 30), At(10, 1)));
+        Assert.Equal([101], (await TeacherLessons(1, At(9, 30), At(10, 1))).Select(l => l.LessonId));
+    }
+
+    private void RecoverLesson100On(DateTime recoverDate)
+    {
+        _context.Lessons.Single(l => l.Id == 100).RecoverDate = recoverDate;
+        _context.SaveChanges();
+        _context.ChangeTracker.Clear();
+    }
+
+    //recovered on 05.10, lesson 100 is held that day at its time
+    [Fact]
+    public async Task GetTeacherLessons_RecoveredLessonIsOnItsRecoverDay()
+    {
+        RecoverLesson100On(At(10, 5));
+
+        Assert.Equal([new TeacherLesson(100, "1001", At(10, 5, 15), 1.5f)],
+            await TeacherLessons(1, At(10, 5), At(10, 6)));
+        Assert.Empty(await TeacherLessons(1, At(9, 29), At(9, 30)));
+    }
+
+    //the recover day is the first day after the searched days
+    [Fact]
+    public async Task GetTeacherLessons_LessonRecoveredOnTheDayAfter_IsNotFound()
+    {
+        RecoverLesson100On(At(10, 5));
+
+        Assert.Empty(await TeacherLessons(1, At(10, 4), At(10, 5)));
+    }
 }

@@ -55,10 +55,19 @@ public sealed class UpdateGroupCommandHandler(
 
         Dictionary<int, int> defaultSalarySchemes =
             await repository.GetDefaultSalarySchemes(request.Teachers, cancellationToken);
+        Dictionary<int, TimeOnly> lessonStartTimes = await repository.GetLessonStartTimesById(cancellationToken);
+
+        //მასწავლებელს სხვა ჯგუფთან დროების გადაფარვა არ ექნება (რეპორტი r18, D178), არც უკვე არსებული. Access ამას
+        //მხოლოდ რეპორტით აჩვენებდა
+        Error? teacherTimesOverlap = await repository.FindTeacherTimesOverlap(
+            GroupMapper.ToTeacherSchedule(group.GrpId, request, lessonStartTimes), cancellationToken);
+        if (teacherTimesOverlap is not null)
+        {
+            return Result.Failure(teacherTimesOverlap);
+        }
 
         //ცვლილება შეცდომიან გაკვეთილებს არ ქმნის (რეპორტი r13, D177): შეტანილი მონაცემის მქონე გაკვეთილი ან მოსწავლე
         //ზედმეტი არ ხდება. Access ამას არ ამოწმებდა და გენერატორი შეცდომებს 11 და 14 წერდა
-        Dictionary<int, TimeOnly> lessonStartTimes = await repository.GetLessonStartTimesById(cancellationToken);
         IReadOnlyList<ErroneousLessonStudent> newErrors = await GroupLessonsGeneration.FindNewLessonErrors(
             lessonGeneratorRepository, unitOfWork, group.GrpId, timeProvider.GetLocalNow().DateTime,
             current => GroupMapper.ToLessonsInput(request, current, defaultSalarySchemes, lessonStartTimes),

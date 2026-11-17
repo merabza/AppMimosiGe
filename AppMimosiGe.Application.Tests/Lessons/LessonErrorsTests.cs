@@ -95,4 +95,17 @@ public sealed class LessonErrorsTests
             "უნდა წაშალოს, ამიტომ მათ დასწრებას, თემას, შეფასებას და კომენტარებს ვეღარ შეუტანთ: Alpha Ann, Beta Bob. " +
             "თუ მოსწავლე გაკვეთილს დაესწრო, ჯერ ჯგუფში მისი თარიღები შეასწორეთ", error.Description);
     }
+
+    //D178: the teacher and the lessons in the given order, separated by semicolons
+    [Fact]
+    public void TeacherHasAnotherLessonAtThisTime_NamesTheTeacherAndTheLessons()
+    {
+        Error error = LessonErrors.TeacherHasAnotherLessonAtThisTime("Alpha Ann / T5", ["first", "second"]);
+
+        Assert.Equal(nameof(LessonErrors.TeacherHasAnotherLessonAtThisTime), error.Code);
+        Assert.Equal(ErrorType.Conflict, error.Type);
+        Assert.Equal(
+            "Alpha Ann / T5 ამ გაკვეთილის დროს სხვა გაკვეთილს ატარებს: first; second. ერთი მასწავლებელი ერთსა და " +
+            "იმავე დროს ორ გაკვეთილს ვერ ჩაატარებს: შეცვალეთ შემცვლელი ან აღდგენის თარიღი", error.Description);
+    }
 }

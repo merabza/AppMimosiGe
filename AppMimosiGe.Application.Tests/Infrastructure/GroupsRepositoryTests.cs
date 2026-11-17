@@ -599,6 +599,39 @@ public sealed class GroupsRepositoryTests : IDisposable
         Assert.Empty(_context.ChangeTracker.Entries());
     }
 
+    //D178: contract 1 teaches in groups 1 (row 11) and 2 (row 13); group 1's row 12 of contract 2 is left out, its whole
+    //schedule comes with the start times
+    [Fact]
+    public async Task GetTeacherSchedules_ReturnsTheGroupsOfTheContractsWithOnlyTheirTeacherRows()
+    {
+        List<TeacherScheduleGroup> result = [.. (await _repository.GetTeacherSchedules([1], 0)).OrderBy(g => g.GrpId)];
+
+        Assert.Equal([1, 2], result.Select(g => g.GrpId));
+        TeacherScheduleGroup group1 = result[0];
+        Assert.Equal("1001", group1.GroupCode);
+        Assert.Null(group1.VoidDate);
+        Assert.Equal([new TeacherScheduleTeacher(1, Date(9, 1), Date(9, 20))], group1.Teachers);
+        Assert.Equal([
+            new TeacherScheduleDayTime(1, new TimeOnly(8, 0), 2f, Date(8, 1), Date(9, 1)),
+            new TeacherScheduleDayTime(3, new TimeOnly(8, 30), 1.5f, Date(9, 1), null)
+        ], group1.DayTimes.OrderBy(d => d.WeekDayId));
+        TeacherScheduleGroup group2 = result[1];
+        Assert.Equal(Today, group2.VoidDate);
+        Assert.Equal([new TeacherScheduleTeacher(1, Date(9, 1), null)], group2.Teachers);
+        Assert.Empty(group2.DayTimes);
+    }
+
+    //group 1 is the edited group; group 2 has no row of contract 2
+    [Fact]
+    public async Task GetTeacherSchedules_SkipsTheExceptedGroupAndGroupsOfOtherTeachers()
+    {
+        List<TeacherScheduleGroup> result = await _repository.GetTeacherSchedules([2, 99], 1);
+
+        TeacherScheduleGroup group = Assert.Single(result);
+        Assert.Equal(3, group.GrpId);
+        Assert.Equal([new TeacherScheduleTeacher(2, Date(10, 5), null)], group.Teachers);
+    }
+
     [Fact]
     public async Task GetStudentContractsForChange_ReturnsTrackedContracts()
     {

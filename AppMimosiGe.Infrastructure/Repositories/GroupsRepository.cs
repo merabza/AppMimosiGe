@@ -178,6 +178,19 @@ public sealed class GroupsRepository(IMimosiGeDbContext context) : IGroupsReposi
             .ToDictionaryAsync(x => x.LstId, x => x.LstTime, cancellationToken);
     }
 
+    public Task<List<TeacherScheduleGroup>> GetTeacherSchedules(IReadOnlyCollection<int> teacherContractIds,
+        int exceptGrpId, CancellationToken cancellationToken = default)
+    {
+        return context.Groups.AsNoTracking()
+            .Where(g => g.GrpId != exceptGrpId &&
+                        g.GroupsByTeachers.Any(t => teacherContractIds.Contains(t.TeacherContractId))).Select(g =>
+                new TeacherScheduleGroup(g.GrpId, g.GroupCode, g.VoidDate,
+                    g.GroupsByTeachers.Where(t => teacherContractIds.Contains(t.TeacherContractId)).Select(t =>
+                        new TeacherScheduleTeacher(t.TeacherContractId, t.StartDate, t.EndDate)).ToList(),
+                    g.GroupDayTimePlaces.Select(d => new TeacherScheduleDayTime(d.WeekDayId, d.LessonStartTime.LstTime,
+                        d.HoursCount, d.StartDate, d.EndDate)).ToList())).ToListAsync(cancellationToken);
+    }
+
     public Task<List<StudentContract>> GetStudentContractsForChange(IReadOnlyCollection<int> scIds,
         CancellationToken cancellationToken = default)
     {
