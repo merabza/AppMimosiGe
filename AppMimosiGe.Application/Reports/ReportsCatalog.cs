@@ -123,7 +123,8 @@ public static class ReportsCatalog
             $"ერთ ოთახში კვირის ერთსა და იმავე დღეს დროით გადამფარავი გაკვეთილები. {ActiveGroupsNote}",
             [ScheduleCategoryKey, ChecksCategoryKey], ForDate, p => new RoomOverlapsReportQuery(p.EndDate!.Value)),
         ReportDefinition.Create("r07UsedDayTimes", "დატვირთვა დღეებისა და საათების მიხედვით",
-            $"რამდენი გაკვეთილი იწყება კვირის თითო დღეს თითო დროს, დღეების ჯამებით. {ActiveGroupsNote}",
+            "რამდენი გაკვეთილი მიმდინარეობს კვირის თითო დღეს დროის თითო მონაკვეთში (გაკვეთილების დაწყებისა და " +
+            $"დასრულების მიხედვით), დღეების ჯამებით. {ActiveGroupsNote}",
             [ScheduleCategoryKey, ChecksCategoryKey], ForDate, p => new UsedDayTimesReportQuery(p.EndDate!.Value)),
         ReportDefinition.Create("r08LessSizeGroups", "შეუვსებელი ჯგუფები",
             $"ჯგუფები, რომლებშიც მოსწავლეები ადგილებზე (ჯგუფის ზომაზე) ნაკლებია, ზომების მიხედვით. {ActiveGroupsNote}",

@@ -18,7 +18,8 @@ namespace AppMimosiGe.Infrastructure.Reports;
 ///     ფორმატით, ტექსტი ტექსტად; ქართული ტექსტისთვის შრიფტი Sylfaen-ია. NewPage სექციის წინ ბეჭდვის გვერდის წყვეტაა
 ///     (D154). ბეჭდვისთვის (D155): A4, სიგანით ერთ გვერდზე (ფართო რეპორტი ლანდშაფტზე), სვეტების სათაურები ყოველ
 ///     გვერდზე; ტექსტი უჯრაში გადაიტანება, პარამეტრებისა და სექციის სათაურის სტრიქონი კი სვეტების მთელ სიგანეზეა
-///     გაერთიანებული, ამიტომ ტექსტი სვეტებს გარეთ არ გადადის და ზედმეტ ფურცელს არ ქმნის
+///     გაერთიანებული, ამიტომ ტექსტი სვეტებს გარეთ არ გადადის და ზედმეტ ფურცელს არ ქმნის. r07-ის მონაცემების რიცხვები
+///     დატვირთვის ფერებითაა, როგორც ვებ-გვერდზე
 /// </summary>
 public sealed class OpenXmlReportExcelWriter : IReportExcelWriter
 {
@@ -56,10 +57,25 @@ public sealed class OpenXmlReportExcelWriter : IReportExcelWriter
     private const uint DateTimeFormatId = 166;
 
     //CellFormats-ის ინდექსი: 0 ნაგულისხმევი, შემდეგ ფორმატის სახე × 2 + 1 (+1 მუქი), სათაური, უჯრაში გადატანილი
-    //ტექსტი (+1 მუქი) და სექციის სათაური
+    //ტექსტი (+1 მუქი), სექციის სათაური და დატვირთვის დონეები
     private const uint TitleStyle = 11;
     private const uint WrappedTextStyle = 12;
     private const uint SectionHeaderStyle = 14;
+
+    //დატვირთვის დონეების (1–8) CellFormats-ები სექციის სათაურის შემდეგ, ფონტები კი სათაურის ფონტის შემდეგ
+    private const uint LoadLevelStyle = 15;
+    private const uint LoadLevelFont = 3;
+
+    //ამ დონიდან დატვირთვის რიცხვი მუქია
+    private const int FirstBoldLoadLevel = 5;
+
+    //დატვირთვის ფერებიანი რეპორტები (r07), როგორც ვებ-გვერდზე (ReportView-ის loadColorReportKeys)
+    private static readonly string[] LoadColorReportKeys = ["r07UsedDayTimes"];
+
+    //დატვირთვის დონეების ფერები (ARGB), როგორც reports.css-ის report-load-1 … report-load-8: 1–4 მკრთალი
+    //ნაცრისფრიდან შავამდე, 5–8 მკრთალი წითლიდან მუქ წითლამდე და მუქად; 8-ზე მეტი 8-ის ფერისაა
+    private static readonly string[] LoadLevelColors =
+        ["FF9E9E9E","FF828282", "FF4B4B4B", "FF000000", "FFF08080", "FFE03C3C", "FFB40000", "FF780000"];
 
     private static readonly bool[] BoldVariants = [false, true];
 
@@ -122,6 +138,7 @@ public sealed class OpenXmlReportExcelWriter : IReportExcelWriter
     {
         List<uint> newPageRows = [];
         List<uint> textRows = [];
+        bool loadColors = LoadColorReportKeys.Contains(report.Key);
         uint rowIndex = 1;
         sheetData.AppendChild(TextRow(rowIndex++, report.Title, TitleStyle));
         if (report.Parameters.Count > 0)
@@ -151,7 +168,7 @@ public sealed class OpenXmlReportExcelWriter : IReportExcelWriter
 
             foreach (List<object?> row in section.Rows)
             {
-                sheetData.AppendChild(CellsRow(rowIndex++, row, report.Columns, false));
+                sheetData.AppendChild(CellsRow(rowIndex++, row, report.Columns, false, loadColors));
             }
 
             if (section.Footer is not null)
@@ -277,13 +294,21 @@ public sealed class OpenXmlReportExcelWriter : IReportExcelWriter
         return text.Sum(c => c is >= '\u10A0' and <= '\u10FF' ? GeorgianLetterWidth : 1);
     }
 
-    private static Row CellsRow(uint rowIndex, List<object?> values, List<ReportColumnResponse> columns, bool bold)
+    //loadColors: მთელი რიცხვის სვეტის რიცხვი თავისი დატვირთვის დონის ფერითაა (r07-ის მონაცემების სტრიქონები)
+    private static Row CellsRow(uint rowIndex, List<object?> values, List<ReportColumnResponse> columns, bool bold,
+        bool loadColors = false)
     {
         var row = new Row { RowIndex = rowIndex };
         for (int i = 0; i < values.Count; i++)
         {
-            Cell? cell = ValueCell($"{ColumnName(i)}{rowIndex}", values[i],
-                i < columns.Count ? columns[i].Type : ReportColumnTypes.Text, bold);
+            string columnType = i < columns.Count ? columns[i].Type : ReportColumnTypes.Text;
+            Cell? cell = ValueCell($"{ColumnName(i)}{rowIndex}", values[i], columnType, bold);
+            if (cell is not null && loadColors && columnType == ReportColumnTypes.WholeNumber &&
+                values[i] is int level and >= 1)
+            {
+                cell.StyleIndex = LoadLevelStyle + (uint)Math.Min(level, LoadLevelColors.Length) - 1;
+            }
+
             if (cell is not null)
             {
                 row.AppendChild(cell);
@@ -438,6 +463,10 @@ public sealed class OpenXmlReportExcelWriter : IReportExcelWriter
         fonts.AppendChild(Font(FontSize, false));
         fonts.AppendChild(Font(FontSize, true));
         fonts.AppendChild(Font(TitleFontSize, true));
+        for (int i = 0; i < LoadLevelColors.Length; i++)
+        {
+            fonts.AppendChild(Font(FontSize, i + 1 >= FirstBoldLoadLevel, LoadLevelColors[i]));
+        }
 
         var fills = new Fills();
         fills.AppendChild(Fill(PatternValues.None));
@@ -478,6 +507,13 @@ public sealed class OpenXmlReportExcelWriter : IReportExcelWriter
         //სექციის სათაური ქვედა კიდეზეა: სიმაღლის მარაგი მის ზემოთ რჩება და წინა სექციას გამოყოფს
         cellFormats.AppendChild(CellFormat(0, 1, new Alignment { WrapText = true }));
 
+        //დატვირთვის დონეები 1–8: General, თავისი ფერის ფონტით, ზედა კიდეზე
+        for (uint i = 0; i < LoadLevelColors.Length; i++)
+        {
+            cellFormats.AppendChild(CellFormat(0, LoadLevelFont + i,
+                new Alignment { Vertical = VerticalAlignmentValues.Top }));
+        }
+
         var stylesheet = new Stylesheet();
         stylesheet.AppendChild(numberingFormats);
         stylesheet.AppendChild(fonts);
@@ -507,7 +543,7 @@ public sealed class OpenXmlReportExcelWriter : IReportExcelWriter
         return cellFormat;
     }
 
-    private static Font Font(double size, bool bold)
+    private static Font Font(double size, bool bold, string? argbColor = null)
     {
         var font = new Font();
         if (bold)
@@ -516,6 +552,11 @@ public sealed class OpenXmlReportExcelWriter : IReportExcelWriter
         }
 
         font.AppendChild(new FontSize { Val = size });
+        if (argbColor is not null)
+        {
+            font.AppendChild(new Color { Rgb = argbColor });
+        }
+
         font.AppendChild(new FontName { Val = FontName });
         return font;
     }

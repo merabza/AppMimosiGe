@@ -237,9 +237,9 @@ public sealed class ScheduleAgendaReportsTests
         Assert.Equal(["Z1|R1", "D1|R1", "A1|R0", "A1|R1", "B1|R1", "C1|R1"], rows.Select(r => $"{r[3]}|{r[4]}"));
     }
 
-    // the count of lessons starting at a time on a week day; no lesson leaves the cell empty
+    // a row per occupied time segment; a time without a lesson on any day has no row, a day without one an empty cell
     [Fact]
-    public void UsedDayTimes_CountsTheLessonsPerStartTimeAndWeekDay()
+    public void UsedDayTimes_CountsTheLessonsPerTimeSegmentAndWeekDay()
     {
         // Arrange
         ScheduleSnapshot schedule = new ScheduleSnapshotBuilder().Group(1, "A1").Group(2, "A2").Lesson(1, 1, 1, "15:00")
@@ -250,17 +250,53 @@ public sealed class ScheduleAgendaReportsTests
         ReportTable table = ScheduleAgendaReports.UsedDayTimes(schedule);
 
         // Assert
-        Assert.Equal(["startTime", .. WeekDayNames()], table.Columns.Select(c => c.Name));
-        Assert.Equal(["დრო", .. WeekDayCaptions], table.Columns.Select(c => c.Caption));
-        Assert.Equal([ReportColumnTypes.Time, .. Enumerable.Repeat(ReportColumnTypes.WholeNumber, 7)],
-            table.Columns.Select(c => c.Type));
+        Assert.Equal(["startTime", "endTime", .. WeekDayNames()], table.Columns.Select(c => c.Name));
+        Assert.Equal(["დრო", "დასრულება", .. WeekDayCaptions], table.Columns.Select(c => c.Caption));
+        Assert.Equal([
+            ReportColumnTypes.Time, ReportColumnTypes.Time, .. Enumerable.Repeat(ReportColumnTypes.WholeNumber, 7)
+        ], table.Columns.Select(c => c.Type));
         List<List<object?>> rows = Rows(table);
         Assert.Equal(2, rows.Count);
-        AssertRow(rows[0], Time("10:00"), 1, null, null, null, null, null, 1);
-        AssertRow(rows[1], Time("15:00"), 2, null, 1, null, null, null, null);
+        AssertRow(rows[0], Time("10:00"), Time("11:30"), 1, null, null, null, null, null, 1);
+        AssertRow(rows[1], Time("15:00"), Time("16:30"), 2, null, 1, null, null, null, null);
     }
 
-    // Access's report footer: the sum of every day (0 for a day without lessons) and the total
+    // the starts and ends of all lessons split the day; a lesson counts in every segment it covers
+    [Fact]
+    public void UsedDayTimes_LessonFallsIntoEverySegmentItCovers()
+    {
+        // Arrange
+        ScheduleSnapshot schedule = new ScheduleSnapshotBuilder().Group(1, "A1").Lesson(1, 1, 1, "10:00", 2)
+            .Lesson(2, 1, 1, "11:00").Lesson(3, 1, 2, "11:30", 1).Build();
+
+        // Act
+        ReportTable table = ScheduleAgendaReports.UsedDayTimes(schedule);
+
+        // Assert
+        List<List<object?>> rows = Rows(table);
+        Assert.Equal(4, rows.Count);
+        AssertRow(rows[0], Time("10:00"), Time("11:00"), 1, null, null, null, null, null, null);
+        AssertRow(rows[1], Time("11:00"), Time("11:30"), 2, null, null, null, null, null, null);
+        AssertRow(rows[2], Time("11:30"), Time("12:00"), 2, 1, null, null, null, null, null);
+        AssertRow(rows[3], Time("12:00"), Time("12:30"), 1, 1, null, null, null, null, null);
+        AssertRow(table.FooterRows[0], "დღეების ჯამები:", null, 2, 1, 0, 0, 0, 0, 0);
+    }
+
+    // a lesson past midnight ends at its time of day, like ScheduleLessonRow.EndTime
+    [Fact]
+    public void UsedDayTimes_LessonPastMidnight_EndsAtTheTimeOfDay()
+    {
+        // Arrange
+        ScheduleSnapshot schedule = new ScheduleSnapshotBuilder().Group(1, "A1").Lesson(1, 1, 1, "23:00", 2).Build();
+
+        // Act
+        List<object?> row = Assert.Single(Rows(ScheduleAgendaReports.UsedDayTimes(schedule)));
+
+        // Assert
+        AssertRow(row, Time("23:00"), Time("01:00"), 1, null, null, null, null, null, null);
+    }
+
+    // Access's report footer: the lessons of every day (0 for a day without lessons) and the total, each lesson once
     [Fact]
     public void UsedDayTimes_FooterHasTheDaySumsAndTheTotal()
     {
@@ -273,8 +309,8 @@ public sealed class ScheduleAgendaReportsTests
 
         // Assert
         Assert.Equal(2, table.FooterRows.Count);
-        AssertRow(table.FooterRows[0], "დღეების ჯამები:", 2, 0, 1, 0, 0, 0, 0);
-        AssertRow(table.FooterRows[1], "სულ:", 3, null, null, null, null, null, null);
+        AssertRow(table.FooterRows[0], "დღეების ჯამები:", null, 2, 0, 1, 0, 0, 0, 0);
+        AssertRow(table.FooterRows[1], "სულ:", null, 3, null, null, null, null, null, null);
     }
 
     private static IEnumerable<string> WeekDayNames()

@@ -24,6 +24,7 @@ public sealed class OpenXmlReportExcelWriterTests
 
     private static readonly DateTime Day = new(2026, 10, 2, 0, 0, 0, DateTimeKind.Unspecified);
     private static readonly string[] CaptionCells = ["A4", "B4", "C4", "D4", "E4", "F4"];
+    private static readonly string[] LoadCells = ["B4", "C4", "D4", "E4", "F4"];
 
     private static ReportResponse Report(string key = "r03RoomsAgenda", List<ReportSectionResponse>? sections = null,
         List<List<object?>>? footerRows = null)
@@ -564,8 +565,11 @@ public sealed class OpenXmlReportExcelWriterTests
         using (document)
         {
             Stylesheet stylesheet = document.WorkbookPart!.WorkbookStylesPart!.Stylesheet!;
-            Assert.Equal(["Sylfaen 11", "Sylfaen 11 bold", "Sylfaen 14 bold"],
-                stylesheet.Fonts!.Elements<Font>().Select(FontText));
+            Assert.Equal([
+                "Sylfaen 11", "Sylfaen 11 bold", "Sylfaen 14 bold", "Sylfaen 11 FF9E9E9E", "Sylfaen 11 FF828282",
+                "Sylfaen 11 FF4B4B4B", "Sylfaen 11 FF000000", "Sylfaen 11 bold FFF08080", "Sylfaen 11 bold FFE03C3C",
+                "Sylfaen 11 bold FFB40000", "Sylfaen 11 bold FF780000"
+            ], stylesheet.Fonts!.Elements<Font>().Select(FontText));
             Assert.Equal([PatternValues.None, PatternValues.Gray125],
                 stylesheet.Fills!.Elements<Fill>().Select(f => f.PatternFill!.PatternType!.Value));
             Border border = Assert.Single(stylesheet.Borders!.Elements<Border>());
@@ -591,25 +595,39 @@ public sealed class OpenXmlReportExcelWriterTests
         {
             List<CellFormat> formats =
                 [.. document.WorkbookPart!.WorkbookStylesPart!.Stylesheet!.CellFormats!.Elements<CellFormat>()];
-            Assert.Equal([0u, 0u, 0u, 2u, 2u, 164u, 164u, 165u, 165u, 166u, 166u, 0u, 0u, 0u, 0u],
+            bool[] loadLevels = [.. Enumerable.Repeat(true, 8)];
+            Assert.Equal([0u, 0u, 0u, 2u, 2u, 164u, 164u, 165u, 165u, 166u, 166u, 0u, 0u, 0u, 0u, .. new uint[8]],
                 formats.Select(f => f.NumberFormatId!.Value));
             Assert.Equal(
-                [false, false, false, true, true, true, true, true, true, true, true, false, false, false, false],
-                formats.Select(f => f.ApplyNumberFormat?.Value ?? false));
-            Assert.Equal([0u, 0u, 1u, 0u, 1u, 0u, 1u, 0u, 1u, 0u, 1u, 2u, 0u, 1u, 1u],
+            [
+                false, false, false, true, true, true, true, true, true, true, true, false, false, false, false,
+                .. new bool[8]
+            ], formats.Select(f => f.ApplyNumberFormat?.Value ?? false));
+            Assert.Equal(
+                [0u, 0u, 1u, 0u, 1u, 0u, 1u, 0u, 1u, 0u, 1u, 2u, 0u, 1u, 1u, 3u, 4u, 5u, 6u, 7u, 8u, 9u, 10u],
                 formats.Select(f => f.FontId!.Value));
             Assert.Equal(
-                [false, false, true, false, true, false, true, false, true, false, true, true, false, true, true],
-                formats.Select(f => f.ApplyFont?.Value ?? false));
+            [
+                false, false, true, false, true, false, true, false, true, false, true, true, false, true, true,
+                .. loadLevels
+            ], formats.Select(f => f.ApplyFont?.Value ?? false));
             Assert.All(formats, f => Assert.Equal(0u, f.FillId!.Value));
             Assert.All(formats, f => Assert.Equal(0u, f.BorderId!.Value));
             Assert.Equal(
-                [false, false, false, false, false, false, false, false, false, false, false, false, true, true, true],
-                formats.Select(f => f.Alignment?.WrapText?.Value ?? false));
-            Assert.Equal([false, true, true, true, true, true, true, true, true, true, true, false, true, true, false],
-                formats.Select(f => f.Alignment?.Vertical?.Value == VerticalAlignmentValues.Top));
-            Assert.Equal([false, true, true, true, true, true, true, true, true, true, true, false, true, true, true],
-                formats.Select(f => f.ApplyAlignment?.Value ?? false));
+            [
+                false, false, false, false, false, false, false, false, false, false, false, false, true, true, true,
+                .. new bool[8]
+            ], formats.Select(f => f.Alignment?.WrapText?.Value ?? false));
+            Assert.Equal(
+            [
+                false, true, true, true, true, true, true, true, true, true, true, false, true, true, false,
+                .. loadLevels
+            ], formats.Select(f => f.Alignment?.Vertical?.Value == VerticalAlignmentValues.Top));
+            Assert.Equal(
+            [
+                false, true, true, true, true, true, true, true, true, true, true, false, true, true, true,
+                .. loadLevels
+            ], formats.Select(f => f.ApplyAlignment?.Value ?? false));
             Assert.Equal(11u, Style(CellAt(worksheet, "A1")));
             //the parameters, a caption, a text, a whole number and a time
             Assert.Equal(12u, Style(CellAt(worksheet, "A2")));
@@ -617,6 +635,38 @@ public sealed class OpenXmlReportExcelWriterTests
             Assert.Equal(12u, Style(CellAt(worksheet, "A5")));
             Assert.Equal(1u, Style(CellAt(worksheet, "C5")));
             Assert.Equal(5u, Style(CellAt(worksheet, "B5")));
+        }
+    }
+
+    // r07 colors the whole numbers of its data rows by their load level (more than 8 is level 8), as on the web page;
+    // its totals and the other columns keep their formats, another report has no colors
+    [Theory]
+    [InlineData("r07UsedDayTimes", new uint[] { 15u, 18u, 19u, 22u, 22u })]
+    [InlineData("r03RoomsAgenda", new uint[] { 1u, 1u, 1u, 1u, 1u })]
+    public void Write_LoadColors_ColorTheNumbersOfR07(string key, uint[] styles)
+    {
+        // Arrange
+        List<ReportColumnResponse> columns =
+        [
+            new("startTime", "დრო", ReportColumnTypes.Time),
+            .. Enumerable.Range(1, 6).Select(i =>
+                new ReportColumnResponse($"weekDay{i}", $"{i}", ReportColumnTypes.WholeNumber))
+        ];
+        var report = new ReportResponse(key, "დატვირთვა", [], columns,
+            [new ReportSectionResponse(null, [[new TimeOnly(10, 0), 1, 4, 5, 8, 9, 0]], null)],
+            [["სულ:", 7]]);
+
+        // Act
+        Worksheet worksheet = Read(new OpenXmlReportExcelWriter().Write(report), out SpreadsheetDocument document);
+
+        // Assert
+        using (document)
+        {
+            Assert.Equal(styles, LoadCells.Select(r => Style(CellAt(worksheet, r))));
+            Assert.Equal(1u, Style(CellAt(worksheet, "G4")));
+            Assert.Equal(5u, Style(CellAt(worksheet, "A4")));
+            Assert.Equal(2u, Style(CellAt(worksheet, "B5")));
+            Assert.Empty(new OpenXmlValidator().Validate(document));
         }
     }
 
@@ -637,7 +687,7 @@ public sealed class OpenXmlReportExcelWriterTests
     private static string FontText(Font font)
     {
         return string.Create(CultureInfo.InvariantCulture,
-            $"{font.FontName!.Val!.Value} {font.FontSize!.Val!.Value}{(font.Bold is null ? "" : " bold")}");
+            $"{font.FontName!.Val!.Value} {font.FontSize!.Val!.Value}{(font.Bold is null ? "" : " bold")}{(font.Color is null ? "" : " " + font.Color.Rgb!.Value)}");
     }
 
     // Excel's sheet names are at most 31 characters

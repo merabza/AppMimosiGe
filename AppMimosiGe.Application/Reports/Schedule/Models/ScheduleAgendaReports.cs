@@ -96,12 +96,22 @@ public static class ScheduleAgendaReports
         ]);
     }
 
-    //r07UsedDayTimes (vR07UsedDayTimesBase1–3): სტრიქონი = დაწყების დრო (მხოლოდ გამოყენებული), უჯრა = ამ დღეს ამ
-    //დროს დაწყებული გაკვეთილების (განრიგის სტრიქონების) რაოდენობა, Access-ის Count(GroupID); ცარიელი = 0.
-    //ქვემოთ Access-ის რეპორტის ჯამები: თითო დღის ჯამი და სულ
+    //r07UsedDayTimes (vR07UsedDayTimesBase1–3). Access-ის სტრიქონი დაწყების დრო იყო; აქ (მომხმარებლის მოთხოვნა, D176)
+    //სტრიქონი = დროის მონაკვეთი: ყველა გაკვეთილის დაწყება და დასრულება (დაწყება + საათები) დღეს მონაკვეთებად ყოფს,
+    //ჩანს მხოლოდ დაკავებული მონაკვეთები. უჯრა = ამ დღეს ამ მონაკვეთს ფარავი გაკვეთილების (განრიგის სტრიქონების)
+    //რაოდენობა, ასე რომ ერთი გაკვეთილი რამდენიმე მონაკვეთშია; ცარიელი = 0. ქვემოთ Access-ის რეპორტის ჯამები: თითო
+    //დღის გაკვეთილები და სულ (თითო გაკვეთილი ერთხელ)
     public static ReportTable UsedDayTimes(ScheduleSnapshot schedule)
     {
-        List<PivotRow<TimeOnly>> rows = WeekDayPivot.Pivot(schedule.Lessons, l => l.StartTime, l => l.WeekDayId,
+        List<TimeSpan> bounds =
+        [
+            .. schedule.Lessons.SelectMany(l => new[] { l.Start, l.End }).Distinct().Order()
+        ];
+        List<PivotRow<TimeSegment>> rows = WeekDayPivot.Pivot(
+            from lesson in schedule.Lessons
+            from segment in bounds.Zip(bounds.Skip(1), (start, end) => new TimeSegment(start, end))
+            where lesson.Start < segment.End && segment.Start < lesson.End
+            select (Lesson: lesson, Segment: segment), x => x.Segment, x => x.Lesson.WeekDayId,
             lessons => lessons.Count, schedule.WeekDays);
         List<object?> daySums =
         [
@@ -110,11 +120,21 @@ public static class ScheduleAgendaReports
 
         return ReportTable.Flat([
             new ReportColumnResponse("startTime", "დრო", ReportColumnTypes.Time),
+            new ReportColumnResponse("endTime", "დასრულება", ReportColumnTypes.Time),
             .. WeekDayPivot.WeekDayColumns(schedule.WeekDays, ReportColumnTypes.WholeNumber)
-        ], [.. rows.OrderBy(r => r.Key).Select(r => Row([r.Key], r.Days))], [
-            Row([DaySumsCaption], daySums),
-            Row([TotalCaption, schedule.Lessons.Count], schedule.WeekDays.Skip(1).Select(_ => (object?)null))
+        ], [
+            .. rows.OrderBy(r => r.Key.Start).Select(r =>
+                Row([TimeOfDay(r.Key.Start), TimeOfDay(r.Key.End)], r.Days))
+        ], [
+            Row([DaySumsCaption, null], daySums),
+            Row([TotalCaption, null, schedule.Lessons.Count], schedule.WeekDays.Skip(1).Select(_ => (object?)null))
         ]);
+    }
+
+    //დრო დღის დასაწყისიდან (შუაღამის შემდეგ დასრულება ისე ჩანს, როგორც ScheduleLessonRow.EndTime)
+    private static TimeOnly TimeOfDay(TimeSpan time)
+    {
+        return TimeOnly.MinValue.Add(time);
     }
 
     //განრიგის სტრიქონი × ამავე ჯგუფის მასწავლებლის სტრიქონი (Access-ის INNER JOIN GroupsByTeachers)
@@ -144,6 +164,9 @@ public static class ScheduleAgendaReports
     }
 
     private sealed record AgendaCell<TKey>(TKey Key, ScheduleLessonRow Lesson);
+
+    //r07-ის დროის მონაკვეთი [Start, End)
+    private sealed record TimeSegment(TimeSpan Start, TimeSpan End);
 
     private sealed record RoomAgendaKey(
         string RoomName,
