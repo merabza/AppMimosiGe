@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -17,7 +16,8 @@ public static class PaymentMatcher
     public static PaymentMatch Match(BankMovement movement, PaymentMatchInput input)
     {
         HashSet<int> current = [.. input.Students.Select(s => s.StudentHumanId)];
-        string text = string.Join(' ', movement.Purpose, movement.AdditionalDescription, movement.AdditionalInformation);
+        string text = string.Join(' ', movement.Purpose, movement.AdditionalDescription,
+            movement.AdditionalInformation);
         HashSet<string> partnerTokens = [.. LatinSkeleton.Tokens(movement.PartnerName)];
         List<string> tokens =
         [
@@ -25,7 +25,8 @@ public static class PaymentMatcher
             .. LatinSkeleton.Tokens(movement.AdditionalInformation).Where(token => !partnerTokens.Contains(token))
         ];
 
-        return ByContractNumber(text, input, current) ?? ByStudentName(tokens, input) ?? ByPayer(movement, input, current) ??
+        return ByContractNumber(text, input, current) ?? ByStudentName(tokens, input) ??
+            ByPayer(movement, input, current) ??
             ByPayerSurname(movement, input) ?? new PaymentMatch(EPaymentMatchStep.None, []);
     }
 

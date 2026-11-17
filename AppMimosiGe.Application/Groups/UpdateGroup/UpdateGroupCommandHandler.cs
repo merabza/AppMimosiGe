@@ -1,9 +1,12 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using AppMimosiGe.Application.Groups.Models;
 using AppMimosiGe.Application.Groups.Validation;
+using AppMimosiGe.Application.LessonGenerator;
+using AppMimosiGe.Application.LessonGenerator.Models;
 using AppMimosiGeShared.Contracts.Errors;
 using AppMimosiGeShared.Contracts.V1.Requests;
 using MimosiGeCore.Domain.Models;
@@ -14,8 +17,11 @@ using SystemTools.SharedKernel;
 namespace AppMimosiGe.Application.Groups.UpdateGroup;
 
 // ReSharper disable once ClassNeverInstantiated.Global
-public sealed class UpdateGroupCommandHandler(IGroupsRepository repository, IUnitOfWork unitOfWork)
-    : ICommandHandler<UpdateGroupCommand>
+public sealed class UpdateGroupCommandHandler(
+    IGroupsRepository repository,
+    ILessonGeneratorRepository lessonGeneratorRepository,
+    IUnitOfWork unitOfWork,
+    TimeProvider timeProvider) : ICommandHandler<UpdateGroupCommand>
 {
     public async Task<Result> Handle(UpdateGroupCommand command, CancellationToken cancellationToken)
     {
@@ -49,6 +55,20 @@ public sealed class UpdateGroupCommandHandler(IGroupsRepository repository, IUni
 
         Dictionary<int, int> defaultSalarySchemes =
             await repository.GetDefaultSalarySchemes(request.Teachers, cancellationToken);
+
+        //ცვლილება შეცდომიან გაკვეთილებს არ ქმნის (რეპორტი r13, D177): შეტანილი მონაცემის მქონე გაკვეთილი ან მოსწავლე
+        //ზედმეტი არ ხდება. Access ამას არ ამოწმებდა და გენერატორი შეცდომებს 11 და 14 წერდა
+        Dictionary<int, TimeOnly> lessonStartTimes = await repository.GetLessonStartTimesById(cancellationToken);
+        IReadOnlyList<ErroneousLessonStudent> newErrors = await GroupLessonsGeneration.FindNewLessonErrors(
+            lessonGeneratorRepository, unitOfWork, group.GrpId, timeProvider.GetLocalNow().DateTime,
+            current => GroupMapper.ToLessonsInput(request, current, defaultSalarySchemes, lessonStartTimes),
+            cancellationToken);
+        if (newErrors.Count > 0)
+        {
+            return Result.Failure(
+                GroupErrors.ChangeCreatesLessonsWithErrors([.. newErrors.Select(e => e.LessonDt).Distinct().Order()]));
+        }
+
         GroupMapper.ApplyFields(group, request);
         GroupMapper.ApplyRows(group, request, defaultSalarySchemes);
         repository.RemoveRows(removedRows);

@@ -75,7 +75,7 @@ public sealed class OpenXmlReportExcelWriter : IReportExcelWriter
     //დატვირთვის დონეების ფერები (ARGB), როგორც reports.css-ის report-load-1 … report-load-8: 1–4 მკრთალი
     //ნაცრისფრიდან შავამდე, 5–8 მკრთალი წითლიდან მუქ წითლამდე და მუქად; 8-ზე მეტი 8-ის ფერისაა
     private static readonly string[] LoadLevelColors =
-        ["FF9E9E9E","FF828282", "FF4B4B4B", "FF000000", "FFF08080", "FFE03C3C", "FFB40000", "FF780000"];
+        ["FF9E9E9E", "FF828282", "FF4B4B4B", "FF000000", "FFF08080", "FFE03C3C", "FFB40000", "FF780000"];
 
     private static readonly bool[] BoldVariants = [false, true];
 
@@ -118,12 +118,8 @@ public sealed class OpenXmlReportExcelWriter : IReportExcelWriter
 
             string sheetName = report.Key[..Math.Min(report.Key.Length, MaxSheetNameLength)];
             Sheets sheets = workbookPart.Workbook.AppendChild(new Sheets());
-            sheets.AppendChild(new Sheet
-            {
-                Id = workbookPart.GetIdOfPart(worksheetPart),
-                SheetId = 1,
-                Name = sheetName
-            });
+            sheets.AppendChild(
+                new Sheet { Id = workbookPart.GetIdOfPart(worksheetPart), SheetId = 1, Name = sheetName });
             workbookPart.Workbook.AppendChild(PrintTitles(sheetName, headerRowIndex));
         }
 
@@ -422,10 +418,7 @@ public sealed class OpenXmlReportExcelWriter : IReportExcelWriter
         {
             columns.AppendChild(new Column
             {
-                Min = (uint)(i + 1),
-                Max = (uint)(i + 1),
-                Width = widths[i],
-                CustomWidth = true
+                Min = (uint)(i + 1), Max = (uint)(i + 1), Width = widths[i], CustomWidth = true
             });
         }
 

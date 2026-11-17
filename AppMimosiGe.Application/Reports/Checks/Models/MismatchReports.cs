@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using AppMimosiGe.Application.Reports.Models;
 using AppMimosiGe.Application.Reports.Schedule.Models;
@@ -28,7 +29,8 @@ public static class MismatchReports
             Text("groupScheme", "ჯგუფის სქემა")
         ], [
             .. snapshot.Teachers.Select(t => (Row: t, Contract: snapshot.TeacherContracts[t.TeacherContractId]))
-                .Where(t => t.Contract.SalarySchemaByHoursId is { } mainSchemeId && mainSchemeId != t.Row.SalarySchemaId)
+                .Where(t => t.Contract.SalarySchemaByHoursId is { } mainSchemeId &&
+                            mainSchemeId != t.Row.SalarySchemaId)
                 .Select(t => (Teacher: t.Contract.Person.NameWithNumber, groups[t.Row.GroupId].GroupCode,
                     ContractScheme: snapshot.SalarySchemeNames[t.Contract.SalarySchemaByHoursId!.Value],
                     GroupScheme: snapshot.SalarySchemeNames[t.Row.SalarySchemaId]))
@@ -59,22 +61,25 @@ public static class MismatchReports
                          dayTimes[studentGroup.GroupId], maxFinishDate))
             {
                 List<CheckDayTimeRow> activeDayTimes =
-                    [.. dayTimes[studentGroup.GroupId].Where(d => IsActive(d.StartDate, d.EndDate, date, maxFinishDate))];
+                [
+                    .. dayTimes[studentGroup.GroupId].Where(d => IsActive(d.StartDate, d.EndDate, date, maxFinishDate))
+                ];
                 //Access-ის vStudenGroupWeekHoursCounts-ში ასეთ თარიღს სტრიქონი არ აქვს
                 if (activeDayTimes.Count == 0)
                 {
                     continue;
                 }
 
-                decimal weekHours = activeDayTimes.Sum(d => (decimal)d.HoursCount);
+                decimal weekHours = activeDayTimes.Sum(d => SingleToDecimal(d.HoursCount));
                 mismatches.AddRange(
                     from student in studentRows.Where(s => IsActive(s.StartDate, s.EndDate, date, maxFinishDate))
-                    let mustFee = student.OneHourFee * (decimal)student.HoursCoefficient * weekHours * WeeksInFourWeeks
+                    let mustFee =
+                        student.OneHourFee * SingleToDecimal(student.HoursCoefficient) * weekHours * WeeksInFourWeeks
                     where Math.Abs(mustFee - student.FourWeekFee) > FeeTolerance
                     from teacher in teachers[studentGroup.GroupId]
                         .Where(t => IsActive(t.StartDate, t.EndDate, date, maxFinishDate))
-                    select new FeeMismatch(studentGroup, snapshot.StudentNames[student.StudentContractId], student, teacher,
-                        date, weekHours, mustFee));
+                    select new FeeMismatch(studentGroup, snapshot.StudentNames[student.StudentContractId], student,
+                        teacher, date, weekHours, mustFee));
             }
         }
 
@@ -132,6 +137,15 @@ public static class MismatchReports
     private static bool IsActive(DateTime startDate, DateTime? endDate, DateTime date, DateTime? maxFinishDate)
     {
         return startDate <= date && (endDate ?? maxFinishDate) > date;
+    }
+
+    //float (Access-ის Single) 7 მნიშვნელოვან ციფრამდე მრგვალდება, როგორც .NET 10-ის (decimal)float-ში. .NET 11-ში
+    //გარდაქმნა ზუსტ ორობით მნიშვნელობას იძლევა (0.3f → 0.300000011920928955078125) და ზუსტად 0.01-იანი სხვაობა
+    //ზღვარს გადასცდებოდა, Access კი სხვაობას Currency-მდე ამრგვალებს
+    private static decimal SingleToDecimal(float value)
+    {
+        return decimal.Parse(value.ToString("G7", CultureInfo.InvariantCulture), NumberStyles.Float,
+            CultureInfo.InvariantCulture);
     }
 
     private static ReportColumnResponse Text(string name, string caption)

@@ -13,10 +13,7 @@ public sealed class FinanceReportsTests
     private static readonly DateTime September = new(2026, 9, 1, 0, 0, 0, DateTimeKind.Unspecified);
     private static readonly DateTime October = new(2026, 10, 1, 0, 0, 0, DateTimeKind.Unspecified);
 
-    private static readonly Dictionary<int, string> MonthNames = new()
-    {
-        [9] = "სექტემბერი", [10] = "ოქტომბერი"
-    };
+    private static readonly Dictionary<int, string> MonthNames = new() { [9] = "სექტემბერი", [10] = "ოქტომბერი" };
 
     private static string Text(List<object?> row)
     {
@@ -135,8 +132,9 @@ public sealed class FinanceReportsTests
         ];
 
         // Act & Assert
-        Assert.Equal(["4", "2", "3", "1"], Assert.Single(FinanceReports.TeacherSalaryByGroups(details, MonthNames)
-            .Sections).Rows.Select(r => Text(r).Split('|')[2]));
+        Assert.Equal(["4", "2", "3", "1"],
+            Assert.Single(FinanceReports.TeacherSalaryByGroups(details, MonthNames).Sections).Rows
+                .Select(r => Text(r).Split('|')[2]));
     }
 
     private static void AssertSingleSection(ReportTable table, string header, string footer)

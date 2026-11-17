@@ -268,12 +268,15 @@ public sealed class OpenXmlReportExcelWriterTests
         // Arrange
         ReportResponse plain = Report() with { Parameters = [] };
         ReportResponse oneColumn = Report(sections: [new ReportSectionResponse("ჯგუფი: A1", [["R1"]], null)],
-            footerRows: []) with { Columns = [Columns[0]] };
+                footerRows: []) with
+            {
+                Columns = [Columns[0]]
+            };
 
         // Act
         Worksheet plainSheet = Read(new OpenXmlReportExcelWriter().Write(plain), out SpreadsheetDocument plainDocument);
-        Worksheet oneColumnSheet =
-            Read(new OpenXmlReportExcelWriter().Write(oneColumn), out SpreadsheetDocument oneColumnDocument);
+        Worksheet oneColumnSheet = Read(new OpenXmlReportExcelWriter().Write(oneColumn),
+            out SpreadsheetDocument oneColumnDocument);
 
         // Assert
         using (plainDocument)
@@ -300,8 +303,7 @@ public sealed class OpenXmlReportExcelWriterTests
         ];
         string words = string.Join(' ', Enumerable.Repeat("123456789", 8));
         var report = new ReportResponse("rTexts", "Texts",
-            [new ReportParameterValueResponse(ReportParameterNames.EndDate, "p", words)], columns,
-            [
+            [new ReportParameterValueResponse(ReportParameterNames.EndDate, "p", words)], columns, [
                 new ReportSectionResponse(words, [["x", "y"]], null),
                 new ReportSectionResponse("short", [["x", "y"]], null),
                 new ReportSectionResponse(new string('z', 120), [["x", "y"]], null)
@@ -355,8 +357,7 @@ public sealed class OpenXmlReportExcelWriterTests
     public void Write_WideReport_PrintsLandscape(int columnCount, bool landscape)
     {
         // Arrange
-        var report = new ReportResponse("rWide", "Wide", [],
-        [
+        var report = new ReportResponse("rWide", "Wide", [], [
             .. Enumerable.Range(1, columnCount)
                 .Select(i => new ReportColumnResponse($"c{i}", $"C{i}", ReportColumnTypes.Text))
         ], [], []);
@@ -526,12 +527,10 @@ public sealed class OpenXmlReportExcelWriterTests
     public void Write_OtherValues()
     {
         // Arrange
-        ReportResponse report =
-            Report(
-                sections:
-                [
-                    new ReportSectionResponse(null, [["  R1 ", true, 7L, 1.5d, new DateOnly(2026, 10, 2)]], null)
-                ], footerRows: []);
+        ReportResponse report = Report(sections:
+        [
+            new ReportSectionResponse(null, [["  R1 ", true, 7L, 1.5d, new DateOnly(2026, 10, 2)]], null)
+        ], footerRows: []);
 
         // Act
         Worksheet worksheet = Read(new OpenXmlReportExcelWriter().Write(report), out SpreadsheetDocument document);
@@ -598,33 +597,27 @@ public sealed class OpenXmlReportExcelWriterTests
             bool[] loadLevels = [.. Enumerable.Repeat(true, 8)];
             Assert.Equal([0u, 0u, 0u, 2u, 2u, 164u, 164u, 165u, 165u, 166u, 166u, 0u, 0u, 0u, 0u, .. new uint[8]],
                 formats.Select(f => f.NumberFormatId!.Value));
-            Assert.Equal(
-            [
+            Assert.Equal([
                 false, false, false, true, true, true, true, true, true, true, true, false, false, false, false,
                 .. new bool[8]
             ], formats.Select(f => f.ApplyNumberFormat?.Value ?? false));
-            Assert.Equal(
-                [0u, 0u, 1u, 0u, 1u, 0u, 1u, 0u, 1u, 0u, 1u, 2u, 0u, 1u, 1u, 3u, 4u, 5u, 6u, 7u, 8u, 9u, 10u],
+            Assert.Equal([0u, 0u, 1u, 0u, 1u, 0u, 1u, 0u, 1u, 0u, 1u, 2u, 0u, 1u, 1u, 3u, 4u, 5u, 6u, 7u, 8u, 9u, 10u],
                 formats.Select(f => f.FontId!.Value));
-            Assert.Equal(
-            [
+            Assert.Equal([
                 false, false, true, false, true, false, true, false, true, false, true, true, false, true, true,
                 .. loadLevels
             ], formats.Select(f => f.ApplyFont?.Value ?? false));
             Assert.All(formats, f => Assert.Equal(0u, f.FillId!.Value));
             Assert.All(formats, f => Assert.Equal(0u, f.BorderId!.Value));
-            Assert.Equal(
-            [
+            Assert.Equal([
                 false, false, false, false, false, false, false, false, false, false, false, false, true, true, true,
                 .. new bool[8]
             ], formats.Select(f => f.Alignment?.WrapText?.Value ?? false));
-            Assert.Equal(
-            [
+            Assert.Equal([
                 false, true, true, true, true, true, true, true, true, true, true, false, true, true, false,
                 .. loadLevels
             ], formats.Select(f => f.Alignment?.Vertical?.Value == VerticalAlignmentValues.Top));
-            Assert.Equal(
-            [
+            Assert.Equal([
                 false, true, true, true, true, true, true, true, true, true, true, false, true, true, true,
                 .. loadLevels
             ], formats.Select(f => f.ApplyAlignment?.Value ?? false));
@@ -641,8 +634,8 @@ public sealed class OpenXmlReportExcelWriterTests
     // r07 colors the whole numbers of its data rows by their load level (more than 8 is level 8), as on the web page;
     // its totals and the other columns keep their formats, another report has no colors
     [Theory]
-    [InlineData("r07UsedDayTimes", new uint[] { 15u, 18u, 19u, 22u, 22u })]
-    [InlineData("r03RoomsAgenda", new uint[] { 1u, 1u, 1u, 1u, 1u })]
+    [InlineData("r07UsedDayTimes", new[] { 15u, 18u, 19u, 22u, 22u })]
+    [InlineData("r03RoomsAgenda", new[] { 1u, 1u, 1u, 1u, 1u })]
     public void Write_LoadColors_ColorTheNumbersOfR07(string key, uint[] styles)
     {
         // Arrange
@@ -653,8 +646,7 @@ public sealed class OpenXmlReportExcelWriterTests
                 new ReportColumnResponse($"weekDay{i}", $"{i}", ReportColumnTypes.WholeNumber))
         ];
         var report = new ReportResponse(key, "დატვირთვა", [], columns,
-            [new ReportSectionResponse(null, [[new TimeOnly(10, 0), 1, 4, 5, 8, 9, 0]], null)],
-            [["სულ:", 7]]);
+            [new ReportSectionResponse(null, [[new TimeOnly(10, 0), 1, 4, 5, 8, 9, 0]], null)], [["სულ:", 7]]);
 
         // Act
         Worksheet worksheet = Read(new OpenXmlReportExcelWriter().Write(report), out SpreadsheetDocument document);

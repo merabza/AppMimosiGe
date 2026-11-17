@@ -45,11 +45,17 @@ public sealed class AcademicYearsRepositoryTests : IDisposable
         _context.AcademicYears.AddRange(
             new AcademicYear
             {
-                AyId = 11, AcademicYearName = "2026-2027", StartDate = Date(2026, 9, 1), FinishDate = Date(2027, 9, 1)
+                AyId = 11,
+                AcademicYearName = "2026-2027",
+                StartDate = Date(2026, 9, 1),
+                FinishDate = Date(2027, 9, 1)
             },
             new AcademicYear
             {
-                AyId = 10, AcademicYearName = "2025-2026", StartDate = Date(2025, 9, 1), FinishDate = Date(2026, 9, 1)
+                AyId = 10,
+                AcademicYearName = "2025-2026",
+                StartDate = Date(2025, 9, 1),
+                FinishDate = Date(2026, 9, 1)
             });
         _context.Courses.AddRange(new Course { CrsId = 1, CourseName = "English" },
             new Course { CrsId = 2, CourseName = "Math" });
@@ -59,19 +65,31 @@ public sealed class AcademicYearsRepositoryTests : IDisposable
         _context.StudentContracts.AddRange(
             new StudentContract
             {
-                ScId = 1, ContractNumber = "6.001", StudentHumanId = 1, PayerHumanId = 1, AcademicYearId = 11
-            },
-            new StudentContract
+                ScId = 1,
+                ContractNumber = "6.001",
+                StudentHumanId = 1,
+                PayerHumanId = 1,
+                AcademicYearId = 11
+            }, new StudentContract
             {
-                ScId = 2, ContractNumber = "5.001", StudentHumanId = 1, PayerHumanId = 1, AcademicYearId = 10
+                ScId = 2,
+                ContractNumber = "5.001",
+                StudentHumanId = 1,
+                PayerHumanId = 1,
+                AcademicYearId = 10
             });
         _context.SaveChanges();
     }
 
-    private static Group Group(int id, string code, int academicYearId, int courseId, DateTime? voidDate) => new()
-    {
-        GrpId = id, GroupCode = code, AcademicYearId = academicYearId, CourseId = courseId, VoidDate = voidDate
-    };
+    private static Group Group(int id, string code, int academicYearId, int courseId, DateTime? voidDate) =>
+        new()
+        {
+            GrpId = id,
+            GroupCode = code,
+            AcademicYearId = academicYearId,
+            CourseId = courseId,
+            VoidDate = voidDate
+        };
 
     [Fact]
     public async Task GetAcademicYears_ReturnsEveryYear()

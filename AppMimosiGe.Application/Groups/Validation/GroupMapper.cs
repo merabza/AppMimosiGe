@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using AppMimosiGe.Application.Groups.Models;
+using AppMimosiGe.Application.LessonGenerator.Models;
 using AppMimosiGeShared.Contracts.V1.Requests;
 using MimosiGeCore.Domain.Models;
 
@@ -79,6 +81,37 @@ public static class GroupMapper
             dayTimePlace.StartDate = row.StartDate.Date;
             dayTimePlace.EndDate = row.EndDate?.Date;
         }
+    }
+
+    /// <summary>
+    ///     გაკვეთილების გენერატორის შემავალი მონაცემები შენახვის შემდეგ (შეცდომიანი გაკვეთილების შესამოწმებლად, D177):
+    ///     ჯგუფის შენახული გაკვეთილები (current) და ველები და სტრიქონები მოთხოვნიდან, როგორც მათ ApplyFields და ApplyRows
+    ///     შეინახავს. სტრიქონების რიგი შედეგს არ ცვლის, რადგან გადამფარავ პერიოდებს ვალიდატორი არ უშვებს (D55).
+    ///     lessonStartTimes: განრიგის დაწყების დრო ID-ით
+    /// </summary>
+    public static GroupLessonsInput ToLessonsInput(GroupRequest request, GroupLessonsInput current,
+        IReadOnlyDictionary<int, int> defaultSalarySchemes, IReadOnlyDictionary<int, TimeOnly> lessonStartTimes)
+    {
+        return current with
+        {
+            VoidDate = request.VoidDate?.Date,
+            Teachers =
+            [
+                .. request.Teachers.Select(row => new GeneratorTeacherRow(row.TeacherContractId,
+                    row.SalarySchemaId ?? defaultSalarySchemes[row.TeacherContractId], row.StartDate.Date,
+                    row.EndDate?.Date))
+            ],
+            Students =
+            [
+                .. request.Students.Select(row => new GeneratorStudentRow(row.Id, row.StudentContractId,
+                    row.HoursCoefficient, row.FourWeekHours, row.StartDate.Date, row.EndDate?.Date))
+            ],
+            DayTimePlaces =
+            [
+                .. request.DayTimePlaces.Select(row => new GeneratorDayTimePlaceRow(row.WeekDayId,
+                    lessonStartTimes[row.LessonStartTimeId], row.HoursCount, row.StartDate.Date, row.EndDate?.Date))
+            ]
+        };
     }
 
     private static bool AllKnown(IEnumerable<int> requestedIds, IEnumerable<int> existingIds)

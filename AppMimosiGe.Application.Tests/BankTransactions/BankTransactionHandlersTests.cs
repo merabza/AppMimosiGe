@@ -132,8 +132,9 @@ public sealed class BankTransactionHandlersTests
         // by date, then the bank id
         Assert.Equal(["1", "2"], _saved.Select(t => t.MovementId));
         BankTransaction unallocated = _saved[0];
-        Assert.Equal((4, 25m, "GEL", "უცნობი", 0, false), (unallocated.BankAccountId, unallocated.Amount,
-            unallocated.Currency, unallocated.Purpose, unallocated.MatchStep, unallocated.AllocatedManually));
+        Assert.Equal((4, 25m, "GEL", "უცნობი", 0, false),
+            (unallocated.BankAccountId, unallocated.Amount, unallocated.Currency, unallocated.Purpose,
+                unallocated.MatchStep, unallocated.AllocatedManually));
         Assert.Empty(unallocated.Payments);
         Assert.Equal(Today.AddHours(9), unallocated.ImportedAt);
         // the siblings' debts are 30 and 10: 40 covers both
@@ -183,8 +184,9 @@ public sealed class BankTransactionHandlersTests
         Result<ImportBankTransactionsResponse> result = await Import(StartDate.AddDays(-10), StartDate.AddDays(-5));
 
         Assert.Equal(Tbc(StartDate, StartDate.AddDays(-5), 0, 0, 0, 0, 0), Only(result));
-        _bankClient.Verify(c => c.GetIncomingPayments(It.IsAny<DateOnly>(), It.IsAny<DateOnly>(),
-            It.IsAny<CancellationToken>()), Times.Never);
+        _bankClient.Verify(
+            c => c.GetIncomingPayments(It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]
@@ -239,8 +241,8 @@ public sealed class BankTransactionHandlersTests
     {
         Mock<IBankMovementsClient> bog = new();
         bog.Setup(c => c.Account).Returns(new IntegratedBankAccount(1, StartDate.AddDays(2)));
-        bog.Setup(c => c.GetIncomingPayments(It.IsAny<DateOnly>(), It.IsAny<DateOnly>(),
-            It.IsAny<CancellationToken>())).ReturnsAsync(received);
+        bog.Setup(c => c.GetIncomingPayments(It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(received);
         _repository.Setup(r => r.GetExistingMovementIds(1, It.IsAny<IReadOnlyCollection<string>>(),
             It.IsAny<CancellationToken>())).ReturnsAsync([]);
         _bankClients.Add(bog.Object);
@@ -265,10 +267,11 @@ public sealed class BankTransactionHandlersTests
             new ImportBankAccountResponse(1, "საქართველოს ბანკი", StartDate.AddDays(2), Today, 0, 0, 0, 0, 0,
                 BankTransactionErrors.BankRateLimitExceeded(42).Description)
         ], result.Value.Accounts);
-        bog.Verify(c => c.GetIncomingPayments(DateOnly.FromDateTime(StartDate.AddDays(2)),
-            DateOnly.FromDateTime(Today), It.IsAny<CancellationToken>()));
-        notIntegrated.Verify(c => c.GetIncomingPayments(It.IsAny<DateOnly>(), It.IsAny<DateOnly>(),
-            It.IsAny<CancellationToken>()), Times.Never);
+        bog.Verify(c => c.GetIncomingPayments(DateOnly.FromDateTime(StartDate.AddDays(2)), DateOnly.FromDateTime(Today),
+            It.IsAny<CancellationToken>()));
+        notIntegrated.Verify(
+            c => c.GetIncomingPayments(It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()),
+            Times.Never);
         _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -287,8 +290,9 @@ public sealed class BankTransactionHandlersTests
         Result<ImportBankTransactionsResponse> result = await Import();
 
         Assert.Equal([4, 1], result.Value.Accounts.Select(a => a.BankAccountId));
-        Assert.Equal([("t1", 4, 12, 4), ("b1", 1, 11, 1)], _saved.Select(t => (t.MovementId, t.BankAccountId,
-            Assert.Single(t.Payments).StudentContractId, t.Payments.Single().BankAccountId)));
+        Assert.Equal([("t1", 4, 12, 4), ("b1", 1, 11, 1)],
+            _saved.Select(t => (t.MovementId, t.BankAccountId, Assert.Single(t.Payments).StudentContractId,
+                t.Payments.Single().BankAccountId)));
         Assert.Equal(["payments", "save", "payments", "save"], calls);
         _repository.Verify(r => r.GetLastTransactionDate(1, It.IsAny<CancellationToken>()));
     }
@@ -346,13 +350,16 @@ public sealed class BankTransactionHandlersTests
     private Task<Result> Allocate(params (int ScId, decimal Amount)[] shares)
     {
         return new SetBankTransactionAllocationCommandHandler(_repository.Object, _payments.Object, _unitOfWork.Object)
-            .Handle(new SetBankTransactionAllocationCommand(7, new BankTransactionAllocationRequest
-            {
-                Shares = [.. shares.Select(s => new BankTransactionShareRequest
-                {
-                    StudentContractId = s.ScId, Amount = s.Amount
-                })]
-            }), CancellationToken.None);
+            .Handle(
+                new SetBankTransactionAllocationCommand(7,
+                    new BankTransactionAllocationRequest
+                    {
+                        Shares =
+                        [
+                            .. shares.Select(s =>
+                                new BankTransactionShareRequest { StudentContractId = s.ScId, Amount = s.Amount })
+                        ]
+                    }), CancellationToken.None);
     }
 
     // a share of the same contract changes the payment's amount, a missing one is deleted, a new one is added; the
@@ -363,10 +370,10 @@ public sealed class BankTransactionHandlersTests
         Payment kept = new() { Id = 1, StudentContractId = 11, Amount = 50m };
         Payment removed = new() { Id = 2, StudentContractId = 12, Amount = 50m };
         BankTransaction bankTransaction = Stored(kept, removed);
-        _repository.Setup(r => r.GetStudentHumanIds(It.IsAny<IReadOnlyCollection<int>>(),
-            It.IsAny<CancellationToken>())).ReturnsAsync(new Dictionary<int, int> { [11] = 1, [13] = 3 });
-        _repository.Setup(r => r.GetStudentPayers(It.IsAny<IReadOnlyCollection<int>>(),
-                It.IsAny<CancellationToken>()))
+        _repository
+            .Setup(r => r.GetStudentHumanIds(It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<int, int> { [11] = 1, [13] = 3 });
+        _repository.Setup(r => r.GetStudentPayers(It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([new StudentPayer { StudentHumanId = 1, PersonalNumber = "01001000100" }]);
         List<StudentPayer> learned = [];
         _repository.Setup(r => r.AddStudentPayer(It.IsAny<StudentPayer>())).Callback<StudentPayer>(learned.Add);
@@ -394,8 +401,9 @@ public sealed class BankTransactionHandlersTests
         Assert.True((await Allocate()).IsSuccess);
 
         Assert.Empty(bankTransaction.Payments);
-        _repository.Verify(r => r.GetStudentHumanIds(It.IsAny<IReadOnlyCollection<int>>(),
-            It.IsAny<CancellationToken>()), Times.Never);
+        _repository.Verify(
+            r => r.GetStudentHumanIds(It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]
@@ -403,10 +411,11 @@ public sealed class BankTransactionHandlersTests
     {
         BankTransaction bankTransaction = Stored();
         bankTransaction.Purpose = new string('ა', 300);
-        _repository.Setup(r => r.GetStudentHumanIds(It.IsAny<IReadOnlyCollection<int>>(),
-            It.IsAny<CancellationToken>())).ReturnsAsync([]);
-        _repository.Setup(r => r.GetStudentPayers(It.IsAny<IReadOnlyCollection<int>>(),
-            It.IsAny<CancellationToken>())).ReturnsAsync([]);
+        _repository
+            .Setup(r => r.GetStudentHumanIds(It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+        _repository.Setup(r => r.GetStudentPayers(It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
 
         Assert.True((await Allocate((11, 100m))).IsSuccess);
 
@@ -441,8 +450,8 @@ public sealed class BankTransactionHandlersTests
 
     private Task<Result> SetIgnored(bool ignored)
     {
-        return new SetBankTransactionIgnoredCommandHandler(_repository.Object, _unitOfWork.Object)
-            .Handle(new SetBankTransactionIgnoredCommand(7, ignored), CancellationToken.None);
+        return new SetBankTransactionIgnoredCommandHandler(_repository.Object, _unitOfWork.Object).Handle(
+            new SetBankTransactionIgnoredCommand(7, ignored), CancellationToken.None);
     }
 
     [Fact]
@@ -479,8 +488,9 @@ public sealed class BankTransactionHandlersTests
         _repository.Setup(r => r.GetRows(Today, Today.AddDays(1), expected, It.IsAny<CancellationToken>()))
             .ReturnsAsync(rows);
 
-        Result<List<BankTransactionRowResponse>> result = await new GetBankTransactionsQueryHandler(_repository.Object)
-            .Handle(new GetBankTransactionsQuery(Today.AddHours(5), Today.AddDays(1).AddHours(1), filter),
+        Result<List<BankTransactionRowResponse>> result =
+            await new GetBankTransactionsQueryHandler(_repository.Object).Handle(
+                new GetBankTransactionsQuery(Today.AddHours(5), Today.AddDays(1).AddHours(1), filter),
                 CancellationToken.None);
 
         Assert.Same(rows, result.Value);
@@ -491,8 +501,9 @@ public sealed class BankTransactionHandlersTests
     [InlineData("all")]
     public async Task GetList_UnknownFilter_IsInvalid(string filter)
     {
-        Result<List<BankTransactionRowResponse>> result = await new GetBankTransactionsQueryHandler(_repository.Object)
-            .Handle(new GetBankTransactionsQuery(null, null, filter), CancellationToken.None);
+        Result<List<BankTransactionRowResponse>> result =
+            await new GetBankTransactionsQueryHandler(_repository.Object).Handle(
+                new GetBankTransactionsQuery(null, null, filter), CancellationToken.None);
 
         Assert.Equal(BankTransactionErrors.ListFilterIsInvalid.Code, result.Error.Code);
     }
@@ -500,8 +511,9 @@ public sealed class BankTransactionHandlersTests
     [Fact]
     public async Task GetList_ReversedPeriod_IsInvalid()
     {
-        Result<List<BankTransactionRowResponse>> result = await new GetBankTransactionsQueryHandler(_repository.Object)
-            .Handle(new GetBankTransactionsQuery(Today, Today.AddDays(-1), null), CancellationToken.None);
+        Result<List<BankTransactionRowResponse>> result =
+            await new GetBankTransactionsQueryHandler(_repository.Object).Handle(
+                new GetBankTransactionsQuery(Today, Today.AddDays(-1), null), CancellationToken.None);
 
         Assert.Equal(BankTransactionErrors.PeriodIsInvalid.Code, result.Error.Code);
     }
@@ -509,8 +521,8 @@ public sealed class BankTransactionHandlersTests
     [Fact]
     public async Task GetOne_FoundOrNotFound()
     {
-        BankTransactionResponse response = new(7, "თიბისი", Today, 10m, "GEL", null, null, null, null, null, null, null, 0,
-            false, false, []);
+        BankTransactionResponse response = new(7, "თიბისი", Today, 10m, "GEL", null, null, null, null, null, null, null,
+            0, false, false, []);
         _repository.Setup(r => r.GetOne(7, It.IsAny<CancellationToken>())).ReturnsAsync(response);
         GetBankTransactionQueryHandler handler = new(_repository.Object);
 
@@ -535,13 +547,15 @@ public sealed class BankTransactionHandlersTests
     [Fact]
     public async Task UnallocatedReport_ReadsTheUnallocatedRows()
     {
-        _repository.Setup(r => r.GetRows(null, null, EBankTransactionsFilter.Unallocated,
-            It.IsAny<CancellationToken>())).ReturnsAsync([
-            new BankTransactionRowResponse(1, "თიბისი", Today, 10m, "p", "s", 0, false, false, 0m, false)
-        ]);
+        _repository
+            .Setup(r => r.GetRows(null, null, EBankTransactionsFilter.Unallocated, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([
+                new BankTransactionRowResponse(1, "თიბისი", Today, 10m, "p", "s", 0, false, false, 0m, false)
+            ]);
 
-        Result<ReportTable> result = await new UnallocatedBankTransactionsReportQueryHandler(_repository.Object)
-            .Handle(new UnallocatedBankTransactionsReportQuery(), CancellationToken.None);
+        Result<ReportTable> result =
+            await new UnallocatedBankTransactionsReportQueryHandler(_repository.Object).Handle(
+                new UnallocatedBankTransactionsReportQuery(), CancellationToken.None);
 
         Assert.Single(Assert.Single(result.Value.Sections).Rows);
     }

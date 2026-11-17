@@ -2,7 +2,6 @@ using System.Linq;
 using AppMimosiGe.Application.Payments;
 using AppMimosiGe.Application.Payments.Validation;
 using AppMimosiGeShared.Contracts.Errors;
-using AppMimosiGeShared.Contracts.V1.Requests;
 using BackendCarcassShared.Contracts.Errors;
 using FluentValidation;
 
@@ -13,8 +12,8 @@ namespace AppMimosiGe.Application.BankTransactions.SetBankTransactionAllocation;
 ///     ზღვარს (≤ ჩარიცხული) და შემოწმებულ გადახდებს handler-ი ამოწმებს (409)
 /// </summary>
 // ReSharper disable once UnusedType.Global
-public sealed class SetBankTransactionAllocationCommandValidator
-    : AbstractValidator<SetBankTransactionAllocationCommand>
+public sealed class
+    SetBankTransactionAllocationCommandValidator : AbstractValidator<SetBankTransactionAllocationCommand>
 {
     public SetBankTransactionAllocationCommandValidator(IPaymentsRepository repository)
     {
@@ -36,8 +35,7 @@ public sealed class SetBankTransactionAllocationCommandValidator
                 share.RuleFor(s => s.Amount).Must(PaymentRequestValidator.HasAllowedDecimals)
                     .WithErrorCode(BankTransactionErrors.ShareAmountHasTooManyDecimals.Code)
                     .WithMessage(BankTransactionErrors.ShareAmountHasTooManyDecimals.Description);
-                share.RuleFor(s => s.StudentContractId)
-                    .MustAsync((id, ct) => repository.StudentContractExists(id, ct))
+                share.RuleFor(s => s.StudentContractId).MustAsync((id, ct) => repository.StudentContractExists(id, ct))
                     .WithErrorCode(BankTransactionErrors.ShareStudentContractNotFound.Code)
                     .WithMessage(BankTransactionErrors.ShareStudentContractNotFound.Description);
             });

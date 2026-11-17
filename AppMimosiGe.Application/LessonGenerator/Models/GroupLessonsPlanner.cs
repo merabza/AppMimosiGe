@@ -373,7 +373,7 @@ public static class GroupLessonsPlanner
                     if (currentStudent.HasEnteredData)
                     {
                         AddLog(LessonGeneratorErrorCodes.ExtraStudentHasEnteredData, mustLesson.Values.LessonDt,
-                            lesson.Id);
+                            lesson.Id, currentStudent.Id);
                     }
                     else
                     {
@@ -389,9 +389,9 @@ public static class GroupLessonsPlanner
             return rows;
         }
 
-        private void AddLog(int errorCode, DateTime? lessonDate, int? lessonId)
+        private void AddLog(int errorCode, DateTime? lessonDate, int? lessonId, int? lessonStudentId = null)
         {
-            _logs.Add(new PlannedLogEntry(errorCode, lessonDate, lessonId));
+            _logs.Add(new PlannedLogEntry(errorCode, lessonDate, lessonId, lessonStudentId));
         }
 
         public GroupLessonsPlan Build(bool clearDirtyLessons, PlannedLastLesson? lastLesson)

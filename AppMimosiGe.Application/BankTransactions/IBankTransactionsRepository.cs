@@ -35,8 +35,8 @@ public interface IBankTransactionsRepository
     Task<List<LearnedPayer>> GetLearnedPayers(CancellationToken cancellationToken = default);
 
     //თარიღების ფილტრი ორივე ჩათვლით; თარიღით (ბოლო პირველი) და ID-ით დალაგებული
-    Task<List<BankTransactionRowResponse>> GetRows(DateTime? dateFrom, DateTime? dateTo,
-        EBankTransactionsFilter filter, CancellationToken cancellationToken = default);
+    Task<List<BankTransactionRowResponse>> GetRows(DateTime? dateFrom, DateTime? dateTo, EBankTransactionsFilter filter,
+        CancellationToken cancellationToken = default);
 
     Task<BankTransactionResponse?> GetOne(int bankTransactionId, CancellationToken cancellationToken = default);
 

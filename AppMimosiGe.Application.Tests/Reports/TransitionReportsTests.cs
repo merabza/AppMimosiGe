@@ -20,7 +20,8 @@ public sealed class TransitionReportsTests
     private static void AssertRows(ReportTable table, params string[] expected)
     {
         Assert.Equal(expected,
-            Rows(table).Select(r => string.Join("|", r.Select(c => c is DateTime d ? d.ToString("MM-dd", CultureInfo.InvariantCulture) : c))));
+            Rows(table).Select(r => string.Join("|",
+                r.Select(c => c is DateTime d ? d.ToString("MM-dd", CultureInfo.InvariantCulture) : c))));
     }
 
     // a student's row of a course ends, the next row of the same course (any group) starts later: the days between
@@ -38,11 +39,14 @@ public sealed class TransitionReportsTests
         ReportTable table = TransitionReports.StudentMissedTransitions(snapshot);
 
         // Assert
-        Assert.Equal(["courseName", "student", "startDate", "endDate", "nextStartDate"], table.Columns.Select(c => c.Name));
+        Assert.Equal(["courseName", "student", "startDate", "endDate", "nextStartDate"],
+            table.Columns.Select(c => c.Name));
         Assert.Equal(["საგანი", "მოსწავლე", "დაწყება", "დასრულება", "შემდეგის დაწყება"],
             table.Columns.Select(c => c.Caption));
-        Assert.Equal([ReportColumnTypes.Text, ReportColumnTypes.Text, ReportColumnTypes.Date, ReportColumnTypes.Date,
-            ReportColumnTypes.Date], table.Columns.Select(c => c.Type));
+        Assert.Equal([
+            ReportColumnTypes.Text, ReportColumnTypes.Text, ReportColumnTypes.Date, ReportColumnTypes.Date,
+            ReportColumnTypes.Date
+        ], table.Columns.Select(c => c.Type));
         AssertRows(table, "Math|Alpha Ann / 6.020|01-05|01-20|01-25");
         Assert.Equal(["სულ:", 1, null, null, null], Assert.Single(table.FooterRows));
     }
@@ -58,7 +62,8 @@ public sealed class TransitionReportsTests
             .Student(5, 1, 21, Day(2026, 3, 10), null).Build();
 
         // Act & Assert
-        AssertRows(TransitionReports.StudentMissedTransitions(snapshot), "Math|SLast20 SFirst20 / 6.020|01-05|01-20|01-25");
+        AssertRows(TransitionReports.StudentMissedTransitions(snapshot),
+            "Math|SLast20 SFirst20 / 6.020|01-05|01-20|01-25");
     }
 
     // order: student "last first / number" (Access's ORDER BY), then course
@@ -93,7 +98,8 @@ public sealed class TransitionReportsTests
         ReportTable table = TransitionReports.TeacherMissedTransitions(snapshot);
 
         // Assert
-        Assert.Equal(["groupCode", "teacher", "startDate", "endDate", "nextStartDate"], table.Columns.Select(c => c.Name));
+        Assert.Equal(["groupCode", "teacher", "startDate", "endDate", "nextStartDate"],
+            table.Columns.Select(c => c.Name));
         Assert.Equal(["ჯგუფი", "მასწავლებელი", "დაწყება", "დასრულება", "შემდეგის დაწყება"],
             table.Columns.Select(c => c.Caption));
         AssertRows(table, "A1|Alpha Ann / T5|01-05|01-20|01-25");

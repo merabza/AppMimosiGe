@@ -18,20 +18,23 @@ public sealed class SetBankTransactionAllocationCommandValidatorTests
 
     public SetBankTransactionAllocationCommandValidatorTests()
     {
-        _repository.Setup(r => r.StudentContractExists(It.IsInRange(10, 19, Moq.Range.Inclusive),
+        _repository.Setup(r => r.StudentContractExists(It.IsInRange(10, 19, Range.Inclusive),
             It.IsAny<CancellationToken>())).ReturnsAsync(true);
     }
 
     private async Task<string[]> ErrorCodes(params (int ScId, decimal Amount)[] shares)
     {
-        ValidationResult result = await new SetBankTransactionAllocationCommandValidator(_repository.Object)
-            .ValidateAsync(new SetBankTransactionAllocationCommand(7, new BankTransactionAllocationRequest
-            {
-                Shares = [.. shares.Select(s => new BankTransactionShareRequest
-                {
-                    StudentContractId = s.ScId, Amount = s.Amount
-                })]
-            }));
+        ValidationResult result =
+            await new SetBankTransactionAllocationCommandValidator(_repository.Object).ValidateAsync(
+                new SetBankTransactionAllocationCommand(7,
+                    new BankTransactionAllocationRequest
+                    {
+                        Shares =
+                        [
+                            .. shares.Select(s =>
+                                new BankTransactionShareRequest { StudentContractId = s.ScId, Amount = s.Amount })
+                        ]
+                    }));
         return [.. result.Errors.Select(e => e.ErrorCode)];
     }
 
@@ -75,7 +78,6 @@ public sealed class SetBankTransactionAllocationCommandValidatorTests
     [Fact]
     public async Task RepeatedContract_IsInvalid()
     {
-        Assert.Equal([BankTransactionErrors.ShareStudentContractIsRepeated.Code],
-            await ErrorCodes((10, 5m), (10, 6m)));
+        Assert.Equal([BankTransactionErrors.ShareStudentContractIsRepeated.Code], await ErrorCodes((10, 5m), (10, 6m)));
     }
 }

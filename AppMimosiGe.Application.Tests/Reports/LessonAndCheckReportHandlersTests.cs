@@ -59,8 +59,8 @@ public sealed class LessonAndCheckReportHandlersTests
 
     private static PeriodLessonRow Lesson(int id, int statusId, bool present, SchedulePerson? substitute = null)
     {
-        return new PeriodLessonRow(id, StartDate.AddHours(id), "G1", 5, Teacher, substitute, statusId, "status",
-            false, present);
+        return new PeriodLessonRow(id, StartDate.AddHours(id), "G1", 5, Teacher, substitute, statusId, "status", false,
+            present);
     }
 
     private static void AssertSameTable(ReportTable expected, Result<ReportTable> actual)
@@ -80,8 +80,9 @@ public sealed class LessonAndCheckReportHandlersTests
         SetupPeriodLessons(Lesson(1, 1, false), Lesson(2, 1, true));
 
         // Act
-        Result<ReportTable> result = await new WrongStatusLessonsReportQueryHandler(_repository.Object, At(now))
-            .Handle(new WrongStatusLessonsReportQuery(StartDate, EndDate), CancellationToken.None);
+        Result<ReportTable> result =
+            await new WrongStatusLessonsReportQueryHandler(_repository.Object, At(now)).Handle(
+                new WrongStatusLessonsReportQuery(StartDate, EndDate), CancellationToken.None);
 
         // Assert
         _repository.Verify(r => r.GetPeriodLessons(StartDate, now, It.IsAny<CancellationToken>()), Times.Once);
@@ -97,12 +98,11 @@ public sealed class LessonAndCheckReportHandlersTests
         SetupPeriodLessons();
 
         // Act
-        await new WrongStatusLessonsReportQueryHandler(_repository.Object, At(Day(2026, 10, 4).AddHours(12)))
-            .Handle(new WrongStatusLessonsReportQuery(StartDate, EndDate), CancellationToken.None);
+        await new WrongStatusLessonsReportQueryHandler(_repository.Object, At(Day(2026, 10, 4).AddHours(12))).Handle(
+            new WrongStatusLessonsReportQuery(StartDate, EndDate), CancellationToken.None);
 
         // Assert
-        _repository.Verify(r => r.GetPeriodLessons(StartDate, DayAfterEnd, It.IsAny<CancellationToken>()),
-            Times.Once);
+        _repository.Verify(r => r.GetPeriodLessons(StartDate, DayAfterEnd, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     // future lessons too (Access): a cancellation or a recovery date may be entered in advance
@@ -113,12 +113,12 @@ public sealed class LessonAndCheckReportHandlersTests
         SetupPeriodLessons(Lesson(1, 2, true), Lesson(2, 2, false));
 
         // Act
-        Result<ReportTable> result = await new LessonsWithWrongVoidStatusReportQueryHandler(_repository.Object)
-            .Handle(new LessonsWithWrongVoidStatusReportQuery(StartDate, EndDate), CancellationToken.None);
+        Result<ReportTable> result =
+            await new LessonsWithWrongVoidStatusReportQueryHandler(_repository.Object).Handle(
+                new LessonsWithWrongVoidStatusReportQuery(StartDate, EndDate), CancellationToken.None);
 
         // Assert
-        _repository.Verify(r => r.GetPeriodLessons(StartDate, DayAfterEnd, It.IsAny<CancellationToken>()),
-            Times.Once);
+        _repository.Verify(r => r.GetPeriodLessons(StartDate, DayAfterEnd, It.IsAny<CancellationToken>()), Times.Once);
         Assert.Single(Assert.Single(result.Value.Sections).Rows);
     }
 
@@ -130,12 +130,12 @@ public sealed class LessonAndCheckReportHandlersTests
             Lesson(3, 1, false));
 
         // Act
-        Result<ReportTable> result = await new TeacherMissAndSubstitutesReportQueryHandler(_repository.Object)
-            .Handle(new TeacherMissAndSubstitutesReportQuery(StartDate, EndDate), CancellationToken.None);
+        Result<ReportTable> result =
+            await new TeacherMissAndSubstitutesReportQueryHandler(_repository.Object).Handle(
+                new TeacherMissAndSubstitutesReportQuery(StartDate, EndDate), CancellationToken.None);
 
         // Assert
-        _repository.Verify(r => r.GetPeriodLessons(StartDate, DayAfterEnd, It.IsAny<CancellationToken>()),
-            Times.Once);
+        _repository.Verify(r => r.GetPeriodLessons(StartDate, DayAfterEnd, It.IsAny<CancellationToken>()), Times.Once);
         Assert.Equal(2, Assert.Single(result.Value.Sections).Rows.Count);
     }
 
@@ -145,12 +145,12 @@ public sealed class LessonAndCheckReportHandlersTests
         // Arrange
         DateTime now = Day(2026, 9, 20).AddHours(9);
         List<AbsenceCountRow> counts = [new(20, new SchedulePerson("S", "S", "6.020"), "Math", 3)];
-        _repository.Setup(r => r.GetAbsenceCounts(StartDate, now, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(counts);
+        _repository.Setup(r => r.GetAbsenceCounts(StartDate, now, It.IsAny<CancellationToken>())).ReturnsAsync(counts);
 
         // Act
-        Result<ReportTable> result = await new MissingsReportQueryHandler(_repository.Object, At(now))
-            .Handle(new MissingsReportQuery(StartDate, EndDate), CancellationToken.None);
+        Result<ReportTable> result =
+            await new MissingsReportQueryHandler(_repository.Object, At(now)).Handle(
+                new MissingsReportQuery(StartDate, EndDate), CancellationToken.None);
 
         // Assert
         AssertSameTable(AbsenceReports.Missings(counts), result);
@@ -164,12 +164,11 @@ public sealed class LessonAndCheckReportHandlersTests
             It.IsAny<CancellationToken>())).ReturnsAsync([]);
 
         // Act
-        await new MissingsReportQueryHandler(_repository.Object, At(Day(2027, 1, 1)))
-            .Handle(new MissingsReportQuery(StartDate, EndDate), CancellationToken.None);
+        await new MissingsReportQueryHandler(_repository.Object, At(Day(2027, 1, 1))).Handle(
+            new MissingsReportQuery(StartDate, EndDate), CancellationToken.None);
 
         // Assert
-        _repository.Verify(r => r.GetAbsenceCounts(StartDate, DayAfterEnd, It.IsAny<CancellationToken>()),
-            Times.Once);
+        _repository.Verify(r => r.GetAbsenceCounts(StartDate, DayAfterEnd, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     // the date's state with the lessons started before now (D121, D122): on the date itself until now
@@ -181,12 +180,16 @@ public sealed class LessonAndCheckReportHandlersTests
         DateTime now = date.AddHours(15);
         var data = new MissingsInRowData([new StudentAbsence(20, date), new StudentAbsence(20, date.AddHours(1))],
             new Dictionary<int, DateTime>(),
-            new Dictionary<int, StudentContact> { [20] = new(new SchedulePerson("S", "S", "6.020"), null, "P P", null) });
+            new Dictionary<int, StudentContact>
+            {
+                [20] = new(new SchedulePerson("S", "S", "6.020"), null, "P P", null)
+            });
         _repository.Setup(r => r.GetMissingsInRow(date, now, It.IsAny<CancellationToken>())).ReturnsAsync(data);
 
         // Act
-        Result<ReportTable> result = await new MissingsInRowReportQueryHandler(_repository.Object, At(now))
-            .Handle(new MissingsInRowReportQuery(date), CancellationToken.None);
+        Result<ReportTable> result =
+            await new MissingsInRowReportQueryHandler(_repository.Object, At(now)).Handle(
+                new MissingsInRowReportQuery(date), CancellationToken.None);
 
         // Assert
         AssertSameTable(AbsenceReports.MissingsInRow(data), result);
@@ -204,12 +207,11 @@ public sealed class LessonAndCheckReportHandlersTests
             new Dictionary<int, StudentContact>()));
 
         // Act
-        await new MissingsInRowReportQueryHandler(_repository.Object, At(Day(2026, 10, 10).AddHours(15)))
-            .Handle(new MissingsInRowReportQuery(date), CancellationToken.None);
+        await new MissingsInRowReportQueryHandler(_repository.Object, At(Day(2026, 10, 10).AddHours(15))).Handle(
+            new MissingsInRowReportQuery(date), CancellationToken.None);
 
         // Assert
-        _repository.Verify(r => r.GetMissingsInRow(date, Day(2026, 10, 10), It.IsAny<CancellationToken>()),
-            Times.Once);
+        _repository.Verify(r => r.GetMissingsInRow(date, Day(2026, 10, 10), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -220,8 +222,9 @@ public sealed class LessonAndCheckReportHandlersTests
         _repository.Setup(r => r.GetLessonErrors(null, It.IsAny<CancellationToken>())).ReturnsAsync(errors);
 
         // Act
-        Result<ReportTable> result = await new LessonsWithErrorsReportQueryHandler(_repository.Object)
-            .Handle(new LessonsWithErrorsReportQuery(), CancellationToken.None);
+        Result<ReportTable> result =
+            await new LessonsWithErrorsReportQueryHandler(_repository.Object).Handle(new LessonsWithErrorsReportQuery(),
+                CancellationToken.None);
 
         // Assert
         AssertSameTable(LessonCheckReports.LessonsWithErrors(errors), result);
@@ -232,11 +235,13 @@ public sealed class LessonAndCheckReportHandlersTests
     {
         // Arrange
         List<TeoDatesLessonRow> lessons = [new(1, "G1", Teacher, StartDate, StartDate, 8f, StartDate)];
-        _repository.Setup(r => r.GetLessonsWithMidnightTeoDates(null, It.IsAny<CancellationToken>())).ReturnsAsync(lessons);
+        _repository.Setup(r => r.GetLessonsWithMidnightTeoDates(null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(lessons);
 
         // Act
-        Result<ReportTable> result = await new WrongWeekDayChangesReportQueryHandler(_repository.Object)
-            .Handle(new WrongWeekDayChangesReportQuery(), CancellationToken.None);
+        Result<ReportTable> result =
+            await new WrongWeekDayChangesReportQueryHandler(_repository.Object).Handle(
+                new WrongWeekDayChangesReportQuery(), CancellationToken.None);
 
         // Assert
         AssertSameTable(LessonCheckReports.WrongWeekDayChanges(lessons), result);
@@ -248,9 +253,8 @@ public sealed class LessonAndCheckReportHandlersTests
         return new GroupRowsSnapshotBuilder().Group(1, "A1").DayTime(1, 1, Day(2026, 1, 5), Day(2026, 1, 20))
             .DayTime(2, 1, Day(2026, 2, 1), null).DayTime(3, 1, Day(2026, 3, 1), Day(2026, 3, 1))
             .Teacher(1, 1, 5, Day(2026, 1, 5), Day(2026, 1, 20), 2).Teacher(2, 1, 6, Day(2026, 2, 1), null)
-            .Teacher(3, 1, 6, Day(2026, 3, 1), Day(2026, 3, 1))
-            .Student(1, 1, 20, Day(2026, 1, 5), Day(2026, 1, 20), 1m).Student(2, 1, 20, Day(2026, 2, 1), null, 1m)
-            .Student(3, 1, 21, Day(2026, 3, 1), Day(2026, 3, 1)).Build();
+            .Teacher(3, 1, 6, Day(2026, 3, 1), Day(2026, 3, 1)).Student(1, 1, 20, Day(2026, 1, 5), Day(2026, 1, 20), 1m)
+            .Student(2, 1, 20, Day(2026, 2, 1), null, 1m).Student(3, 1, 21, Day(2026, 3, 1), Day(2026, 3, 1)).Build();
     }
 
     private async Task AssertGroupRowsHandler<TQuery>(IQueryHandler<TQuery, ReportTable> handler, TQuery query,
@@ -258,7 +262,8 @@ public sealed class LessonAndCheckReportHandlersTests
     {
         // Arrange
         GroupRowsSnapshot snapshot = BusyRows();
-        _repository.Setup(r => r.GetGroupRows(query.AcademicYearId, It.IsAny<CancellationToken>())).ReturnsAsync(snapshot);
+        _repository.Setup(r => r.GetGroupRows(query.AcademicYearId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(snapshot);
 
         // Act
         Result<ReportTable> result = await handler.Handle(query, CancellationToken.None);

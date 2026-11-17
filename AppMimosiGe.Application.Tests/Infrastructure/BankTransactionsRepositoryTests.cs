@@ -171,10 +171,11 @@ public sealed class BankTransactionsRepositoryTests : IDisposable
         List<BankTransactionRowResponse> rows = await _repository.GetRows(null, null, EBankTransactionsFilter.None);
 
         Assert.Equal([24, 22, 23, 21, 20], rows.Select(r => r.Id));
-        Assert.Equal(new BankTransactionRowResponse(20, "Alpha Bank", At(11, 1), 100m, "payer 20", "purpose 20", 2, false, false,
-            100m, true), rows[4]);
-        Assert.Equal((20m, false, true), (rows[3].AllocatedAmount, rows[3].HasCheckedPayments,
-            rows[3].AllocatedManually));
+        Assert.Equal(
+            new BankTransactionRowResponse(20, "Alpha Bank", At(11, 1), 100m, "payer 20", "purpose 20", 2, false, false,
+                100m, true), rows[4]);
+        Assert.Equal((20m, false, true),
+            (rows[3].AllocatedAmount, rows[3].HasCheckedPayments, rows[3].AllocatedManually));
         Assert.Equal(0m, rows[1].AllocatedAmount);
         Assert.Equal("Beta Bank", rows[0].BankName);
     }
@@ -188,12 +189,12 @@ public sealed class BankTransactionsRepositoryTests : IDisposable
     [Fact]
     public async Task GetRows_Filters()
     {
-        Assert.Equal([24, 22, 21], (await _repository.GetRows(null, null, EBankTransactionsFilter.Unallocated))
-            .Select(r => r.Id));
+        Assert.Equal([24, 22, 21],
+            (await _repository.GetRows(null, null, EBankTransactionsFilter.Unallocated)).Select(r => r.Id));
         Assert.Equal([23], (await _repository.GetRows(null, null, EBankTransactionsFilter.Ignored)).Select(r => r.Id));
         // both days included, whatever the time
-        Assert.Equal([22, 23, 21], (await _repository.GetRows(At(11, 2), At(11, 3), EBankTransactionsFilter.None))
-            .Select(r => r.Id));
+        Assert.Equal([22, 23, 21],
+            (await _repository.GetRows(At(11, 2), At(11, 3), EBankTransactionsFilter.None)).Select(r => r.Id));
     }
 
     [Fact]
@@ -202,10 +203,12 @@ public sealed class BankTransactionsRepositoryTests : IDisposable
         BankTransactionResponse? response = await _repository.GetOne(20);
 
         Assert.NotNull(response);
-        Assert.Equal((20, "Alpha Bank", At(11, 1), 100m, "GEL", "purpose 20", "doc 20", "payer 20", "GE00TB0000000000000100",
-            "01001000100", 2, false, false), (response.Id, response.BankName, response.TransactionDate, response.Amount, response.Currency,
-            response.Purpose, response.DocumentNumber, response.PartnerName, response.PartnerAccountIban,
-            response.PartnerTaxCode, response.MatchStep, response.AllocatedManually, response.Ignored));
+        Assert.Equal(
+            (20, "Alpha Bank", At(11, 1), 100m, "GEL", "purpose 20", "doc 20", "payer 20", "GE00TB0000000000000100",
+                "01001000100", 2, false, false),
+            (response.Id, response.BankName, response.TransactionDate, response.Amount, response.Currency,
+                response.Purpose, response.DocumentNumber, response.PartnerName, response.PartnerAccountIban,
+                response.PartnerTaxCode, response.MatchStep, response.AllocatedManually, response.Ignored));
         Assert.Equal([
             new BankTransactionAllocationResponse(30, 10, "Alpha Ann 6.001", 11, 60m, true),
             new BankTransactionAllocationResponse(31, 11, "Beta Bob 6.002", 11, 40m, false)
@@ -227,7 +230,8 @@ public sealed class BankTransactionsRepositoryTests : IDisposable
     [Fact]
     public async Task GetStudentHumanIds_OfTheContracts()
     {
-        Assert.Equal(new Dictionary<int, int> { [10] = 1, [12] = 1 }, await _repository.GetStudentHumanIds([10, 12, 99]));
+        Assert.Equal(new Dictionary<int, int> { [10] = 1, [12] = 1 },
+            await _repository.GetStudentHumanIds([10, 12, 99]));
     }
 
     [Fact]

@@ -99,27 +99,27 @@ public sealed class ImportBankTransactionsCommandHandler(
 
         if (periodFrom > periodTo)
         {
-            return new ImportBankAccountResponse(account.BankAccountId, bankName, periodFrom, periodTo, 0, 0, 0, 0,
-                0, null);
+            return new ImportBankAccountResponse(account.BankAccountId, bankName, periodFrom, periodTo, 0, 0, 0, 0, 0,
+                null);
         }
 
         Result<IReadOnlyList<BankMovement>> received = await bankClient.GetIncomingPayments(
             DateOnly.FromDateTime(periodFrom), DateOnly.FromDateTime(periodTo), cancellationToken);
         if (received.IsFailure)
         {
-            return new ImportBankAccountResponse(account.BankAccountId, bankName, periodFrom, periodTo, 0, 0, 0, 0,
-                0, received.Error.Description);
+            return new ImportBankAccountResponse(account.BankAccountId, bankName, periodFrom, periodTo, 0, 0, 0, 0, 0,
+                received.Error.Description);
         }
 
         IReadOnlyList<BankMovement> movements = received.Value;
         HashSet<string> existing = movements.Count == 0
             ? []
-            : await repository.GetExistingMovementIds(account.BankAccountId,
-                [.. movements.Select(m => m.MovementId)], cancellationToken);
+            : await repository.GetExistingMovementIds(account.BankAccountId, [.. movements.Select(m => m.MovementId)],
+                cancellationToken);
         List<BankMovement> newMovements =
         [
-            .. movements.Where(m => !existing.Contains(m.MovementId)).DistinctBy(m => m.MovementId)
-                .OrderBy(m => m.Date).ThenBy(m => m.MovementId, StringComparer.Ordinal)
+            .. movements.Where(m => !existing.Contains(m.MovementId)).DistinctBy(m => m.MovementId).OrderBy(m => m.Date)
+                .ThenBy(m => m.MovementId, StringComparer.Ordinal)
         ];
 
         List<PlannedTransaction> plan = newMovements.Count == 0
@@ -204,8 +204,8 @@ public sealed class ImportBankTransactionsCommandHandler(
         }
 
         //გადახდა კონტრაქტის შემდეგი გადახდის თარიღს ცვლის (D78)
-        await paymentsRepository.MarkNextPayDatesDirty(
-            plan.SelectMany(p => p.Shares).Select(s => s.StudentContractId), cancellationToken);
+        await paymentsRepository.MarkNextPayDatesDirty(plan.SelectMany(p => p.Shares).Select(s => s.StudentContractId),
+            cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 

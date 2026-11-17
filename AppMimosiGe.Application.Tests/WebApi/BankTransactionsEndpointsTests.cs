@@ -90,8 +90,8 @@ public sealed class BankTransactionsEndpointsTests
     [Fact]
     public async Task GetOne_OkOrNotFound()
     {
-        BankTransactionResponse response = new(7, "თიბისი", Day, 10m, "GEL", null, null, null, null, null, null, null, 0, false,
-            false, []);
+        BankTransactionResponse response = new(7, "თიბისი", Day, 10m, "GEL", null, null, null, null, null, null, null,
+            0, false, false, []);
         var handler = QueryHandler<GetBankTransactionQuery, BankTransactionResponse>(response);
 
         var ok = await BankTransactionsEndpoints.GetOne(7, handler.Object);
@@ -108,8 +108,8 @@ public sealed class BankTransactionsEndpointsTests
     [Fact]
     public async Task Import_PassesThePeriodAndDryRun()
     {
-        ImportBankTransactionsResponse response = new([new ImportBankAccountResponse(4, "თიბისი", Day, Day, 1, 0, 1, 1, 0,
-            null)], true);
+        ImportBankTransactionsResponse response =
+            new([new ImportBankAccountResponse(4, "თიბისი", Day, Day, 1, 0, 1, 1, 0, null)], true);
         var handler = new Mock<ICommandHandler<ImportBankTransactionsCommand, ImportBankTransactionsResponse>>();
         handler.Setup(h => h.Handle(It.IsAny<ImportBankTransactionsCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(response);
@@ -132,7 +132,10 @@ public sealed class BankTransactionsEndpointsTests
     [Fact]
     public async Task SetAllocation_PassesTheRequest()
     {
-        BankTransactionAllocationRequest request = new() { Shares = [new() { StudentContractId = 10, Amount = 5m }] };
+        BankTransactionAllocationRequest request = new()
+        {
+            Shares = [new BankTransactionShareRequest { StudentContractId = 10, Amount = 5m }]
+        };
         var handler = CommandHandler<SetBankTransactionAllocationCommand>(Result.Success());
 
         var ok = await BankTransactionsEndpoints.SetAllocation(7, request, handler.Object);
@@ -160,8 +163,9 @@ public sealed class BankTransactionsEndpointsTests
 
         handler = CommandHandler<SetBankTransactionIgnoredCommand>(
             Result.Failure(BankTransactionErrors.BankTransactionHasPayments));
-        AssertProblem((await BankTransactionsEndpoints.SetIgnored(7, new BankTransactionIgnoredRequest(),
-            handler.Object)).Result, StatusCodes.Status409Conflict);
+        AssertProblem(
+            (await BankTransactionsEndpoints.SetIgnored(7, new BankTransactionIgnoredRequest(), handler.Object)).Result,
+            StatusCodes.Status409Conflict);
     }
 
     // the routes the SPA calls, with their HTTP methods
@@ -204,9 +208,11 @@ public sealed class BankTransactionsEndpointsTests
 
         app.UseAppMimosiGeApi(logger.Object);
 
-        logger.Verify(l => l.Information("{MethodName} Started",
-            nameof(BankTransactionsEndpoints.UseBankTransactionsEndpoints)), Times.Once);
-        logger.Verify(l => l.Information("{MethodName} Finished",
-            nameof(BankTransactionsEndpoints.UseBankTransactionsEndpoints)), Times.Once);
+        logger.Verify(
+            l => l.Information("{MethodName} Started", nameof(BankTransactionsEndpoints.UseBankTransactionsEndpoints)),
+            Times.Once);
+        logger.Verify(
+            l => l.Information("{MethodName} Finished", nameof(BankTransactionsEndpoints.UseBankTransactionsEndpoints)),
+            Times.Once);
     }
 }

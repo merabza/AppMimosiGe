@@ -34,7 +34,12 @@ public static class BankTransactionReports
         [
             .. ordered.Select(r => new List<object?>
             {
-                r.TransactionDate.Date, r.BankName, r.PartnerName, r.Purpose, r.Amount, r.AllocatedAmount,
+                r.TransactionDate.Date,
+                r.BankName,
+                r.PartnerName,
+                r.Purpose,
+                r.Amount,
+                r.AllocatedAmount,
                 r.Amount - r.AllocatedAmount
             })
         ];

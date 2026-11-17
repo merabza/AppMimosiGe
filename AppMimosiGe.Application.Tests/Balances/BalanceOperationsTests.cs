@@ -7,6 +7,25 @@ namespace AppMimosiGe.Application.Tests.Balances;
 
 public sealed class BalanceOperationsTests
 {
+    //decimal literals: since .NET 11 a double such as -16.6667 converts to decimal with all its binary digits
+    public static TheoryData<decimal, float, float, decimal> ChargeAmounts =>
+        new()
+        {
+            { 48m, 8f, 1f, -6m },
+            { 48m, 8f, 1.5f, -9m },
+            { 100m, 12f, 2f, -16.6667m },
+            { 60.5m, 6f, 0.5f, -5.0417m }
+        };
+
+    public static TheoryData<decimal, decimal> MoneyRoundings =>
+        new()
+        {
+            { 1.23455m, 1.2346m },
+            { 1.23445m, 1.2344m },
+            { -16.666666666666666666666666667m, -16.6667m },
+            { 5m, 5m }
+        };
+
     private static DateTime At(int month, int day, int hour = 0, int minute = 0) =>
         new(2026, month, day, hour, minute, 0, DateTimeKind.Unspecified);
 
@@ -17,10 +36,7 @@ public sealed class BalanceOperationsTests
     }
 
     [Theory]
-    [InlineData(48, 8f, 1f, -6)]
-    [InlineData(48, 8f, 1.5f, -9)]
-    [InlineData(100, 12f, 2f, -16.6667)]
-    [InlineData(60.5, 6f, 0.5f, -5.0417)]
+    [MemberData(nameof(ChargeAmounts))]
     public void ChargeAmount_IsMinusTheHourFeeTimesTheHours(decimal fee, float fourWeekHours, float hoursCount,
         decimal expected)
     {
@@ -79,10 +95,7 @@ public sealed class BalanceOperationsTests
     }
 
     [Theory]
-    [InlineData(1.23455, 1.2346)]
-    [InlineData(1.23445, 1.2344)]
-    [InlineData(-16.666666666666666666666666667, -16.6667)]
-    [InlineData(5, 5)]
+    [MemberData(nameof(MoneyRoundings))]
     public void RoundMoney_RoundsToFourDecimals(decimal amount, decimal expected)
     {
         Assert.Equal(expected, BalanceOperations.RoundMoney(amount));

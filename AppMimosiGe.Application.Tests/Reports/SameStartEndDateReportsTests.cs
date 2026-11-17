@@ -28,8 +28,9 @@ public sealed class SameStartEndDateReportsTests
 
     private static void AssertRows(ReportTable table, params string[] expected)
     {
-        Assert.Equal(expected, Assert.Single(table.Sections).Rows.Select(r =>
-            string.Join("|", r.Select(c => c is DateTime d ? d.ToString("MM-dd", CultureInfo.InvariantCulture) : c))));
+        Assert.Equal(expected,
+            Assert.Single(table.Sections).Rows.Select(r => string.Join("|",
+                r.Select(c => c is DateTime d ? d.ToString("MM-dd", CultureInfo.InvariantCulture) : c))));
     }
 
     // order: student (Access's ORDER BY), then group code

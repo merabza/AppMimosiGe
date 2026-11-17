@@ -1,6 +1,6 @@
-using AppMimosiGe.Application.AcademicYears;
 using System;
 using System.Linq;
+using AppMimosiGe.Application.AcademicYears;
 using AppMimosiGe.Application.Balances;
 using AppMimosiGe.Application.BankTransactions;
 using AppMimosiGe.Application.CrmCalls;
@@ -256,8 +256,7 @@ public sealed class AppMimosiGeInfrastructureDependencyInjectionTests
         services.AddAppMimosiGeInfrastructure(null);
 
         // Assert
-        ServiceDescriptor descriptor =
-            Assert.Single(services, s => s.ServiceType == typeof(IAcademicYearsRepository));
+        ServiceDescriptor descriptor = Assert.Single(services, s => s.ServiceType == typeof(IAcademicYearsRepository));
         Assert.Equal(typeof(AcademicYearsRepository), descriptor.ImplementationType);
         Assert.Equal(ServiceLifetime.Scoped, descriptor.Lifetime);
     }

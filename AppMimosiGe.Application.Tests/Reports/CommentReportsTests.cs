@@ -18,8 +18,7 @@ public sealed class CommentReportsTests
         return new DateTime(2026, 9, day, hour, minute, 0, DateTimeKind.Unspecified);
     }
 
-    private static CommentStudent Student(int contractId, string? teacherComment = null,
-        string? studentComment = null)
+    private static CommentStudent Student(int contractId, string? teacherComment = null, string? studentComment = null)
     {
         return new CommentStudent(contractId, new SchedulePerson($"SLast{contractId}", "S", $"6.{contractId:000}"),
             teacherComment, studentComment);

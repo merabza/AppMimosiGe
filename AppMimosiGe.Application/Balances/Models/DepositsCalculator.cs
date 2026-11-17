@@ -62,12 +62,9 @@ public static class DepositsCalculator
             //გარეშე კონტრაქტი სიაში ისედაც არ ხვდება). სტრიქონის გარეშე Max ცარიელ სიმრავლეზე null-ია
             DepositRowResponse row = new(contract.StudentContractId, contract.AcademicYearId, contract.StudentName,
                 contract.ContractNumber, balance, contract.StudentPhone, contract.PayerName, contract.PayerPhone,
-                nextLessonDates.TryGetValue(account, out DateTime nextLessonDate)
-                    ? nextLessonDate
-                    : null,
-                crmMustPayDates.TryGetValue(account, out DateTime crmMustPayDate)
-                    ? crmMustPayDate
-                    : null, FourWeekFee(contractGroupStudents, dateToEnd), contract.DesiredMonthlyPaymentDay,
+                nextLessonDates.TryGetValue(account, out DateTime nextLessonDate) ? nextLessonDate : null,
+                crmMustPayDates.TryGetValue(account, out DateTime crmMustPayDate) ? crmMustPayDate : null,
+                FourWeekFee(contractGroupStudents, dateToEnd), contract.DesiredMonthlyPaymentDay,
                 desiredPayDates?.NextPayDate, desiredPayDates?.AfterNextPayDate, desiredDayAmount, contract.NextPayDate,
                 contractGroupStudents.Count > 0 ? -SumOrNull(contractOperations) : null,
                 contractGroupStudents.Max(g => g.EndDate ?? g.GroupVoidDate ?? openEndDate));

@@ -17,8 +17,7 @@ namespace AppMimosiGe.Application.AcademicYears.CreateAcademicYear;
 public sealed class CreateAcademicYearCommandHandler(
     IAcademicYearsRepository repository,
     IUnitOfWork unitOfWork,
-    TimeProvider timeProvider)
-    : ICommandHandler<CreateAcademicYearCommand, NewAcademicYearResponse>
+    TimeProvider timeProvider) : ICommandHandler<CreateAcademicYearCommand, NewAcademicYearResponse>
 {
     //ახალი წელი მიმდინარეს მომდევნოა, ამიტომ განმეორებით გაშვება იმავე წელს იძლევა: preview ამას აჩვენებს, შექმნა კი
     //409-ია

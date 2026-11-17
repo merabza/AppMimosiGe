@@ -83,8 +83,7 @@ public static class LessonCheckReports
     {
         List<PeriodLessonRow> cases =
         [
-            .. lessons.Where(l =>
-                l.LessonStatusId == ReportLessonStatuses.Cancelled || l.SubstituteTeacher is not null)
+            .. lessons.Where(l => l.LessonStatusId == ReportLessonStatuses.Cancelled || l.SubstituteTeacher is not null)
         ];
         List<ReportColumnResponse> columns =
         [

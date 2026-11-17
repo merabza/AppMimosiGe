@@ -6,26 +6,6 @@ using AppMimosiGe.Application.Balances.Models;
 namespace AppMimosiGe.Application.BankTransactions.Models;
 
 /// <summary>
-///     ჩარიცხვის ერთი წილი: მოსწავლე, მისი მიმდინარე წლის კონტრაქტი (გადახდა მასზე იწერება) და თანხა
-/// </summary>
-public sealed record PlannedShare(int StudentHumanId, int StudentContractId, decimal Amount);
-
-/// <summary>
-///     ერთი ახალი ჩარიცხვა: რომელმა წესმა იპოვა მოსწავლე(ები) და წილები (ცარიელი = გაუნაწილებელი)
-/// </summary>
-public sealed record PlannedTransaction(BankMovement Movement, EPaymentMatchStep Step, IReadOnlyList<PlannedShare> Shares);
-
-/// <param name="Match">მოსწავლეების საძიებო მონაცემები (PaymentMatcher)</param>
-/// <param name="CurrentContractByStudent">მოსწავლე → მიმდინარე წლის კონტრაქტი</param>
-/// <param name="Operations">მიმდინარე მოსწავლეების ყველა კონტრაქტის ოპერაციები (BalanceOperations.Build)</param>
-/// <param name="StudentByContract">კონტრაქტი → მოსწავლე (მოსწავლის ანგარიში, StudentAccounts)</param>
-public sealed record ImportPlanInput(
-    PaymentMatchInput Match,
-    IReadOnlyDictionary<int, int> CurrentContractByStudent,
-    IReadOnlyList<BalanceOperation> Operations,
-    IReadOnlyDictionary<int, int> StudentByContract);
-
-/// <summary>
 ///     ახალი ჩარიცხვების ავტომატური განაწილება (TBC_INTEGRATION.md §4, D163, D164): თითო ჩარიცხვას PaymentMatcher
 ///     მოსწავლეებს უძებნის; ერთი მოსწავლე მთელ თანხას იღებს, რამდენიმე კი PaymentDistributor-ით ინაწილებს, ჩარიცხვის
 ///     თარიღის ბალანსით (მოსწავლის ანგარიში: ყველა კონტრაქტი, ამ დღის ჩათვლით) და წლის ბოლომდე გადასახდელით (ყველა

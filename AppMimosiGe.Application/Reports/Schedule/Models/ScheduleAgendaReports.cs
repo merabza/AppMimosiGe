@@ -123,8 +123,7 @@ public static class ScheduleAgendaReports
             new ReportColumnResponse("endTime", "დასრულება", ReportColumnTypes.Time),
             .. WeekDayPivot.WeekDayColumns(schedule.WeekDays, ReportColumnTypes.WholeNumber)
         ], [
-            .. rows.OrderBy(r => r.Key.Start).Select(r =>
-                Row([TimeOfDay(r.Key.Start), TimeOfDay(r.Key.End)], r.Days))
+            .. rows.OrderBy(r => r.Key.Start).Select(r => Row([TimeOfDay(r.Key.Start), TimeOfDay(r.Key.End)], r.Days))
         ], [
             Row([DaySumsCaption, null], daySums),
             Row([TotalCaption, null, schedule.Lessons.Count], schedule.WeekDays.Skip(1).Select(_ => (object?)null))

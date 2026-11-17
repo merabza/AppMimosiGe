@@ -51,6 +51,9 @@ namespace AppMimosiGe.Application.Tests.Reports;
 
 public sealed class ReportsCatalogTests
 {
+    private const string AllGroupRows =
+        "არჩეული სასწავლო წლის (ცარიელი — ყველა წლის) ყველა ჯგუფის ყველა სტრიქონი, თარიღების მიუხედავად.";
+
     private static readonly DateTime Date = new(2026, 10, 2, 0, 0, 0, DateTimeKind.Unspecified);
     private static readonly DateTime StartDate = new(2026, 9, 1, 0, 0, 0, DateTimeKind.Unspecified);
 
@@ -77,9 +80,6 @@ public sealed class ReportsCatalogTests
         "r33DTPSameStartEndDate"
     ];
 
-    private const string AllGroupRows =
-        "არჩეული სასწავლო წლის (ცარიელი — ყველა წლის) ყველა ჯგუფის ყველა სტრიქონი, თარიღების მიუხედავად.";
-
     //part 18: the groups' state for one date (r09 had no filter in Access, D132)
     private static readonly string[] Part18OneDateKeys =
     [
@@ -95,15 +95,14 @@ public sealed class ReportsCatalogTests
     [Fact]
     public void Definitions_AreTheReportsInAccessOrder()
     {
-        AssertKeys(ReportsCatalog.Definitions.Select(d => d.Key), "r01Comments", "r03RoomsAgenda",
-            "r04StudentsAgenda", "r05TeachersAgenda", "r06RoomOver", "r07UsedDayTimes", "r08LessSizeGroups",
-            "r09Optimization", "r10Groups", "r11WrongStatuseLessons", "r12LessonsWithWrongVoidStatus",
-            "r13LessonsWithErrors", "r14Missings", "r15BlackList", "r17MissingsInRow", "r18TeacherOver",
-            "r19StudentOver", "r20StudentDoubleCources", "r21TeacherDoubleGroups", "r22", "r23GroupSizesAnalize",
-            "r24GroupsOptimization", "r25TecherSalaryByGroups", "r26StudMissDate", "r27TeacherMissDate",
-            "r28DayTimesMissDate", "r29TeacherMissSalary", "r30StudentMissFees", "r31StudSameStartEndDate",
-            "r32TeachSameStartEndDate", "r33DTPSameStartEndDate", "r34TeacherMissAndSubstitutes", "r36",
-            "r40UnallocatedBankTransactions");
+        AssertKeys(ReportsCatalog.Definitions.Select(d => d.Key), "r01Comments", "r03RoomsAgenda", "r04StudentsAgenda",
+            "r05TeachersAgenda", "r06RoomOver", "r07UsedDayTimes", "r08LessSizeGroups", "r09Optimization", "r10Groups",
+            "r11WrongStatuseLessons", "r12LessonsWithWrongVoidStatus", "r13LessonsWithErrors", "r14Missings",
+            "r15BlackList", "r17MissingsInRow", "r18TeacherOver", "r19StudentOver", "r20StudentDoubleCources",
+            "r21TeacherDoubleGroups", "r22", "r23GroupSizesAnalize", "r24GroupsOptimization", "r25TecherSalaryByGroups",
+            "r26StudMissDate", "r27TeacherMissDate", "r28DayTimesMissDate", "r29TeacherMissSalary",
+            "r30StudentMissFees", "r31StudSameStartEndDate", "r32TeachSameStartEndDate", "r33DTPSameStartEndDate",
+            "r34TeacherMissAndSubstitutes", "r36", "r40UnallocatedBankTransactions");
     }
 
     [Fact]
@@ -138,8 +137,9 @@ public sealed class ReportsCatalogTests
                 Part16Keys.Contains(d.Key) || Part18OneDateKeys.Contains(d.Key) || d.Key == "r17MissingsInRow"),
             d => Assert.Equal(new ReportParameter(ReportParameterNames.EndDate, "თარიღისთვის", true),
                 Assert.Single(d.Parameters)));
-        Assert.Equal(14, ReportsCatalog.Definitions.Count(d =>
-            Part16Keys.Contains(d.Key) || Part18OneDateKeys.Contains(d.Key) || d.Key == "r17MissingsInRow"));
+        Assert.Equal(14,
+            ReportsCatalog.Definitions.Count(d =>
+                Part16Keys.Contains(d.Key) || Part18OneDateKeys.Contains(d.Key) || d.Key == "r17MissingsInRow"));
     }
 
     // Access's StartDate, EndDate reports: both required
@@ -636,8 +636,8 @@ public sealed class ReportsCatalogTests
         await using ServiceProvider provider = services.BuildServiceProvider();
 
         // Act
-        await ReportsCatalog.Find("r10Groups")!.Run(new ReportParametersRequest(null, Date, null, null, null),
-            provider, CancellationToken.None);
+        await ReportsCatalog.Find("r10Groups")!.Run(new ReportParametersRequest(null, Date, null, null, null), provider,
+            CancellationToken.None);
 
         // Assert
         Assert.Equal(new GroupListReportQuery(Date, null, null, null), query);

@@ -24,14 +24,15 @@ public sealed class AbsenceReportsTests
 
     private static string Text(List<object?> row)
     {
-        return string.Join("|", row.Select(c => c is IFormattable f ? f.ToString(null, CultureInfo.InvariantCulture) : c));
+        return string.Join("|",
+            row.Select(c => c is IFormattable f ? f.ToString(null, CultureInfo.InvariantCulture) : c));
     }
 
     //a student with a payer; synthetic people only
     private static StudentContact Contact(int contractId, string lastName, string? phone = "555123456")
     {
-        return new StudentContact(new SchedulePerson(lastName, "S", $"6.{contractId:000}"), phone, $"P{contractId} Payer",
-            null);
+        return new StudentContact(new SchedulePerson(lastName, "S", $"6.{contractId:000}"), phone,
+            $"P{contractId} Payer", null);
     }
 
     // r14: the most absences first, then the student and the course
@@ -72,7 +73,8 @@ public sealed class AbsenceReportsTests
         ];
 
         // Act & Assert
-        Assert.Equal(["Alpha A|6.020|Math|2", "Alpha A|6.021|Math|2"], Rows(AbsenceReports.Missings(counts)).Select(Text));
+        Assert.Equal(["Alpha A|6.020|Math|2", "Alpha A|6.021|Math|2"],
+            Rows(AbsenceReports.Missings(counts)).Select(Text));
     }
 
     // r17: the absences after the last presence count; a student never present counts every absence (D122); only
@@ -83,14 +85,17 @@ public sealed class AbsenceReportsTests
         // Arrange: 20 present on the 5th: 2 later absences; 21 never present: 2; 22 present on the 9th: 1 later
         // absence; 23 present on the 10th: none later
         MissingsInRowData data = new([
-            new StudentAbsence(20, At(1, 10)), new StudentAbsence(20, At(8, 10)), new StudentAbsence(20, At(9, 10)),
-            new StudentAbsence(21, At(2, 10)), new StudentAbsence(21, At(3, 10)), new StudentAbsence(22, At(8, 10)),
-            new StudentAbsence(22, At(10, 10)), new StudentAbsence(23, At(9, 10)), new StudentAbsence(23, At(8, 10))
-        ], new Dictionary<int, DateTime> { [20] = At(5, 10), [22] = At(9, 10), [23] = At(10, 10) }, new Dictionary<int, StudentContact>
-        {
-            [20] = Contact(20, "Zeta"), [21] = Contact(21, "Alpha", null), [22] = Contact(22, "Beta"),
-            [23] = Contact(23, "Gamma")
-        });
+                new StudentAbsence(20, At(1, 10)), new StudentAbsence(20, At(8, 10)), new StudentAbsence(20, At(9, 10)),
+                new StudentAbsence(21, At(2, 10)), new StudentAbsence(21, At(3, 10)), new StudentAbsence(22, At(8, 10)),
+                new StudentAbsence(22, At(10, 10)), new StudentAbsence(23, At(9, 10)), new StudentAbsence(23, At(8, 10))
+            ], new Dictionary<int, DateTime> { [20] = At(5, 10), [22] = At(9, 10), [23] = At(10, 10) },
+            new Dictionary<int, StudentContact>
+            {
+                [20] = Contact(20, "Zeta"),
+                [21] = Contact(21, "Alpha", null),
+                [22] = Contact(22, "Beta"),
+                [23] = Contact(23, "Gamma")
+            });
 
         // Act
         ReportTable table = AbsenceReports.MissingsInRow(data);
@@ -112,8 +117,9 @@ public sealed class AbsenceReportsTests
     {
         // Arrange
         MissingsInRowData data = new([
-            new StudentAbsence(20, At(5, 10)), new StudentAbsence(20, At(6, 10)), new StudentAbsence(20, At(7, 10))
-        ], new Dictionary<int, DateTime> { [20] = At(5, 10) }, new Dictionary<int, StudentContact> { [20] = Contact(20, "Zeta") });
+                new StudentAbsence(20, At(5, 10)), new StudentAbsence(20, At(6, 10)), new StudentAbsence(20, At(7, 10))
+            ], new Dictionary<int, DateTime> { [20] = At(5, 10) },
+            new Dictionary<int, StudentContact> { [20] = Contact(20, "Zeta") });
 
         // Act & Assert
         Assert.Equal(2, Assert.Single(Rows(AbsenceReports.MissingsInRow(data)))[4]);
@@ -125,12 +131,10 @@ public sealed class AbsenceReportsTests
     {
         // Arrange
         MissingsInRowData data = new([
-            new StudentAbsence(20, At(1, 10)), new StudentAbsence(20, At(2, 10)), new StudentAbsence(21, At(1, 10)),
-            new StudentAbsence(21, At(2, 10)), new StudentAbsence(21, At(3, 10))
-        ], new Dictionary<int, DateTime>(), new Dictionary<int, StudentContact>
-        {
-            [20] = Contact(20, "Alpha"), [21] = Contact(21, "Zeta")
-        });
+                new StudentAbsence(20, At(1, 10)), new StudentAbsence(20, At(2, 10)), new StudentAbsence(21, At(1, 10)),
+                new StudentAbsence(21, At(2, 10)), new StudentAbsence(21, At(3, 10))
+            ], new Dictionary<int, DateTime>(),
+            new Dictionary<int, StudentContact> { [20] = Contact(20, "Alpha"), [21] = Contact(21, "Zeta") });
 
         // Act & Assert
         Assert.Equal([3, 2], Rows(AbsenceReports.MissingsInRow(data)).Select(r => r[4]));

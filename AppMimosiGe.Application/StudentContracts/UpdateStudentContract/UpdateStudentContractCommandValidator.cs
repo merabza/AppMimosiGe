@@ -28,9 +28,8 @@ public sealed class UpdateStudentContractCommandValidator : AbstractValidator<Up
 
             //მოსწავლის ბალანსი მისი ყველა კონტრაქტის ჯამია, ამიტომ წელში მოსწავლეს ერთი კონტრაქტი აქვს (ნაწილი 20)
             RuleFor(x => x)
-                .MustAsync(async (command, ct) =>
-                    !await repository.StudentHasContract(command.Request!.AcademicYearId,
-                        command.Request.StudentHumanId, command.ScId, ct))
+                .MustAsync(async (command, ct) => !await repository.StudentHasContract(command.Request!.AcademicYearId,
+                    command.Request.StudentHumanId, command.ScId, ct))
                 .WithErrorCode(StudentContractErrors.StudentAlreadyHasContract.Code)
                 .WithMessage(StudentContractErrors.StudentAlreadyHasContract.Description);
         });

@@ -65,7 +65,7 @@ try
         .AddApplication(debugLogger, typeof(BackendCarcass.Application.AssemblyReference),
             typeof(AppMimosiGe.Application.AssemblyReference))
         .AddFluentValidation(debugLogger, AppMimosiGe.Application.AssemblyReference.Assembly,
-            BackendCarcass.Api.AssemblyReference.Assembly)
+            AssemblyReference.Assembly)
         //.AddCarcassDom(debugMode)
         .AddAppMimosiGeRepositories(debugLogger)
         .AddAppMimosiGeInfrastructure(debugLogger,

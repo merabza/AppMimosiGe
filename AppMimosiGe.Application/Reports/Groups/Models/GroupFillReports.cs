@@ -22,8 +22,7 @@ public static class GroupFillReports
     //სექცია = ჯგუფის ზომა (Access-ის რეპორტის დაჯგუფება GroupSizeID-ით), სტრიქონები ჯგუფის კოდით
     public static ReportTable LessSizeGroups(GroupsSnapshot snapshot)
     {
-        return new ReportTable(
-        [
+        return new ReportTable([
             Text("groupCode", "ჯგუფი"), Text("course", "საგანი"), Text("studentStatus", "მოსწავლის სტატუსი"),
             WholeNumber("studentsCount", "რაოდენობა")
         ], [
@@ -54,15 +53,15 @@ public static class GroupFillReports
         ], [
             .. underFilled.SelectMany((first, index) => underFilled.Skip(index + 1)
                 .Where(second => SameKind(first.Group, second.Group) &&
-                                 first.Group.Size >= first.StudentsCount + second.StudentsCount)
-                .Select(second => new List<object?>
-                {
-                    first.Group.GroupCode,
-                    second.Group.GroupCode,
-                    first.Group.Size,
-                    first.StudentsCount,
-                    second.StudentsCount
-                }))
+                                 first.Group.Size >= first.StudentsCount + second.StudentsCount).Select(second =>
+                    new List<object?>
+                    {
+                        first.Group.GroupCode,
+                        second.Group.GroupCode,
+                        first.Group.Size,
+                        first.StudentsCount,
+                        second.StudentsCount
+                    }))
         ]);
     }
 
@@ -109,8 +108,7 @@ public static class GroupFillReports
     public static ReportTable GroupsOptimization(GroupsSnapshot snapshot)
     {
         ILookup<int, ReportGroupStudent> students = snapshot.Students.ToLookup(s => s.GroupId);
-        return new ReportTable(
-        [
+        return new ReportTable([
             Text("groupCode", "ჯგუფი"), Text("teachers", "მასწავლებელი"), Text("student", "მოსწავლე")
         ], [
             .. UnderFilled(snapshot).GroupBy(f => (f.Group.CourseId, f.Group.StudentStatusId, f.Group.GroupSizeId))
@@ -119,13 +117,13 @@ public static class GroupFillReports
                 .OrderBy(kind => kind[0].Group.CourseName, StringComparer.Ordinal)
                 .ThenBy(kind => kind[0].Group.CourseId)
                 .ThenBy(kind => kind[0].Group.StudentStatusName, StringComparer.Ordinal)
-                .ThenBy(kind => kind[0].Group.StudentStatusId).ThenBy(kind => kind[0].Group.GroupSizeId)
-                .Select(kind => new ReportSectionResponse(
-                    $"{kind[0].Group.CourseName} · {kind[0].Group.StudentStatusName} · {kind[0].Group.GroupSizeName}" +
-                    $" · ჯგუფები: {kind.Count} · მოსწავლეები: {kind.Sum(f => f.StudentsCount)}", [
-                        .. kind.OrderBy(f => f.Group.GroupCode, StringComparer.Ordinal).ThenBy(f => f.Group.GroupId)
-                            .SelectMany(f => GroupStudentRows(snapshot, f.Group, students[f.Group.GroupId]))
-                    ], null))
+                .ThenBy(kind => kind[0].Group.StudentStatusId).ThenBy(kind => kind[0].Group.GroupSizeId).Select(kind =>
+                    new ReportSectionResponse(
+                        $"{kind[0].Group.CourseName} · {kind[0].Group.StudentStatusName} · {kind[0].Group.GroupSizeName}" +
+                        $" · ჯგუფები: {kind.Count} · მოსწავლეები: {kind.Sum(f => f.StudentsCount)}", [
+                            .. kind.OrderBy(f => f.Group.GroupCode, StringComparer.Ordinal).ThenBy(f => f.Group.GroupId)
+                                .SelectMany(f => GroupStudentRows(snapshot, f.Group, students[f.Group.GroupId]))
+                        ], null))
         ], []);
     }
 
@@ -194,8 +192,7 @@ public static class GroupFillReports
     }
 
     //ჯამის სტრიქონი: წარწერა პირველ სვეტში, მნიშვნელობა მეორეში
-    private static List<object?> Footer(List<ReportColumnResponse> columns, string caption,
-        object? value)
+    private static List<object?> Footer(List<ReportColumnResponse> columns, string caption, object? value)
     {
         return [caption, value, .. Enumerable.Repeat<object?>(null, columns.Count - 2)];
     }

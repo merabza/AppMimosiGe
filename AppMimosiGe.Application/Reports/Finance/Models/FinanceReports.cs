@@ -26,8 +26,10 @@ public static class FinanceReports
         ];
         List<List<object?>> rows =
         [
-            .. data.Payments.SelectMany(p => new[] { p.StudentHumanId, p.PayerHumanId }.Distinct()
-                    .Select(humanId => (HumanId: humanId, p.Amount))).GroupBy(p => p.HumanId)
+            .. data.Payments
+                .SelectMany(p =>
+                    new[] { p.StudentHumanId, p.PayerHumanId }.Distinct()
+                        .Select(humanId => (HumanId: humanId, p.Amount))).GroupBy(p => p.HumanId)
                 .Select(human => (Debtor: data.Humans[human.Key], Debt: human.Sum(p => p.Amount)))
                 .OrderBy(h => h.Debtor.LastName, StringComparer.Ordinal)
                 .ThenBy(h => h.Debtor.FirstName, StringComparer.Ordinal)
@@ -47,9 +49,9 @@ public static class FinanceReports
     public static ReportTable TeacherSalaryByGroups(IEnumerable<SalaryDetailRow> details,
         IReadOnlyDictionary<int, string> monthNames)
     {
-        return new ReportTable(
-        [
-            Text("groupCode", "ჯგუფი"), Text("course", "საგანი"), Number("hours", "საათები"), Number("hourCost", "ფასი"),
+        return new ReportTable([
+            Text("groupCode", "ჯგუფი"), Text("course", "საგანი"), Number("hours", "საათები"),
+            Number("hourCost", "ფასი"),
             Number("amount", "ღირებულება")
         ], [
             .. details.GroupBy(d => (d.MonthDate, d.TeacherContractId)).Select(section => section.ToList())
@@ -64,10 +66,13 @@ public static class FinanceReports
                             .. section.OrderBy(d => d.GroupCode, StringComparer.Ordinal).ThenBy(d => d.GroupId)
                                 .ThenBy(d => d.SadId).Select(d => new List<object?>
                                 {
-                                    d.GroupCode, d.CourseName, d.HoursCount, d.HourCost, d.Amount
+                                    d.GroupCode,
+                                    d.CourseName,
+                                    d.HoursCount,
+                                    d.HourCost,
+                                    d.Amount
                                 })
-                        ],
-                        [
+                        ], [
                             ReportFooters.TotalCaption, null, hours,
                             hours == 0 ? null : Math.Round(amount / hours, MoneyDecimals), amount
                         ]);

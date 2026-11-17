@@ -1,7 +1,10 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using AppMimosiGe.Application.LessonGenerator;
+using AppMimosiGe.Application.LessonGenerator.Models;
 using AppMimosiGe.Application.Lessons.Models;
 using AppMimosiGeShared.Contracts.Errors;
 using AppMimosiGeShared.Contracts.V1.Requests;
@@ -13,8 +16,11 @@ using SystemTools.SharedKernel;
 namespace AppMimosiGe.Application.Lessons.UpdateLesson;
 
 // ReSharper disable once ClassNeverInstantiated.Global
-public sealed class UpdateLessonCommandHandler(ILessonsRepository repository, IUnitOfWork unitOfWork)
-    : ICommandHandler<UpdateLessonCommand>
+public sealed class UpdateLessonCommandHandler(
+    ILessonsRepository repository,
+    ILessonGeneratorRepository lessonGeneratorRepository,
+    IUnitOfWork unitOfWork,
+    TimeProvider timeProvider) : ICommandHandler<UpdateLessonCommand>
 {
     public async Task<Result> Handle(UpdateLessonCommand command, CancellationToken cancellationToken)
     {
@@ -48,6 +54,16 @@ public sealed class UpdateLessonCommandHandler(ILessonsRepository repository, IU
             }
         }
 
+        //ჟურნალი შეცდომიან გაკვეთილს არ ქმნის (რეპორტი r13, D177): ჯგუფის შეცვლის შემდეგ ზედმეტ გაკვეთილს ან
+        //მოსწავლეს, რომელიც გენერატორს ჯერ არ წაუშლია, შეტანილი მონაცემი არ ემატება
+        IReadOnlyList<ErroneousLessonStudent> newErrors = await GroupLessonsGeneration.FindNewLessonErrors(
+            lessonGeneratorRepository, unitOfWork, lesson.GroupId, timeProvider.GetLocalNow().DateTime,
+            current => LessonMapper.ToLessonsInput(current, lesson.Id, request), cancellationToken);
+        if (newErrors.Count > 0)
+        {
+            return Result.Failure(await LessonWithErrorsError(newErrors, cancellationToken));
+        }
+
         LessonMapper.ApplyFields(lesson, request);
         foreach (LessonStudentRequest row in request.Students)
         {
@@ -66,5 +82,21 @@ public sealed class UpdateLessonCommandHandler(ILessonsRepository repository, IU
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
         return Result.Success();
+    }
+
+    //ზედმეტი გაკვეთილი (შეცდომა 11) ან ზედმეტი მოსწავლეები სახელებით (შეცდომა 14). ახალი შეცდომები მხოლოდ ამ
+    //გაკვეთილისაა და ერთი სახისაა: ზედმეტ გაკვეთილში მოსწავლეები ცალკე არ მოწმდება
+    private async Task<Error> LessonWithErrorsError(IReadOnlyList<ErroneousLessonStudent> newErrors,
+        CancellationToken cancellationToken)
+    {
+        if (newErrors[0].ErrorCode == LessonGeneratorErrorCodes.ExtraLessonHasEnteredData)
+        {
+            return LessonErrors.ExtraLessonCannotHaveEnteredData;
+        }
+
+        List<int> studentContractIds = [.. newErrors.Select(e => e.StudentContractId).Distinct()];
+        Dictionary<int, string> names = await repository.GetStudentNames(studentContractIds, cancellationToken);
+        return LessonErrors.ExtraStudentsCannotHaveEnteredData(studentContractIds.Select(id => names[id])
+            .Order(StringComparer.Ordinal));
     }
 }

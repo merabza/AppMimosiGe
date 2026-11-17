@@ -45,8 +45,8 @@ public sealed class TbcBisClient(HttpClient httpClient, TbcBisSettings settings,
             ? new IntegratedBankAccount(bankAccountId, startDate)
             : null;
 
-    public async Task<Result<IReadOnlyList<BankMovement>>> GetIncomingPayments(DateOnly periodFrom,
-        DateOnly periodTo, CancellationToken cancellationToken)
+    public async Task<Result<IReadOnlyList<BankMovement>>> GetIncomingPayments(DateOnly periodFrom, DateOnly periodTo,
+        CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(settings.BaseUrl) || string.IsNullOrWhiteSpace(settings.ClientId) ||
             string.IsNullOrWhiteSpace(settings.ClientSecret) || string.IsNullOrWhiteSpace(settings.AccountIban))
@@ -143,8 +143,7 @@ public sealed class TbcBisClient(HttpClient httpClient, TbcBisSettings settings,
         return response.Value.AccessToken;
     }
 
-    private async Task<Result<T>> Send<T>(Func<HttpRequestMessage> createRequest,
-        CancellationToken cancellationToken)
+    private async Task<Result<T>> Send<T>(Func<HttpRequestMessage> createRequest, CancellationToken cancellationToken)
     {
         try
         {
@@ -160,7 +159,7 @@ public sealed class TbcBisClient(HttpClient httpClient, TbcBisSettings settings,
                 return Result.Failure<T>(await ApiError(response, cancellationToken));
             }
 
-            T? body = await response.Content.ReadFromJsonAsync<T>(JsonOptions, cancellationToken);
+            var body = await response.Content.ReadFromJsonAsync<T>(JsonOptions, cancellationToken);
             return body is null
                 ? Result.Failure<T>(BankTransactionErrors.BankResponseIsInvalid)
                 : Result.Success<T>(body);

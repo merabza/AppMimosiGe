@@ -132,6 +132,15 @@ public sealed class LessonsRepository(IMimosiGeDbContext context) : ILessonsRepo
             .ToListAsync(cancellationToken);
     }
 
+    public Task<Dictionary<int, string>> GetStudentNames(IReadOnlyCollection<int> scIds,
+        CancellationToken cancellationToken = default)
+    {
+        //ToDictionaryAsync-ის სელექტორები ჩატვირთვის შემდეგ მუშაობს, ამიტომ სახელი ჯერ SQL-ში იკრიბება
+        return context.StudentContracts.AsNoTracking().Where(x => scIds.Contains(x.ScId))
+            .Select(x => new { x.ScId, Name = x.StudentHuman.LastName + " " + x.StudentHuman.FirstName })
+            .ToDictionaryAsync(x => x.ScId, x => x.Name, cancellationToken);
+    }
+
     private static IQueryable<Lesson> ApplyFilter(IQueryable<Lesson> lessons, LessonsListQuery query)
     {
         if (query.GrpId is { } grpId)

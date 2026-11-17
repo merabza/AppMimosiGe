@@ -26,9 +26,7 @@ public static class ContractNumbers
     {
         string prefix = Prefix(academicYearStartDate);
         int max = existingNumbers.Select(n => Sequence(prefix, n)).DefaultIfEmpty(0).Max();
-        return max >= MaxSequence
-            ? null
-            : string.Create(CultureInfo.InvariantCulture, $"{prefix}.{max + 1:000}");
+        return max >= MaxSequence ? null : string.Create(CultureInfo.InvariantCulture, $"{prefix}.{max + 1:000}");
     }
 
     private static int Sequence(string prefix, string number)

@@ -32,11 +32,11 @@ public sealed class Part18ReportHandlersTests
 
     private static readonly Dictionary<int, string> MonthNames = new() { [9] = "სექტემბერი", [10] = "ოქტომბერი" };
 
-    private readonly Mock<IReportsRepository> _repository = new();
-
     //two under-filled groups of one kind (r24 lists them) with a teacher each
     private static readonly GroupsSnapshot Groups = new GroupsSnapshotBuilder().Group(1, "A1").Students(1, 1)
         .Teacher(1, 5).Group(2, "B1").Students(2, 2, 3).Teacher(2, 6).Build();
+
+    private readonly Mock<IReportsRepository> _repository = new();
 
     private static void AssertSameTable(ReportTable expected, Result<ReportTable> actual)
     {
@@ -60,14 +60,18 @@ public sealed class Part18ReportHandlersTests
         SetupGroups();
 
         // Act
-        Result<ReportTable> lessSize = await new LessSizeGroupsReportQueryHandler(_repository.Object)
-            .Handle(new LessSizeGroupsReportQuery(Date), CancellationToken.None);
-        Result<ReportTable> pairs = await new MergeableGroupPairsReportQueryHandler(_repository.Object)
-            .Handle(new MergeableGroupPairsReportQuery(Date), CancellationToken.None);
-        Result<ReportTable> sizes = await new GroupSizesAnalysisReportQueryHandler(_repository.Object)
-            .Handle(new GroupSizesAnalysisReportQuery(Date), CancellationToken.None);
-        Result<ReportTable> optimization = await new GroupsOptimizationReportQueryHandler(_repository.Object)
-            .Handle(new GroupsOptimizationReportQuery(Date), CancellationToken.None);
+        Result<ReportTable> lessSize =
+            await new LessSizeGroupsReportQueryHandler(_repository.Object).Handle(new LessSizeGroupsReportQuery(Date),
+                CancellationToken.None);
+        Result<ReportTable> pairs =
+            await new MergeableGroupPairsReportQueryHandler(_repository.Object).Handle(
+                new MergeableGroupPairsReportQuery(Date), CancellationToken.None);
+        Result<ReportTable> sizes =
+            await new GroupSizesAnalysisReportQueryHandler(_repository.Object).Handle(
+                new GroupSizesAnalysisReportQuery(Date), CancellationToken.None);
+        Result<ReportTable> optimization =
+            await new GroupsOptimizationReportQueryHandler(_repository.Object).Handle(
+                new GroupsOptimizationReportQuery(Date), CancellationToken.None);
 
         // Assert
         AssertSameTable(GroupFillReports.LessSizeGroups(Groups), lessSize);
@@ -86,8 +90,9 @@ public sealed class Part18ReportHandlersTests
         SetupGroups();
 
         // Act
-        Result<ReportTable> result = await new GroupListReportQueryHandler(_repository.Object)
-            .Handle(new GroupListReportQuery(Date, 6, 1, 2), CancellationToken.None);
+        Result<ReportTable> result =
+            await new GroupListReportQueryHandler(_repository.Object).Handle(new GroupListReportQuery(Date, 6, 1, 2),
+                CancellationToken.None);
 
         // Assert
         AssertSameTable(GroupListReport.Groups(Groups, 6, 1, 2), result);
@@ -99,14 +104,16 @@ public sealed class Part18ReportHandlersTests
     public async Task DailyComments_LoadsTheDatesMonth()
     {
         // Arrange
-        CommentLesson lesson = new(1, Day(2026, 10, 5).AddHours(10), "A1", "Math",
-            new SchedulePerson("T", "F", "T5"), null, null, []);
-        _repository.Setup(r => r.GetCommentLessons(Day(2026, 10, 1), Day(2026, 11, 1), 5,
-            It.IsAny<CancellationToken>())).ReturnsAsync([lesson]);
+        CommentLesson lesson = new(1, Day(2026, 10, 5).AddHours(10), "A1", "Math", new SchedulePerson("T", "F", "T5"),
+            null, null, []);
+        _repository
+            .Setup(r => r.GetCommentLessons(Day(2026, 10, 1), Day(2026, 11, 1), 5, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([lesson]);
 
         // Act
-        Result<ReportTable> result = await new DailyCommentsReportQueryHandler(_repository.Object)
-            .Handle(new DailyCommentsReportQuery(Date.AddDays(20).AddHours(15), 5), CancellationToken.None);
+        Result<ReportTable> result =
+            await new DailyCommentsReportQueryHandler(_repository.Object).Handle(
+                new DailyCommentsReportQuery(Date.AddDays(20).AddHours(15), 5), CancellationToken.None);
 
         // Assert
         AssertSameTable(CommentReports.DailyComments([lesson]), result);
@@ -122,8 +129,9 @@ public sealed class Part18ReportHandlersTests
         _repository.Setup(r => r.GetDesperateDebts(It.IsAny<CancellationToken>())).ReturnsAsync(data);
 
         // Act
-        Result<ReportTable> result = await new BlackListReportQueryHandler(_repository.Object)
-            .Handle(new BlackListReportQuery(), CancellationToken.None);
+        Result<ReportTable> result =
+            await new BlackListReportQueryHandler(_repository.Object).Handle(new BlackListReportQuery(),
+                CancellationToken.None);
 
         // Assert
         AssertSameTable(FinanceReports.BlackList(data), result);
@@ -136,13 +144,14 @@ public sealed class Part18ReportHandlersTests
     {
         // Arrange
         SalaryDetailRow detail = new(1, Day(2026, 9, 1), 5, "L", "F", "T5", 1, "A1", "Math", 2f, 10m, 20m);
-        _repository.Setup(r => r.GetSalaryDetails(Day(2026, 9, 1), Day(2026, 10, 1), 5,
-            It.IsAny<CancellationToken>())).ReturnsAsync([detail]);
+        _repository.Setup(r => r.GetSalaryDetails(Day(2026, 9, 1), Day(2026, 10, 1), 5, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([detail]);
         _repository.Setup(r => r.GetMonthNames(It.IsAny<CancellationToken>())).ReturnsAsync(MonthNames);
 
         // Act
-        Result<ReportTable> result = await new TeacherSalaryByGroupsReportQueryHandler(_repository.Object)
-            .Handle(new TeacherSalaryByGroupsReportQuery(Day(2026, 9, 15), Date, 5), CancellationToken.None);
+        Result<ReportTable> result =
+            await new TeacherSalaryByGroupsReportQueryHandler(_repository.Object).Handle(
+                new TeacherSalaryByGroupsReportQuery(Day(2026, 9, 15), Date, 5), CancellationToken.None);
 
         // Assert
         AssertSameTable(FinanceReports.TeacherSalaryByGroups([detail], MonthNames), result);
@@ -161,8 +170,9 @@ public sealed class Part18ReportHandlersTests
         _repository.Setup(r => r.GetMonthNames(It.IsAny<CancellationToken>())).ReturnsAsync(MonthNames);
 
         // Act
-        Result<ReportTable> result = await new TimeSheetReportQueryHandler(_repository.Object)
-            .Handle(new TimeSheetReportQuery(Day(2026, 9, 15), Date), CancellationToken.None);
+        Result<ReportTable> result =
+            await new TimeSheetReportQueryHandler(_repository.Object).Handle(
+                new TimeSheetReportQuery(Day(2026, 9, 15), Date), CancellationToken.None);
 
         // Assert
         AssertSameTable(TimeSheetReport.TimeSheet(data, MonthNames), result);

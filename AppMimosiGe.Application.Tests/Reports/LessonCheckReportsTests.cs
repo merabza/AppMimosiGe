@@ -25,13 +25,13 @@ public sealed class LessonCheckReportsTests
     }
 
     //a lesson of teacher A in group G1 unless said otherwise; synthetic people only
-    private static PeriodLessonRow Lesson(int id, DateTime lessonDt, int statusId = NotCancelled,
-        bool present = false, bool recovered = false, SchedulePerson? substitute = null, string groupCode = "G1",
+    private static PeriodLessonRow Lesson(int id, DateTime lessonDt, int statusId = NotCancelled, bool present = false,
+        bool recovered = false, SchedulePerson? substitute = null, string groupCode = "G1",
         SchedulePerson? teacher = null)
     {
         SchedulePerson lessonTeacher = teacher ?? TeacherA;
-        return new PeriodLessonRow(id, lessonDt, groupCode, lessonTeacher == TeacherA ? 5 : 6, lessonTeacher, substitute,
-            statusId, $"status{statusId}", recovered, present);
+        return new PeriodLessonRow(id, lessonDt, groupCode, lessonTeacher == TeacherA ? 5 : 6, lessonTeacher,
+            substitute, statusId, $"status{statusId}", recovered, present);
     }
 
     private static List<List<object?>> Rows(ReportTable table)
@@ -249,7 +249,8 @@ public sealed class LessonCheckReportsTests
         ]);
 
         // Assert
-        Assert.Equal(["01 10||status2", "01 10|Zeta Zoe / T6|status1"], Assert.Single(table.Sections).Rows.Select(Text));
+        Assert.Equal(["01 10||status2", "01 10|Zeta Zoe / T6|status1"],
+            Assert.Single(table.Sections).Rows.Select(Text));
     }
 
     // no cases: no sections, the total is 0

@@ -19,7 +19,8 @@ namespace AppMimosiGe.Infrastructure.BankTransactions.BogBonline;
 /// <summary>
 ///     საქართველოს ბანკის Business Online API (D166): OAuth 2.0 client credentials ტოკენი (Keycloak) და ანგარიშის
 ///     ამონაწერი (Statement V2) ფურცლებად (≤ 1000; შემდეგი ფურცლები ამონაწერის id-ით, თანმიმდევრობით). მხოლოდ კითხულობს.
-///     ტოკენი ახლდება ვადის გასვლამდე 5 წუთით ადრე (მოკლე ტოკენი ვადის ნახევარზე); 401-ზე იშლება. ამონაწერი 1-ჯერ წუთში შეიძლება (429 → Retry-After)
+///     ტოკენი ახლდება ვადის გასვლამდე 5 წუთით ადრე (მოკლე ტოკენი ვადის ნახევარზე); 401-ზე იშლება. ამონაწერი 1-ჯერ წუთში
+///     შეიძლება (429 → Retry-After)
 /// </summary>
 public sealed class BogBonlineClient(HttpClient httpClient, BogBonlineSettings settings, TimeProvider timeProvider)
     : IBankMovementsClient
@@ -35,8 +36,8 @@ public sealed class BogBonlineClient(HttpClient httpClient, BogBonlineSettings s
             ? new IntegratedBankAccount(bankAccountId, startDate)
             : null;
 
-    public async Task<Result<IReadOnlyList<BankMovement>>> GetIncomingPayments(DateOnly periodFrom,
-        DateOnly periodTo, CancellationToken cancellationToken)
+    public async Task<Result<IReadOnlyList<BankMovement>>> GetIncomingPayments(DateOnly periodFrom, DateOnly periodTo,
+        CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(settings.TokenUrl) || string.IsNullOrWhiteSpace(settings.BaseUrl) ||
             string.IsNullOrWhiteSpace(settings.ClientId) || string.IsNullOrWhiteSpace(settings.ClientSecret) ||
@@ -104,9 +105,8 @@ public sealed class BogBonlineClient(HttpClient httpClient, BogBonlineSettings s
         //EntryId რიცხვია (JSON-ში "123.0"): ბოლო ნულების გარეშე, რომ ერთი ჩანაწერი ყოველთვის ერთნაირად ჩაიწეროს
         return new BankMovement(record.EntryId!.Value.ToString("G29", CultureInfo.InvariantCulture),
             record.EntryDate!.Value.DateTime, record.DocumentValueDate?.DateTime, record.EntryAmountCredit!.Value,
-            settings.Currency, record.DocumentNomination, record.DocumentInformation, null,
-            record.EntryDocumentNumber, sender?.Name, sender?.AccountNumber, sender?.BankCode, sender?.Inn,
-            record.DocumentPayerInn);
+            settings.Currency, record.DocumentNomination, record.DocumentInformation, null, record.EntryDocumentNumber,
+            sender?.Name, sender?.AccountNumber, sender?.BankCode, sender?.Inn, record.DocumentPayerInn);
     }
 
     private async Task<Result<string>> GetAccessToken(CancellationToken cancellationToken)
@@ -151,8 +151,7 @@ public sealed class BogBonlineClient(HttpClient httpClient, BogBonlineSettings s
         return response.Value.AccessToken;
     }
 
-    private async Task<Result<T>> Send<T>(Func<HttpRequestMessage> createRequest,
-        CancellationToken cancellationToken)
+    private async Task<Result<T>> Send<T>(Func<HttpRequestMessage> createRequest, CancellationToken cancellationToken)
     {
         try
         {
@@ -170,7 +169,7 @@ public sealed class BogBonlineClient(HttpClient httpClient, BogBonlineSettings s
                     : await ApiError(response, cancellationToken));
             }
 
-            T? body = await response.Content.ReadFromJsonAsync<T>(JsonOptions, cancellationToken);
+            var body = await response.Content.ReadFromJsonAsync<T>(JsonOptions, cancellationToken);
             return body is null
                 ? Result.Failure<T>(BankTransactionErrors.BankResponseIsInvalid)
                 : Result.Success<T>(body);

@@ -24,7 +24,6 @@ public sealed class TbcBisClientTests : IDisposable
 
     private readonly FakeHandler _handler = new();
     private readonly HttpClient _httpClient;
-    private readonly Mock<TimeProvider> _timeProvider = new();
 
     private readonly TbcBisSettings _settings = new()
     {
@@ -33,6 +32,8 @@ public sealed class TbcBisClientTests : IDisposable
         ClientSecret = "secret",
         AccountIban = "GE48TB7873440574631292"
     };
+
+    private readonly Mock<TimeProvider> _timeProvider = new();
 
     public TbcBisClientTests()
     {
@@ -83,7 +84,8 @@ public sealed class TbcBisClientTests : IDisposable
 
     private static string Page(int total, params string[] movements)
     {
-        return $$"""{"transactions":[{{string.Join(",", movements)}}],"pager":[{"pageIndex":0,"pageSize":700}],"total":{{total}}}""";
+        return
+            $$"""{"transactions":[{{string.Join(",", movements)}}],"pager":[{"pageIndex":0,"pageSize":700}],"total":{{total}}}""";
     }
 
     [Fact]
@@ -125,9 +127,9 @@ public sealed class TbcBisClientTests : IDisposable
         // Assert
         Assert.Equal(
             new BankMovement("018.2", new DateTime(2026, 9, 15, 0, 0, 0, DateTimeKind.Unspecified),
-                new DateTime(2026, 9, 14, 0, 0, 0, DateTimeKind.Unspecified), 150.5m, "GEL",
-                "სწავლის საფასური", "info", "descr", "DOC-1", "Partner Name", "GE61TB9876543210987654", "TBCBGE22",
-                "01001054321", "01001012345"), Assert.Single(result.Value));
+                new DateTime(2026, 9, 14, 0, 0, 0, DateTimeKind.Unspecified), 150.5m, "GEL", "სწავლის საფასური", "info",
+                "descr", "DOC-1", "Partner Name", "GE61TB9876543210987654", "TBCBGE22", "01001054321", "01001012345"),
+            Assert.Single(result.Value));
     }
 
     [Fact]

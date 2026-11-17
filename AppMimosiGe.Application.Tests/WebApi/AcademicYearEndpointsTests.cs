@@ -113,8 +113,9 @@ public sealed class AcademicYearEndpointsTests
             await AcademicYearEndpoints.CloseGroups(11, handler.Object, CloseDate, true);
 
         Assert.Same(closed, Assert.IsType<Ok<CloseAcademicYearGroupsResponse>>(result.Result).Value);
-        handler.Verify(h => h.Handle(new CloseAcademicYearGroupsCommand(11, CloseDate, true),
-            It.IsAny<CancellationToken>()), Times.Once);
+        handler.Verify(
+            h => h.Handle(new CloseAcademicYearGroupsCommand(11, CloseDate, true), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
@@ -128,8 +129,9 @@ public sealed class AcademicYearEndpointsTests
             await AcademicYearEndpoints.CloseGroups(99, handler.Object);
 
         Assert.Equal(StatusCodes.Status404NotFound, Assert.IsType<ProblemHttpResult>(result.Result).StatusCode);
-        handler.Verify(h => h.Handle(new CloseAcademicYearGroupsCommand(99, null, false),
-            It.IsAny<CancellationToken>()), Times.Once);
+        handler.Verify(
+            h => h.Handle(new CloseAcademicYearGroupsCommand(99, null, false), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
@@ -222,8 +224,8 @@ public sealed class AcademicYearEndpointsTests
         List<RouteEndpoint> endpoints = EndpointsTestApp.MappedEndpoints(app);
         Assert.Equal(4, endpoints.Count);
         Assert.All(endpoints, e => Assert.NotEmpty(e.Metadata.GetOrderedMetadata<IAuthorizeData>()));
-        Assert.Equal(3, endpoints.Count(e => e.RoutePattern.RawText!.Contains("/academicyear/",
-            StringComparison.Ordinal)));
+        Assert.Equal(3,
+            endpoints.Count(e => e.RoutePattern.RawText!.Contains("/academicyear/", StringComparison.Ordinal)));
     }
 
     [Fact]

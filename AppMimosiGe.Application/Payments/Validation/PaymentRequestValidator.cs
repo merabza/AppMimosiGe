@@ -23,7 +23,8 @@ public sealed class PaymentRequestValidator : AbstractValidator<PaymentRequest>
     //AddFluentValidation ამ კლასსაც DI-ში არეგისტრირებს, ამიტომ კონსტრუქტორი მხოლოდ რეგისტრირებულ სერვისებს იღებს
     public PaymentRequestValidator(IPaymentsRepository repository, IEnumerable<IBankMovementsClient> bankClients)
     {
-        List<IntegratedBankAccount> integratedAccounts = [.. bankClients.Select(c => c.Account).OfType<IntegratedBankAccount>()];
+        List<IntegratedBankAccount> integratedAccounts =
+            [.. bankClients.Select(c => c.Account).OfType<IntegratedBankAccount>()];
 
         RuleFor(x => x.StudentContractId).MustAsync((id, ct) => repository.StudentContractExists(id, ct))
             .WithErrorCode(PaymentErrors.StudentContractNotFound.Code)

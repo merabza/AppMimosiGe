@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -48,6 +49,9 @@ public interface IGroupsRepository
     Task<List<LookupItemResponse>> GetWeekDays(CancellationToken cancellationToken = default);
     Task<List<LookupItemResponse>> GetLessonStartTimes(CancellationToken cancellationToken = default);
     Task<List<LookupItemResponse>> GetRooms(CancellationToken cancellationToken = default);
+
+    //განრიგის დაწყების დროები ID-ით: მოთხოვნის განრიგი გაკვეთილების გენერატორის შემავალ მონაცემებად (D177)
+    Task<Dictionary<int, TimeOnly>> GetLessonStartTimesById(CancellationToken cancellationToken = default);
 
     //dirty ალმის დასაყენებლად, EF-ის თვალყურის დევნებით
     Task<List<StudentContract>> GetStudentContractsForChange(IReadOnlyCollection<int> scIds,

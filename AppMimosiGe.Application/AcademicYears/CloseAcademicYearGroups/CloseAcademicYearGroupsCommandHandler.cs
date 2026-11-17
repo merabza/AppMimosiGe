@@ -68,12 +68,12 @@ public sealed class CloseAcademicYearGroupsCommandHandler(
             GroupLessonsGenerationResponse generation = result.Response;
             groups.Add(new CloseGroupResponse(groupToClose.GrpId, groupToClose.GroupCode, groupToClose.CourseName,
                 groupClosing.PreviousVoidDate, groupClosing.OpenTeacherRowsCount, groupClosing.OpenStudentRowsCount,
-                groupClosing.OpenScheduleRowsCount, groupClosing.DeletedLessonsCharges(generation.Changes
-                    .Where(c => c.Action == LessonGeneratorMapper.DeleteAction).Select(c => c.LessonId)
-                    .OfType<int>()), generation));
+                groupClosing.OpenScheduleRowsCount,
+                groupClosing.DeletedLessonsCharges(generation.Changes
+                    .Where(c => c.Action == LessonGeneratorMapper.DeleteAction).Select(c => c.LessonId).OfType<int>()),
+                generation));
         }
 
-        return new CloseAcademicYearGroupsResponse(command.DryRun, command.AyId, closeDate, horizon.HorizonEnd,
-            groups);
+        return new CloseAcademicYearGroupsResponse(command.DryRun, command.AyId, closeDate, horizon.HorizonEnd, groups);
     }
 }

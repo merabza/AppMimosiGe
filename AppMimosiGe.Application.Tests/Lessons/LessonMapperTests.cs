@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using AppMimosiGe.Application.LessonGenerator.Models;
 using AppMimosiGe.Application.Lessons.UpdateLesson;
 using AppMimosiGeShared.Contracts.V1.Requests;
 using MimosiGeCore.Domain.Models;
@@ -176,5 +179,75 @@ public sealed class LessonMapperTests
         Assert.Null(row.TeacherComment);
         Assert.Null(row.StudentComment);
         Assert.Equal(0, row.StudentLateMinutes);
+    }
+
+    //the saved group: lesson 9 with rows 21 (entered data) and 22 (none), and lesson 10 with row 31 (none)
+    private static GroupLessonsInput SavedLessons()
+    {
+        var values = new LessonValues(LessonDt, 3, 4, 8f, LessonDt, LessonDt);
+        return new GroupLessonsInput(null, [], [], [], [
+            new ExistingLesson(9, values,
+                [new ExistingLessonStudent(21, 10, 1, 1.5f, true), new ExistingLessonStudent(22, 11, 2, 1.5f, false)]),
+            new ExistingLesson(10, values with { LessonDt = LessonDt.AddDays(7) },
+                [new ExistingLessonStudent(31, 10, 1, 1.5f, false)])
+        ]);
+    }
+
+    private static Dictionary<int, bool> EnteredData(GroupLessonsInput input)
+    {
+        return input.Lessons.SelectMany(l => l.Students).ToDictionary(s => s.Id, s => s.HasEnteredData);
+    }
+
+    //the rows of the request get the entered data they will be saved with; a row left out of the request and
+    //the other lessons stay as they are
+    [Fact]
+    public void ToLessonsInput_RowsOfTheRequestGetTheirEnteredDataAfterTheSave()
+    {
+        // Arrange
+        GroupLessonsInput current = SavedLessons();
+        var request = new LessonRequest
+        {
+            LessonStatusId = 1, Students = [new LessonStudentRequest { Id = 22, TeacherComment = "late" }]
+        };
+
+        // Act
+        GroupLessonsInput input = LessonMapper.ToLessonsInput(current, 9, request);
+
+        // Assert
+        Assert.Equal(new Dictionary<int, bool> { [21] = true, [22] = true, [31] = false }, EnteredData(input));
+        Assert.Same(current.Lessons[1], input.Lessons[1]);
+    }
+
+    //blank texts are saved as NULL and the late minutes are no entered data (D65, D73)
+    [Theory]
+    [InlineData(false, null, null, " ", "", 5, false)]
+    [InlineData(true, null, null, null, null, 0, true)]
+    [InlineData(false, " theme ", null, null, null, 0, true)]
+    [InlineData(false, null, 8f, null, null, 0, true)]
+    [InlineData(false, null, null, null, "comment", 0, true)]
+    public void ToLessonsInput_EnteredDataIsCountedAsTheRowWillBeSaved(bool present, string? theme, float? rate,
+        string? teacherComment, string? studentComment, int studentLateMinutes, bool expected)
+    {
+        var request = new LessonRequest
+        {
+            LessonStatusId = 1,
+            Students =
+            [
+                new LessonStudentRequest
+                {
+                    Id = 21,
+                    Present = present,
+                    Theme = theme,
+                    Rate = rate,
+                    TeacherComment = teacherComment,
+                    StudentComment = studentComment,
+                    StudentLateMinutes = studentLateMinutes
+                }
+            ]
+        };
+
+        GroupLessonsInput input = LessonMapper.ToLessonsInput(SavedLessons(), 9, request);
+
+        Assert.Equal(expected, EnteredData(input)[21]);
     }
 }

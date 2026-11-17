@@ -11,29 +11,27 @@ public sealed class PaymentMatcherTests
     //მიმდინარე წლის მოსწავლეები (სინთეზური სახელები): 1 და 2 და-ძმაა (გადამხდელი 100), 3 სხვა ოჯახია იგივე გვარით
     //(გადამხდელი 101), 4 სხვა გვარისაა (გადამხდელი 102); 9 მხოლოდ წინა წლის მოსწავლეა
     private static readonly PaymentMatchInput Input = new([
-            new MatchStudent(1, "ნინო", "ბერიძე"),
-            new MatchStudent(2, "გიორგი", "ბერიძე"),
-            new MatchStudent(3, "ანა", "ბერიძე"),
-            new MatchStudent(4, "ლუკა", "გელაშვილი")
-        ],
-        new Dictionary<string, int> { ["6.001"] = 1, ["6.004"] = 4, ["5.090"] = 2, ["5.091"] = 9 },
-        [
-            new MatchPayer(100, "01001000100", "თამარ", "ბერიძე", [1, 2]),
-            new MatchPayer(101, "01001000101", "დავით", "ბერიძე", [3]),
-            new MatchPayer(102, "01001000102", "ეკა", "კაპანაძე", [4])
-        ],
-        [
-            new LearnedPayer(4, "01001000200", null),
-            new LearnedPayer(3, null, "GE00TB0000000000000300"),
-            new LearnedPayer(9, "01001000999", "GE00TB0000000000000999")
-        ]);
+        new MatchStudent(1, "ნინო", "ბერიძე"),
+        new MatchStudent(2, "გიორგი", "ბერიძე"),
+        new MatchStudent(3, "ანა", "ბერიძე"),
+        new MatchStudent(4, "ლუკა", "გელაშვილი")
+    ], new Dictionary<string, int> { ["6.001"] = 1, ["6.004"] = 4, ["5.090"] = 2, ["5.091"] = 9 }, [
+        new MatchPayer(100, "01001000100", "თამარ", "ბერიძე", [1, 2]),
+        new MatchPayer(101, "01001000101", "დავით", "ბერიძე", [3]),
+        new MatchPayer(102, "01001000102", "ეკა", "კაპანაძე", [4])
+    ], [
+        new LearnedPayer(4, "01001000200", null),
+        new LearnedPayer(3, null, "GE00TB0000000000000300"),
+        new LearnedPayer(9, "01001000999", "GE00TB0000000000000999")
+    ]);
 
     private static BankMovement Movement(string? purpose = null, string? partnerName = null,
         string? partnerTaxCode = null, string? partnerPersonalNumber = null, string? partnerIban = null,
         string? additionalInformation = null, string? additionalDescription = null)
     {
-        return new BankMovement("1.2", new DateTime(2026, 11, 9, 0, 0, 0, DateTimeKind.Unspecified), null, 100m, "GEL", purpose, additionalInformation,
-            additionalDescription, null, partnerName, partnerIban, "TBCBGE22", partnerTaxCode, partnerPersonalNumber);
+        return new BankMovement("1.2", new DateTime(2026, 11, 9, 0, 0, 0, DateTimeKind.Unspecified), null, 100m, "GEL",
+            purpose, additionalInformation, additionalDescription, null, partnerName, partnerIban, "TBCBGE22",
+            partnerTaxCode, partnerPersonalNumber);
     }
 
     private static void AssertMatch(EPaymentMatchStep step, int[] students, BankMovement movement)
@@ -150,7 +148,8 @@ public sealed class PaymentMatcherTests
     public void Match_UnknownPersonalNumber_TriesTheIbanButNotTheName()
     {
         AssertMatch(EPaymentMatchStep.PayerAccount, [3],
-            Movement(partnerName: "ეკა კაპანაძე", partnerTaxCode: "01001000555", partnerIban: "GE00TB0000000000000300"));
+            Movement(partnerName: "ეკა კაპანაძე", partnerTaxCode: "01001000555",
+                partnerIban: "GE00TB0000000000000300"));
         // a namesake of the payer: her surname is not a student's, so nothing is found
         AssertMatch(EPaymentMatchStep.None, [], Movement(partnerName: "ეკა კაპანაძე", partnerTaxCode: "01001000555"));
     }

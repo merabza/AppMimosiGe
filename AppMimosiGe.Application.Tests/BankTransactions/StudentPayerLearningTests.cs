@@ -42,8 +42,8 @@ public sealed class StudentPayerLearningTests
         StudentPayer known = new() { StudentHumanId = 1, PersonalNumber = "01001000100", AccountIban = "OTHER" };
         StudentPayer otherStudent = new() { StudentHumanId = 3, PersonalNumber = "01001000100" };
 
-        Assert.Equal([2], StudentPayerLearning.NewLinks(Transaction(), [1, 2], [known, otherStudent])
-            .Select(l => l.StudentHumanId));
+        Assert.Equal([2],
+            StudentPayerLearning.NewLinks(Transaction(), [1, 2], [known, otherStudent]).Select(l => l.StudentHumanId));
     }
 
     [Fact]
@@ -51,8 +51,7 @@ public sealed class StudentPayerLearningTests
     {
         StudentPayer known = new() { StudentHumanId = 1, AccountIban = "GE00TB0000000000000100" };
 
-        List<StudentPayer> links =
-            StudentPayerLearning.NewLinks(Transaction(taxCode: "204567891"), [1, 2], [known]);
+        List<StudentPayer> links = StudentPayerLearning.NewLinks(Transaction("204567891"), [1, 2], [known]);
 
         Assert.Equal([(2, null, "GE00TB0000000000000100", "თამარ ბერიძე")], Links(links));
     }

@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Linq;
 using AppMimosiGe.Application.Reports.Groups.Models;
 using AppMimosiGe.Application.Reports.Models;
-using AppMimosiGeShared.Contracts.V1.Responses;
 using Xunit;
 
 namespace AppMimosiGe.Application.Tests.Reports;
@@ -34,12 +33,9 @@ public sealed class GroupFillReportsTests
     public void LessSizeGroups_ListsTheGroupsWithFreePlacesBySize()
     {
         // Arrange
-        GroupsSnapshot snapshot = new GroupsSnapshotBuilder()
-            .Group(1, "C1", statusName: "S2").Students(1, 1, 2, 3)
-            .Group(2, "A1").Students(2, 4, 5, 6, 7)
-            .Group(3, "B1", 2, "Art", 1, "Two", 2).Students(3, 8)
-            .Group(4, "A2").Students(4, 9)
-            .Group(5, "D1", sizeId: 1, sizeName: "Two", size: 2).Students(5, 10, 11).Build();
+        GroupsSnapshot snapshot = new GroupsSnapshotBuilder().Group(1, "C1", statusName: "S2").Students(1, 1, 2, 3)
+            .Group(2, "A1").Students(2, 4, 5, 6, 7).Group(3, "B1", 2, "Art", 1, "Two", 2).Students(3, 8).Group(4, "A2")
+            .Students(4, 9).Group(5, "D1", sizeId: 1, sizeName: "Two", size: 2).Students(5, 10, 11).Build();
 
         // Act
         ReportTable table = GroupFillReports.LessSizeGroups(snapshot);
@@ -57,8 +53,8 @@ public sealed class GroupFillReportsTests
     public void LessSizeGroups_SameCode_ByGroupId()
     {
         // Arrange
-        GroupsSnapshot snapshot = new GroupsSnapshotBuilder().Group(5, "A1", 2, "Art").Students(5, 1)
-            .Group(3, "A1").Students(3, 2).Build();
+        GroupsSnapshot snapshot = new GroupsSnapshotBuilder().Group(5, "A1", 2, "Art").Students(5, 1).Group(3, "A1")
+            .Students(3, 2).Build();
 
         // Act & Assert
         Assert.Equal(["Four: A1|Math|S1|1; A1|Art|S1|1"], Sections(GroupFillReports.LessSizeGroups(snapshot)));
@@ -70,15 +66,10 @@ public sealed class GroupFillReportsTests
     public void Optimization_ListsThePairsThatFitInOneGroupOnce()
     {
         // Arrange
-        GroupsSnapshot snapshot = new GroupsSnapshotBuilder()
-            .Group(1, "D1").Students(1, 1, 2)
-            .Group(2, "B1").Students(2, 3, 4, 5)
-            .Group(3, "A1").Students(3, 6)
-            .Group(4, "C1").Students(4, 7, 8)
-            .Group(5, "E1", 2, "Art").Students(5, 9)
-            .Group(6, "F1", statusId: 2).Students(6, 10)
-            .Group(7, "G1", sizeId: 3).Students(7, 11)
-            .Group(8, "H1").Students(8, 12, 13, 14, 15).Build();
+        GroupsSnapshot snapshot = new GroupsSnapshotBuilder().Group(1, "D1").Students(1, 1, 2).Group(2, "B1")
+            .Students(2, 3, 4, 5).Group(3, "A1").Students(3, 6).Group(4, "C1").Students(4, 7, 8)
+            .Group(5, "E1", 2, "Art").Students(5, 9).Group(6, "F1", statusId: 2).Students(6, 10)
+            .Group(7, "G1", sizeId: 3).Students(7, 11).Group(8, "H1").Students(8, 12, 13, 14, 15).Build();
 
         // Act
         ReportTable table = GroupFillReports.Optimization(snapshot);
@@ -96,8 +87,8 @@ public sealed class GroupFillReportsTests
     public void Optimization_SameCode_FirstIsTheSmallerId()
     {
         // Arrange
-        GroupsSnapshot snapshot = new GroupsSnapshotBuilder().Group(7, "A1").Students(7, 1)
-            .Group(3, "A1").Students(3, 2, 3).Build();
+        GroupsSnapshot snapshot = new GroupsSnapshotBuilder().Group(7, "A1").Students(7, 1).Group(3, "A1")
+            .Students(3, 2, 3).Build();
 
         // Act & Assert
         Assert.Equal([": A1|A1|4|2|1"], Sections(GroupFillReports.Optimization(snapshot)));
@@ -109,13 +100,10 @@ public sealed class GroupFillReportsTests
     public void GroupSizesAnalysis_ListsEveryGroupWithItsFill()
     {
         // Arrange
-        GroupsSnapshot snapshot = new GroupsSnapshotBuilder()
-            .Group(1, "G1", statusName: "S2").Students(1, 1, 2)
-            .Group(2, "G2").Students(2, 3)
-            .Group(3, "G4").Students(3, 4, 5)
-            .Group(4, "G3", 2, "Art").Students(4, 6, 7)
-            .Group(5, "G6").Students(5, 8, 9)
-            .Group(6, "G5", sizeId: 1, sizeName: "Two", size: 2).Students(6, 10, 11).Build();
+        GroupsSnapshot snapshot = new GroupsSnapshotBuilder().Group(1, "G1", statusName: "S2").Students(1, 1, 2)
+            .Group(2, "G2").Students(2, 3).Group(3, "G4").Students(3, 4, 5).Group(4, "G3", 2, "Art").Students(4, 6, 7)
+            .Group(5, "G6").Students(5, 8, 9).Group(6, "G5", sizeId: 1, sizeName: "Two", size: 2).Students(6, 10, 11)
+            .Build();
 
         // Act
         ReportTable table = GroupFillReports.GroupSizesAnalysis(snapshot);
@@ -155,8 +143,10 @@ public sealed class GroupFillReportsTests
         Assert.Equal("13%",
             Assert.Single(Assert.Single(GroupFillReports.GroupSizesAnalysis(new GroupsSnapshotBuilder()
                 .Group(1, "A1", size: 8).Students(1, 1).Build()).Sections).Rows)[4]);
-        Assert.Equal("0.13%", GroupFillReports.GroupSizesAnalysis(new GroupsSnapshotBuilder()
-            .Group(1, "A1", size: 800).Students(1, 1).Build()).FooterRows[2][1]);
+        Assert.Equal("0.13%",
+            GroupFillReports
+                .GroupSizesAnalysis(new GroupsSnapshotBuilder().Group(1, "A1", size: 800).Students(1, 1).Build())
+                .FooterRows[2][1]);
     }
 
     // no groups: the count is 0, the averages are empty; a group without places has no fill
@@ -184,13 +174,11 @@ public sealed class GroupFillReportsTests
     public void GroupsOptimization_ListsTheKindsThatNeedFewerGroups()
     {
         // Arrange
-        GroupsSnapshot snapshot = new GroupsSnapshotBuilder()
-            .Group(1, "B1").Students(1, 2, 1).Teacher(1, 6).Teacher(1, 5).Teacher(1, 5)
-            .Group(2, "A1").Students(2, 3).Teacher(2, 5)
-            .Group(3, "F1").Students(3, 4, 5, 6, 7).Teacher(3, 5)
-            .Group(4, "C1", 2, "Art").Students(4, 8, 9).Teacher(4, 5)
-            .Group(5, "D1", 2, "Art").Students(5, 10, 11, 12).Teacher(5, 5)
-            .Group(6, "E1", 3, "Chess").Students(6, 13).Teacher(6, 5).Build();
+        GroupsSnapshot snapshot = new GroupsSnapshotBuilder().Group(1, "B1").Students(1, 2, 1).Teacher(1, 6)
+            .Teacher(1, 5).Teacher(1, 5).Group(2, "A1").Students(2, 3).Teacher(2, 5).Group(3, "F1")
+            .Students(3, 4, 5, 6, 7).Teacher(3, 5).Group(4, "C1", 2, "Art").Students(4, 8, 9).Teacher(4, 5)
+            .Group(5, "D1", 2, "Art").Students(5, 10, 11, 12).Teacher(5, 5).Group(6, "E1", 3, "Chess").Students(6, 13)
+            .Teacher(6, 5).Build();
 
         // Act
         ReportTable table = GroupFillReports.GroupsOptimization(snapshot);
@@ -199,8 +187,7 @@ public sealed class GroupFillReportsTests
         AssertColumns(table, ("groupCode", "ჯგუფი", "text"), ("teachers", "მასწავლებელი", "text"),
             ("student", "მოსწავლე", "text"));
         Assert.Equal([
-            "Math · S1 · Four · ჯგუფები: 2 · მოსწავლეები: 3: " +
-            "A1|TLast5 TFirst5 / T5|SLast3 SFirst3 / 6.003; " +
+            "Math · S1 · Four · ჯგუფები: 2 · მოსწავლეები: 3: " + "A1|TLast5 TFirst5 / T5|SLast3 SFirst3 / 6.003; " +
             "B1|TLast5 TFirst5 / T5; TLast6 TFirst6 / T6|SLast1 SFirst1 / 6.001; " +
             "B1|TLast5 TFirst5 / T5; TLast6 TFirst6 / T6|SLast2 SFirst2 / 6.002"
         ], Sections(table));
@@ -212,10 +199,8 @@ public sealed class GroupFillReportsTests
     public void GroupsOptimization_CountsTheGroupsTheStudentsNeed()
     {
         // Arrange
-        GroupsSnapshot snapshot = new GroupsSnapshotBuilder()
-            .Group(1, "A1").Students(1, 1, 2).Teacher(1, 5)
-            .Group(2, "A2").Students(2, 3, 4).Teacher(2, 5)
-            .Group(3, "B1", 2, "Art").Students(3, 5, 6).Teacher(3, 5)
+        GroupsSnapshot snapshot = new GroupsSnapshotBuilder().Group(1, "A1").Students(1, 1, 2).Teacher(1, 5)
+            .Group(2, "A2").Students(2, 3, 4).Teacher(2, 5).Group(3, "B1", 2, "Art").Students(3, 5, 6).Teacher(3, 5)
             .Group(4, "B2", 2, "Art").Students(4, 7, 8, 9).Teacher(4, 5).Build();
 
         // Act & Assert
@@ -228,8 +213,8 @@ public sealed class GroupFillReportsTests
     public void GroupsOptimization_SameCode_ByGroupId()
     {
         // Arrange
-        GroupsSnapshot snapshot = new GroupsSnapshotBuilder().Group(9, "A1").Students(9, 1).Teacher(9, 5)
-            .Group(4, "A1").Students(4, 2).Teacher(4, 6).Build();
+        GroupsSnapshot snapshot = new GroupsSnapshotBuilder().Group(9, "A1").Students(9, 1).Teacher(9, 5).Group(4, "A1")
+            .Students(4, 2).Teacher(4, 6).Build();
 
         // Act & Assert
         Assert.Equal([

@@ -6,7 +6,8 @@ namespace AppMimosiGe.Application.BankTransactions.Models;
 
 /// <summary>
 ///     სახელის ან გვარის პოვნა ტექსტის სიტყვებში (LatinSkeleton-ის ფორმით) ბრუნვის დაბოლოებების გათვალისწინებით:
-///     "ბერიძის", "ბერიძისთვის", "ბერიძეს", "გელაშვილისათვის", "ნინოს". ფუძე = სახელი ბოლო ხმოვნის გარეშე; სიტყვა ემთხვევა,
+///     "ბერიძის", "ბერიძისთვის", "ბერიძეს", "გელაშვილისათვის", "ნინოს". ფუძე = სახელი ბოლო ხმოვნის გარეშე; სიტყვა
+///     ემთხვევა,
 ///     თუ ფუძით იწყება და დარჩენილი ნაწილი (შესაძლოა ერთი ხმოვნით დაწყებული) ცნობილი დაბოლოებაა. 3 ასოზე მოკლე ფუძე
 ///     მხოლოდ ზუსტად ემთხვევა, რომ მოკლე სახელი ყველაფერს არ დაემთხვეს. რამდენსიტყვიანი სახელის (მაგ. "ანა-მარია")
 ///     ყველა სიტყვა უნდა მოიძებნოს
@@ -50,7 +51,7 @@ public static class NameMatcher
         }
 
         string rest = token[stem.Length..];
-        return Endings.Contains(rest) ||
-               rest.Length > 0 && Vowels.Contains(rest[0], StringComparison.Ordinal) && Endings.Contains(rest[1..]);
+        return Endings.Contains(rest) || rest.Length > 0 && Vowels.Contains(rest[0], StringComparison.Ordinal) &&
+            Endings.Contains(rest[1..]);
     }
 }

@@ -99,9 +99,10 @@ public sealed class SetBankTransactionAllocationCommandHandler(
                 StudentContractId = share.StudentContractId,
                 PayDate = bankTransaction.TransactionDate.Date,
                 Amount = share.Amount,
-                Document = bankTransaction.Purpose is { Length: > ImportBankTransactionsCommandHandler.DocumentMaxLength }
-                    ? bankTransaction.Purpose[..ImportBankTransactionsCommandHandler.DocumentMaxLength]
-                    : bankTransaction.Purpose,
+                Document =
+                    bankTransaction.Purpose is { Length: > ImportBankTransactionsCommandHandler.DocumentMaxLength }
+                        ? bankTransaction.Purpose[..ImportBankTransactionsCommandHandler.DocumentMaxLength]
+                        : bankTransaction.Purpose,
                 BankAccountId = bankTransaction.BankAccountId,
                 Checked = false
             });

@@ -31,7 +31,8 @@ public sealed class DepositsCalculatorTests
         int humanId = studentHumanId ?? 100 + scId;
         _studentByContract[scId] = humanId;
         _contracts.Add(new DepositContractData(scId, academicYearId, studentName, $"6.00{scId}", "555000001",
-            "Payer Pat", "555000002", desiredDay, nextPayDate, humanId, new DateTime(2015 + academicYearId, 9, 1, 0, 0, 0, DateTimeKind.Unspecified)));
+            "Payer Pat", "555000002", desiredDay, nextPayDate, humanId,
+            new DateTime(2015 + academicYearId, 9, 1, 0, 0, 0, DateTimeKind.Unspecified)));
     }
 
     private void Charge(int scId, DateTime date, decimal amount = -10m)
@@ -501,7 +502,7 @@ public sealed class DepositsCalculatorTests
         Charge(1, At(5, 10, 15), -30m);
         Contract(2, desiredDay: 15, studentHumanId: 100);
         Payment(2, At(9, 1), 50m);
-        Charge(2, At(9, 10, 15), -10m);
+        Charge(2, At(9, 10, 15));
     }
 
     [Fact]

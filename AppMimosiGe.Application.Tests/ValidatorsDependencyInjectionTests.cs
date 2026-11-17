@@ -17,16 +17,16 @@ public sealed class ValidatorsDependencyInjectionTests
         Type[] validators =
         [
             .. typeof(AssemblyReference).Assembly.GetTypes().Where(t =>
-                t is { IsClass: true, IsAbstract: false } &&
-                t.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IValidator<>)))
+                t is { IsClass: true, IsAbstract: false } && t.GetInterfaces().Any(i =>
+                    i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IValidator<>)))
         ];
 
         Assert.NotEmpty(validators);
         Assert.All(validators, validator =>
         {
             ConstructorInfo constructor = Assert.Single(validator.GetConstructors());
-            Assert.All(constructor.GetParameters(), p => Assert.True(p.ParameterType.IsInterface,
-                $"{validator.Name}({p.ParameterType.Name} {p.Name})"));
+            Assert.All(constructor.GetParameters(),
+                p => Assert.True(p.ParameterType.IsInterface, $"{validator.Name}({p.ParameterType.Name} {p.Name})"));
         });
     }
 }

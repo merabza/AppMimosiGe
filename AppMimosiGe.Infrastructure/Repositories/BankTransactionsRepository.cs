@@ -45,18 +45,17 @@ public sealed class BankTransactionsRepository(IMimosiGeDbContext context) : IBa
         CancellationToken cancellationToken = default)
     {
         return context.StudentContracts.AsNoTracking().Where(x => x.AcademicYearId == academicYearId)
-            .OrderBy(x => x.ScId).Select(x => new MatchContractData(x.ScId, x.StudentHumanId,
-                x.StudentHuman.FirstName, x.StudentHuman.LastName, x.PayerHumanId, x.PayerHuman.PersonalId,
-                x.PayerHuman.FirstName, x.PayerHuman.LastName)).ToListAsync(cancellationToken);
+            .OrderBy(x => x.ScId).Select(x => new MatchContractData(x.ScId, x.StudentHumanId, x.StudentHuman.FirstName,
+                x.StudentHuman.LastName, x.PayerHumanId, x.PayerHuman.PersonalId, x.PayerHuman.FirstName,
+                x.PayerHuman.LastName)).ToListAsync(cancellationToken);
     }
 
-    public async Task<Dictionary<string, int>> GetStudentByContractNumber(
-        CancellationToken cancellationToken = default)
+    public async Task<Dictionary<string, int>> GetStudentByContractNumber(CancellationToken cancellationToken = default)
     {
         var contracts = await context.StudentContracts.AsNoTracking()
             .Select(x => new { x.ContractNumber, x.StudentHumanId, x.ScId }).ToListAsync(cancellationToken);
-        return contracts.GroupBy(x => x.ContractNumber.Trim(), StringComparer.Ordinal)
-            .ToDictionary(g => g.Key, g => g.MaxBy(x => x.ScId)!.StudentHumanId, StringComparer.Ordinal);
+        return contracts.GroupBy(x => x.ContractNumber.Trim(), StringComparer.Ordinal).ToDictionary(g => g.Key,
+            g => g.MaxBy(x => x.ScId)!.StudentHumanId, StringComparer.Ordinal);
     }
 
     public Task<List<LearnedPayer>> GetLearnedPayers(CancellationToken cancellationToken = default)
@@ -89,9 +88,9 @@ public sealed class BankTransactionsRepository(IMimosiGeDbContext context) : IBa
             _ => query
         };
 
-        return query.OrderByDescending(x => x.TransactionDate).ThenByDescending(x => x.Id)
-            .Select(x => new BankTransactionRowResponse(x.Id, x.BankAccount.BankName, x.TransactionDate, x.Amount, x.PartnerName, x.Purpose,
-                x.MatchStep, x.AllocatedManually, x.Ignored, x.Payments.Sum(p => p.Amount),
+        return query.OrderByDescending(x => x.TransactionDate).ThenByDescending(x => x.Id).Select(x =>
+            new BankTransactionRowResponse(x.Id, x.BankAccount.BankName, x.TransactionDate, x.Amount, x.PartnerName,
+                x.Purpose, x.MatchStep, x.AllocatedManually, x.Ignored, x.Payments.Sum(p => p.Amount),
                 x.Payments.Any(p => p.Checked))).ToListAsync(cancellationToken);
     }
 
@@ -123,15 +122,14 @@ public sealed class BankTransactionsRepository(IMimosiGeDbContext context) : IBa
         }
 
         List<BankTransactionAllocationResponse> allocations = await context.Payments.AsNoTracking()
-            .Where(p => p.BankTransactionId == bankTransactionId).OrderBy(p => p.Id)
-            .Select(p => new BankTransactionAllocationResponse(p.Id, p.StudentContractId,
-                p.StudentContract.StudentHuman.LastName + " " + p.StudentContract.StudentHuman.FirstName + " " +
-                p.StudentContract.ContractNumber, p.StudentContract.AcademicYearId, p.Amount, p.Checked))
+            .Where(p => p.BankTransactionId == bankTransactionId).OrderBy(p => p.Id).Select(p =>
+                new BankTransactionAllocationResponse(p.Id, p.StudentContractId,
+                    p.StudentContract.StudentHuman.LastName + " " + p.StudentContract.StudentHuman.FirstName + " " +
+                    p.StudentContract.ContractNumber, p.StudentContract.AcademicYearId, p.Amount, p.Checked))
             .ToListAsync(cancellationToken);
 
         return new BankTransactionResponse(bankTransaction.Id, bankTransaction.BankName,
-            bankTransaction.TransactionDate,
-            bankTransaction.Amount, bankTransaction.Currency, bankTransaction.Purpose,
+            bankTransaction.TransactionDate, bankTransaction.Amount, bankTransaction.Currency, bankTransaction.Purpose,
             bankTransaction.AdditionalInformation, bankTransaction.AdditionalDescription,
             bankTransaction.DocumentNumber, bankTransaction.PartnerName, bankTransaction.PartnerAccountIban,
             bankTransaction.PartnerTaxCode, bankTransaction.MatchStep, bankTransaction.AllocatedManually,

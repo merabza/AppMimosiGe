@@ -9,7 +9,8 @@ namespace AppMimosiGe.Application.AcademicYears.Models;
 /// <summary>
 ///     ჯგუფის დახურვა გენერაციამდე: ძველი VoidDate, დაუსრულებელი სტრიქონები (დასრულება ცარიელია ან დახურვის თარიღზე
 ///     გვიანაა ან ტოლია) და დახურვის თარიღის შემდგომი თითო გაკვეთილის დარიცხვა (ბალანსის იგივე ფორმულით:
-///     BalanceOperations.ChargeAmount; გაუქმებული გაკვეთილი არ ირიცხება). ჯგუფს VoidDate = closeDate და DirtyLessons ესმება
+///     BalanceOperations.ChargeAmount; გაუქმებული გაკვეთილი არ ირიცხება). ჯგუფს VoidDate = closeDate და DirtyLessons
+///     ესმება
 /// </summary>
 public sealed class GroupClosing
 {

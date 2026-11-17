@@ -67,6 +67,22 @@ public static class GroupLessonsGeneration
             plan.LastLesson, LastLessonId(plan.LastLesson, createdLessons));
     }
 
+    /// <summary>
+    ///     შეცდომიანი გაკვეთილების შემოწმება შენახვამდე (LessonsWithErrorsRule, D177): ჯგუფის შენახული მონაცემები ყველა
+    ///     გაკვეთილით და change-ის შედეგი (შენახვის შემდგომი მდგომარეობა) გენერატორის ჰორიზონტით ედრება, როგორც მას
+    ///     შემდეგი გაშვება დაითვლის. აბრუნებს მოსწავლეების სტრიქონებს, რომლებსაც ცვლილება შეცდომიანს გახდიდა. არაფერი
+    ///     იწერება. ჯგუფი არსებობს: მას რედაქტორი უკვე ჩატვირთავს
+    /// </summary>
+    public static async Task<IReadOnlyList<ErroneousLessonStudent>> FindNewLessonErrors(
+        ILessonGeneratorRepository repository, IUnitOfWork unitOfWork, int grpId, DateTime now,
+        Func<GroupLessonsInput, GroupLessonsInput> change, CancellationToken cancellationToken)
+    {
+        GenerationHorizon horizon = await PrepareOperationMonths(repository, unitOfWork, now, true, cancellationToken);
+        Group group = (await repository.GetGroupForGeneration(grpId, false, cancellationToken))!;
+        GroupLessonsInput current = LessonGeneratorMapper.ToInput(group);
+        return LessonsWithErrorsRule.NewErrors(current, change(current), horizon.HorizonEnd);
+    }
+
     private static int? LastLessonId(PlannedLastLesson? lastLesson,
         IReadOnlyDictionary<DateTime, Lesson> createdLessons)
     {

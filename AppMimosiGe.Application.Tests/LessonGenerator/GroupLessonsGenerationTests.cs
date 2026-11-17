@@ -106,6 +106,74 @@ public sealed class GroupLessonsGenerationTests
         _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    // --- FindNewLessonErrors
+
+    //the saved group (loaded without tracking, with its lessons) against its change, at the horizon the next run
+    //counts: October is not in the calendar yet, but the dry run counts it, so the lesson of October 5 is no error
+    //before the change and becomes one after it. Nothing is written
+    [Fact]
+    public async Task FindNewLessonErrors_ComparesTheSavedGroupWithItsChangeAtTheNextHorizonAndWritesNothing()
+    {
+        // Arrange
+        _repository.Setup(r => r.GetLastOperationMonth(It.IsAny<CancellationToken>())).ReturnsAsync(Date(9, 1));
+        Group group = Group();
+        var lesson = new Lesson
+        {
+            Id = 100,
+            GroupId = 42,
+            LessonDt = Date(10, 5, 15),
+            TeacherContractId = 5,
+            SalarySchemaId = 8,
+            FourWeekHours = 8f,
+            TeoMinDate = Date(10, 5, 15),
+            TeoMaxDate = Date(10, 26, 15)
+        };
+        lesson.LessonsByStudents.Add(new LessonByStudent
+        {
+            Id = 200,
+            StudentContractId = 10,
+            GroupByStudentId = 1,
+            HoursCount = 1.5f,
+            Present = true
+        });
+        group.Lessons.Add(lesson);
+        _repository.Setup(r => r.GetGroupForGeneration(42, false, It.IsAny<CancellationToken>())).ReturnsAsync(group);
+        GroupLessonsInput? current = null;
+
+        // Act
+        IReadOnlyList<ErroneousLessonStudent> errors = await GroupLessonsGeneration.FindNewLessonErrors(
+            _repository.Object, _unitOfWork.Object, 42, Date(8, 15), input =>
+            {
+                current = input;
+                return input with { VoidDate = Date(10, 5) };
+            }, CancellationToken.None);
+
+        // Assert
+        Assert.Equal([
+            new ErroneousLessonStudent(LessonGeneratorErrorCodes.ExtraLessonHasEnteredData, 100, Date(10, 5, 15), 200,
+                10)
+        ], errors);
+        Assert.NotNull(current);
+        Assert.Equal([100], current.Lessons.Select(l => l.Id));
+        _repository.Verify(r => r.GetGroupForGeneration(42, true, It.IsAny<CancellationToken>()), Times.Never);
+        _repository.Verify(r => r.AddOperationMonths(It.IsAny<IEnumerable<DateTime>>()), Times.Never);
+        _repository.Verify(r => r.MarkAllDirty(It.IsAny<CancellationToken>()), Times.Never);
+        _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task FindNewLessonErrors_ChangeWithoutNewErrors_FindsNothing()
+    {
+        _repository.Setup(r => r.GetLastOperationMonth(It.IsAny<CancellationToken>())).ReturnsAsync(Date(9, 1));
+        _repository.Setup(r => r.GetGroupForGeneration(42, false, It.IsAny<CancellationToken>())).ReturnsAsync(Group());
+
+        IReadOnlyList<ErroneousLessonStudent> errors = await GroupLessonsGeneration.FindNewLessonErrors(
+            _repository.Object, _unitOfWork.Object, 42, Date(8, 15), input => input with { VoidDate = Date(9, 14) },
+            CancellationToken.None);
+
+        Assert.Empty(errors);
+    }
+
     // --- Run
 
     [Fact]
@@ -174,11 +242,10 @@ public sealed class GroupLessonsGenerationTests
         _repository.Setup(r => r.AddLesson(It.IsAny<Lesson>())).Callback<Lesson>(lesson => added = lesson);
         _unitOfWork.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).Callback(() => added?.Id = 900);
         DateTime lessonDt = Date(9, 14, 15);
-        var plan = new GroupLessonsPlan(
-            [
-                new PlannedLessonChange(ELessonChangeKind.Create, null,
-                    new LessonValues(lessonDt, 5, 8, 8f, lessonDt, lessonDt), null, [])
-            ], [], [], false, new PlannedLastLesson(100, lessonDt));
+        var plan = new GroupLessonsPlan([
+            new PlannedLessonChange(ELessonChangeKind.Create, null,
+                new LessonValues(lessonDt, 5, 8, 8f, lessonDt, lessonDt), null, [])
+        ], [], [], false, new PlannedLastLesson(100, lessonDt));
 
         // Act
         GroupGenerationResult? result = await GroupLessonsGeneration.Run(_repository.Object, _unitOfWork.Object, 42,

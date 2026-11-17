@@ -154,8 +154,8 @@ public sealed class ReportsRepository(IMimosiGeDbContext context) : IReportsRepo
             await TeacherPersons([.. lessons.Select(l => l.TeacherContractId)], cancellationToken);
         return
         [
-            .. lessons.Select(l => new TeoDatesLessonRow(l.Id, l.GroupCode, teachers[l.TeacherContractId],
-                l.TeoMinDate, l.TeoMaxDate, l.FourWeekHours, l.LessonDt))
+            .. lessons.Select(l => new TeoDatesLessonRow(l.Id, l.GroupCode, teachers[l.TeacherContractId], l.TeoMinDate,
+                l.TeoMaxDate, l.FourWeekHours, l.LessonDt))
         ];
     }
 
@@ -187,13 +187,12 @@ public sealed class ReportsRepository(IMimosiGeDbContext context) : IReportsRepo
     {
         DateTime dayAfter = ActiveGroupsForReports.DayAfter(date);
         IQueryable<int> activeGroupIds = ActiveGroupsForReports.Query(context, date).Select(g => g.GrpId);
-        List<StudentAbsence> absences = await context.LessonsByStudents.AsNoTracking()
-            .Where(s => !s.Present && s.Lesson.LessonStatusId != ReportLessonStatuses.Cancelled &&
-                        s.Lesson.LessonDt < before && s.GroupByStudent != null &&
-                        s.GroupByStudent.StudentContractId == s.StudentContractId &&
-                        s.GroupByStudent.StartDate < dayAfter &&
-                        (s.GroupByStudent.EndDate == null || s.GroupByStudent.EndDate >= dayAfter) &&
-                        activeGroupIds.Contains(s.GroupByStudent.GroupId))
+        List<StudentAbsence> absences = await context.LessonsByStudents.AsNoTracking().Where(s =>
+                !s.Present && s.Lesson.LessonStatusId != ReportLessonStatuses.Cancelled && s.Lesson.LessonDt < before &&
+                s.GroupByStudent != null && s.GroupByStudent.StudentContractId == s.StudentContractId &&
+                s.GroupByStudent.StartDate < dayAfter &&
+                (s.GroupByStudent.EndDate == null || s.GroupByStudent.EndDate >= dayAfter) &&
+                activeGroupIds.Contains(s.GroupByStudent.GroupId))
             .Select(s => new StudentAbsence(s.StudentContractId, s.Lesson.LessonDt)).ToListAsync(cancellationToken);
         List<int> contractIds = [.. absences.Select(a => a.StudentContractId).Distinct()];
         Dictionary<int, DateTime> lastPresences = await context.LessonsByStudents.AsNoTracking()
@@ -229,12 +228,12 @@ public sealed class ReportsRepository(IMimosiGeDbContext context) : IReportsRepo
             .ToListAsync(cancellationToken);
         List<CheckStudentRow> students = await context.GroupsByStudents.AsNoTracking()
             .Where(s => academicYearId == null || s.Group.AcademicYearId == academicYearId).Select(s =>
-            new CheckStudentRow(s.GbsId, s.GroupId, s.StudentContractId, s.StartDate, s.EndDate, s.FourWeekHours,
-                s.FourWeekFee, s.OneHourFee, s.HoursCoefficient)).ToListAsync(cancellationToken);
+                new CheckStudentRow(s.GbsId, s.GroupId, s.StudentContractId, s.StartDate, s.EndDate, s.FourWeekHours,
+                    s.FourWeekFee, s.OneHourFee, s.HoursCoefficient)).ToListAsync(cancellationToken);
         List<CheckTeacherRow> teachers = await context.GroupsByTeachers.AsNoTracking()
-            .Where(t => academicYearId == null || t.Group.AcademicYearId == academicYearId)
-            .Select(t => new CheckTeacherRow(t.Id, t.GroupId, t.TeacherContractId, t.SalarySchemaId, t.StartDate,
-                t.EndDate)).ToListAsync(cancellationToken);
+            .Where(t => academicYearId == null || t.Group.AcademicYearId == academicYearId).Select(t =>
+                new CheckTeacherRow(t.Id, t.GroupId, t.TeacherContractId, t.SalarySchemaId, t.StartDate, t.EndDate))
+            .ToListAsync(cancellationToken);
         List<CheckDayTimeRow> dayTimes = await context.GroupDayTimePlaces.AsNoTracking()
             .Where(d => academicYearId == null || d.Group.AcademicYearId == academicYearId)
             .Select(d => new CheckDayTimeRow(d.GdtpId, d.GroupId, d.StartDate, d.EndDate, d.HoursCount))
@@ -273,9 +272,10 @@ public sealed class ReportsRepository(IMimosiGeDbContext context) : IReportsRepo
         DateTime dayAfter = ActiveGroupsForReports.DayAfter(date);
         IQueryable<int> activeGroupIds = ActiveGroupsForReports.Query(context, date).Select(g => g.GrpId);
 
-        List<ReportGroup> groups = await ActiveGroupsForReports.Query(context, date).AsNoTracking()
-            .Select(g => new ReportGroup(g.GrpId, g.GroupCode, g.CourseId, g.Course.CourseName, g.GroupSizeId,
-                g.GroupSize.GrsName, g.GroupSize.GrsSize, g.StudentStatusId, g.StudentStatus.StudentStatusName))
+        List<ReportGroup> groups = await ActiveGroupsForReports.Query(context, date).AsNoTracking().Select(g =>
+                new ReportGroup(g.GrpId, g.GroupCode, g.CourseId, g.Course.CourseName, g.GroupSizeId,
+                    g.GroupSize.GrsName,
+                    g.GroupSize.GrsSize, g.StudentStatusId, g.StudentStatus.StudentStatusName))
             .ToListAsync(cancellationToken);
         List<ReportGroupStudent> students = await context.GroupsByStudents.AsNoTracking()
             .Where(s => activeGroupIds.Contains(s.GroupId) && s.StartDate < dayAfter &&
@@ -346,9 +346,8 @@ public sealed class ReportsRepository(IMimosiGeDbContext context) : IReportsRepo
             .ToListAsync(cancellationToken);
         List<int> humanIds = [.. payments.SelectMany(p => new[] { p.StudentHumanId, p.PayerHumanId }).Distinct()];
         Dictionary<int, Debtor> humans = await context.Humans.AsNoTracking().Where(h => humanIds.Contains(h.HumId))
-            .Select(h => new { h.HumId, h.LastName, h.FirstName, h.PersonalId })
-            .ToDictionaryAsync(h => h.HumId, h => new Debtor(h.LastName, h.FirstName, h.PersonalId),
-                cancellationToken);
+            .Select(h => new { h.HumId, h.LastName, h.FirstName, h.PersonalId }).ToDictionaryAsync(h => h.HumId,
+                h => new Debtor(h.LastName, h.FirstName, h.PersonalId), cancellationToken);
         return new BlackListData(payments, humans);
     }
 
@@ -400,9 +399,9 @@ public sealed class ReportsRepository(IMimosiGeDbContext context) : IReportsRepo
         CancellationToken cancellationToken)
     {
         List<int> ids = [.. teacherContractIds.Distinct()];
-        return context.TeacherContracts.AsNoTracking().Where(tc => ids.Contains(tc.Id))
-            .Select(tc => new KeyValuePair<int, SchedulePerson>(tc.Id,
-                new SchedulePerson(tc.TeacherHuman.LastName, tc.TeacherHuman.FirstName, tc.ContractNumber)))
+        return context.TeacherContracts.AsNoTracking().Where(tc => ids.Contains(tc.Id)).Select(tc =>
+                new KeyValuePair<int, SchedulePerson>(tc.Id,
+                    new SchedulePerson(tc.TeacherHuman.LastName, tc.TeacherHuman.FirstName, tc.ContractNumber)))
             .ToDictionaryAsync(p => p.Key, p => p.Value, cancellationToken);
     }
 
@@ -411,9 +410,9 @@ public sealed class ReportsRepository(IMimosiGeDbContext context) : IReportsRepo
         CancellationToken cancellationToken)
     {
         List<int> ids = [.. studentContractIds.Distinct()];
-        return context.StudentContracts.AsNoTracking().Where(sc => ids.Contains(sc.ScId))
-            .Select(sc => new KeyValuePair<int, SchedulePerson>(sc.ScId,
-                new SchedulePerson(sc.StudentHuman.LastName, sc.StudentHuman.FirstName, sc.ContractNumber)))
+        return context.StudentContracts.AsNoTracking().Where(sc => ids.Contains(sc.ScId)).Select(sc =>
+                new KeyValuePair<int, SchedulePerson>(sc.ScId,
+                    new SchedulePerson(sc.StudentHuman.LastName, sc.StudentHuman.FirstName, sc.ContractNumber)))
             .ToDictionaryAsync(p => p.Key, p => p.Value, cancellationToken);
     }
 }

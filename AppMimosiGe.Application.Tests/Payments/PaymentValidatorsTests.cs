@@ -34,6 +34,20 @@ public sealed class PaymentValidatorsTests
             .ReturnsAsync(true);
     }
 
+    //decimal literals: since .NET 11 a double such as 0.01 converts to decimal with all its binary digits
+    //(0.0100000000000000002081668171), so a double would have too many decimals whatever the rule allows
+    public static TheoryData<decimal> AmountsWithMoreThanTwoDecimals => [10.005m, -0.001m];
+
+    public static TheoryData<decimal, bool> AllowedDecimalsAmounts =>
+        new()
+        {
+            { 1m, true },
+            { 0.01m, true },
+            { -120.5m, true },
+            { 0.001m, false },
+            { 99.999m, false }
+        };
+
     private static PaymentRequest Request(int studentContractId = 10, DateTime? payDate = null, decimal amount = 150m,
         string? document = null, int? bankAccountId = 1)
     {
@@ -139,12 +153,10 @@ public sealed class PaymentValidatorsTests
     }
 
     [Theory]
-    [InlineData(10.005)]
-    [InlineData(-0.001)]
-    public async Task AmountWithMoreThanTwoDecimals_IsInvalid(double amount)
+    [MemberData(nameof(AmountsWithMoreThanTwoDecimals))]
+    public async Task AmountWithMoreThanTwoDecimals_IsInvalid(decimal amount)
     {
-        Assert.Equal([PaymentErrors.AmountHasTooManyDecimals.Code],
-            await CreateErrorCodes(Request(amount: (decimal)amount)));
+        Assert.Equal([PaymentErrors.AmountHasTooManyDecimals.Code], await CreateErrorCodes(Request(amount: amount)));
     }
 
     // trailing zeros are no extra decimals
@@ -181,13 +193,9 @@ public sealed class PaymentValidatorsTests
     }
 
     [Theory]
-    [InlineData(1, true)]
-    [InlineData(0.01, true)]
-    [InlineData(-120.5, true)]
-    [InlineData(0.001, false)]
-    [InlineData(99.999, false)]
-    public void HasAllowedDecimals_AllowsAtMostTwo(double amount, bool expected)
+    [MemberData(nameof(AllowedDecimalsAmounts))]
+    public void HasAllowedDecimals_AllowsAtMostTwo(decimal amount, bool expected)
     {
-        Assert.Equal(expected, PaymentRequestValidator.HasAllowedDecimals((decimal)amount));
+        Assert.Equal(expected, PaymentRequestValidator.HasAllowedDecimals(amount));
     }
 }

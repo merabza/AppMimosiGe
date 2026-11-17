@@ -15,14 +15,13 @@ public sealed class BankTransactionsImportPlannerTests
     //students 1 and 2 are siblings (payer 100), 3 has another payer; 1's current contract is 11, 2's is 12, 3's is 13;
     //1 also has last year's contract 21
     private static readonly PaymentMatchInput Match = new([
-            new MatchStudent(1, "ნინო", "ბერიძე"),
-            new MatchStudent(2, "გიორგი", "ბერიძე"),
-            new MatchStudent(3, "ლუკა", "გელაშვილი")
-        ], new Dictionary<string, int>(),
-        [
-            new MatchPayer(100, "01001000100", "თამარ", "ბერიძე", [1, 2]),
-            new MatchPayer(101, "01001000101", "ეკა", "კაპანაძე", [3])
-        ], []);
+        new MatchStudent(1, "ნინო", "ბერიძე"),
+        new MatchStudent(2, "გიორგი", "ბერიძე"),
+        new MatchStudent(3, "ლუკა", "გელაშვილი")
+    ], new Dictionary<string, int>(), [
+        new MatchPayer(100, "01001000100", "თამარ", "ბერიძე", [1, 2]),
+        new MatchPayer(101, "01001000101", "ეკა", "კაპანაძე", [3])
+    ], []);
 
     private static readonly Dictionary<int, int> CurrentContracts = new() { [1] = 11, [2] = 12, [3] = 13 };
     private static readonly Dictionary<int, int> StudentByContract = new() { [11] = 1, [21] = 1, [12] = 2, [13] = 3 };
@@ -111,8 +110,8 @@ public sealed class BankTransactionsImportPlannerTests
     [Fact]
     public void Plan_EarlierSharesCountInTheNextBalances()
     {
-        List<PlannedTransaction> plan = Plan([Charge(11, 50m), Charge(12, 50m)],
-            Movement("1", 50m, "გიორგი ბერიძე"), Movement("2", 50m, "სწავლა", "01001000100", 1));
+        List<PlannedTransaction> plan = Plan([Charge(11, 50m), Charge(12, 50m)], Movement("1", 50m, "გიორგი ბერიძე"),
+            Movement("2", 50m, "სწავლა", "01001000100", 1));
 
         Assert.Equal([new PlannedShare(2, 12, 50m)], plan[0].Shares);
         Assert.Equal([new PlannedShare(1, 11, 50m)], plan[1].Shares);

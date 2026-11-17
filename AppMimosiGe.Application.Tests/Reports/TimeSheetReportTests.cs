@@ -14,10 +14,7 @@ public sealed class TimeSheetReportTests
     private const int FirstHalfIndex = 18;
     private const int SecondHalfIndex = 35;
 
-    private static readonly Dictionary<int, string> MonthNames = new()
-    {
-        [9] = "სექტემბერი", [10] = "ოქტომბერი"
-    };
+    private static readonly Dictionary<int, string> MonthNames = new() { [9] = "სექტემბერი", [10] = "ოქტომბერი" };
 
     //employees: 5 "TLast5 TFirst5" T5, 6 "Alpha A" T6 and 7 "Alpha A" T10 (one name, ordered by the number)
     private static readonly Dictionary<int, SchedulePerson> Employees = new()
@@ -54,8 +51,7 @@ public sealed class TimeSheetReportTests
     {
         IEnumerable<string> days = table.Columns.Select((column, index) => (column, index))
             .Where(c => c.column.Name.StartsWith("day", StringComparison.Ordinal) && c.column.Name != "days" &&
-                        row[c.index] is not null)
-            .Select(c => $"{c.column.Caption}={Number(row[c.index])}");
+                        row[c.index] is not null).Select(c => $"{c.column.Caption}={Number(row[c.index])}");
         return $"{row[0]}|{row[1]}|{row[2]}|{string.Join(",", days)}|{Number(row[FirstHalfIndex])}|" +
                $"{Number(row[SecondHalfIndex])}|{row[36]}|{Number(row[37])}";
     }

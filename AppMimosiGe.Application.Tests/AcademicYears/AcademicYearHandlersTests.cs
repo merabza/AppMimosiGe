@@ -28,9 +28,9 @@ public sealed class AcademicYearHandlersTests
 {
     //5 October 2026, 12:00 local time: the current year is 2026-2027
     private static readonly DateTimeOffset Now = new(2026, 10, 5, 12, 0, 0, TimeSpan.FromHours(4));
+    private readonly Mock<ILessonGeneratorRepository> _lessonGeneratorRepository = new();
 
     private readonly Mock<IAcademicYearsRepository> _repository = new();
-    private readonly Mock<ILessonGeneratorRepository> _lessonGeneratorRepository = new();
     private readonly Mock<TimeProvider> _timeProvider = new();
     private readonly Mock<IUnitOfWork> _unitOfWork = new();
 
@@ -49,13 +49,14 @@ public sealed class AcademicYearHandlersTests
     private static DateTime Date(int month, int day, int year, int hour = 0) =>
         new(year, month, day, hour, 0, 0, DateTimeKind.Unspecified);
 
-    private static AcademicYear Year(int ayId, int startYear) => new()
-    {
-        AyId = ayId,
-        AcademicYearName = $"{startYear}-{startYear + 1}",
-        StartDate = Date(9, 1, startYear),
-        FinishDate = Date(9, 1, startYear + 1)
-    };
+    private static AcademicYear Year(int ayId, int startYear) =>
+        new()
+        {
+            AyId = ayId,
+            AcademicYearName = $"{startYear}-{startYear + 1}",
+            StartDate = Date(9, 1, startYear),
+            FinishDate = Date(9, 1, startYear + 1)
+        };
 
     // --- step 1: the new year
 
@@ -68,8 +69,9 @@ public sealed class AcademicYearHandlersTests
         Result<NewAcademicYearResponse> result =
             await CreateHandler().Handle(new CreateAcademicYearCommand(true), CancellationToken.None);
 
-        Assert.Equal(new NewAcademicYearResponse(true, null, "2027-2028", Date(9, 1, 2027), Date(9, 1, 2028), "7",
-            false), result.Value);
+        Assert.Equal(
+            new NewAcademicYearResponse(true, null, "2027-2028", Date(9, 1, 2027), Date(9, 1, 2028), "7", false),
+            result.Value);
         _repository.Verify(r => r.Add(It.IsAny<AcademicYear>()), Times.Never);
         _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -137,7 +139,11 @@ public sealed class AcademicYearHandlersTests
         });
         group.GroupsByStudents.Add(new GroupByStudent
         {
-            GbsId = 1, StudentContractId = 10, FourWeekHours = 8f, FourWeekFee = 48m, StartDate = Date(8, 23, 2027)
+            GbsId = 1,
+            StudentContractId = 10,
+            FourWeekHours = 8f,
+            FourWeekFee = 48m,
+            StartDate = Date(8, 23, 2027)
         });
         group.GroupDayTimePlaces.Add(new GroupDayTimePlace
         {
@@ -167,7 +173,12 @@ public sealed class AcademicYearHandlersTests
         };
         lesson.LessonsByStudents.Add(new LessonByStudent
         {
-            Id = id + 100, LessonId = id, StudentContractId = 10, GroupByStudentId = 1, HoursCount = 1.5f, Present = present
+            Id = id + 100,
+            LessonId = id,
+            StudentContractId = 10,
+            GroupByStudentId = 1,
+            HoursCount = 1.5f,
+            Present = present
         });
         return lesson;
     }
@@ -233,8 +244,9 @@ public sealed class AcademicYearHandlersTests
             (closed.GrpId, closed.GroupCode, closed.CourseName, closed.PreviousVoidDate, closed.OpenTeacherRowsCount,
                 closed.OpenStudentRowsCount, closed.OpenScheduleRowsCount));
         //23 and 30 August are created, 6 September is deleted (-48 / 8 × 1.5), 13 September stays with error 11
-        Assert.Equal((2, 1, -9m), (closed.Generation.CreatedLessonsCount, closed.Generation.DeletedLessonsCount,
-            closed.DeletedLessonsCharges));
+        Assert.Equal((2, 1, -9m),
+            (closed.Generation.CreatedLessonsCount, closed.Generation.DeletedLessonsCount,
+                closed.DeletedLessonsCharges));
         LessonGeneratorErrorResponse error = Assert.Single(closed.Generation.Errors);
         Assert.Equal((LessonGeneratorErrorCodes.ExtraLessonHasEnteredData, 701), (error.ErrorCode, error.LessonId));
         Assert.Equal(Date(9, 1, 2027), group.VoidDate);
@@ -311,8 +323,8 @@ public sealed class AcademicYearHandlersTests
             .Handle(new CloseAcademicYearGroupsCommand(11, Date(month, day, year), false), CancellationToken.None);
 
         Assert.Equal(AcademicYearErrors.CloseDateIsOutOfRange.Code, result.Error.Code);
-        _repository.Verify(r => r.GetGroupsToClose(It.IsAny<int>(), It.IsAny<DateTime>(),
-            It.IsAny<CancellationToken>()), Times.Never);
+        _repository.Verify(
+            r => r.GetGroupsToClose(It.IsAny<int>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     // --- the wizard's information and the global list
@@ -320,13 +332,12 @@ public sealed class AcademicYearHandlersTests
     [Fact]
     public async Task WizardInfo_HasTheYearsTheCurrentYearAndTheHorizon()
     {
-        List<AcademicYearInfoResponse> years =
-            [new(11, "2026-2027", Date(9, 1, 2026), Date(9, 1, 2027), 130, 56, 56)];
+        List<AcademicYearInfoResponse> years = [new(11, "2026-2027", Date(9, 1, 2026), Date(9, 1, 2027), 130, 56, 56)];
         _repository.Setup(r => r.GetAcademicYearsInfo(It.IsAny<CancellationToken>())).ReturnsAsync(years);
 
-        Result<AcademicYearWizardInfoResponse> result = await new GetAcademicYearWizardInfoQueryHandler(
-                _repository.Object, _lessonGeneratorRepository.Object, _timeProvider.Object)
-            .Handle(new GetAcademicYearWizardInfoQuery(), CancellationToken.None);
+        Result<AcademicYearWizardInfoResponse> result =
+            await new GetAcademicYearWizardInfoQueryHandler(_repository.Object, _lessonGeneratorRepository.Object,
+                _timeProvider.Object).Handle(new GetAcademicYearWizardInfoQuery(), CancellationToken.None);
 
         Assert.Same(years, result.Value.AcademicYears);
         Assert.Equal((11, Date(11, 1, 2027), Date(11, 30, 2027)),
@@ -340,9 +351,9 @@ public sealed class AcademicYearHandlersTests
         _lessonGeneratorRepository.Setup(r => r.GetLastOperationMonth(It.IsAny<CancellationToken>()))
             .ReturnsAsync((DateTime?)null);
 
-        Result<AcademicYearWizardInfoResponse> result = await new GetAcademicYearWizardInfoQueryHandler(
-                _repository.Object, _lessonGeneratorRepository.Object, _timeProvider.Object)
-            .Handle(new GetAcademicYearWizardInfoQuery(), CancellationToken.None);
+        Result<AcademicYearWizardInfoResponse> result =
+            await new GetAcademicYearWizardInfoQueryHandler(_repository.Object, _lessonGeneratorRepository.Object,
+                _timeProvider.Object).Handle(new GetAcademicYearWizardInfoQuery(), CancellationToken.None);
 
         Assert.Null(result.Value.HorizonEnd);
     }
@@ -354,8 +365,8 @@ public sealed class AcademicYearHandlersTests
             .ReturnsAsync([Year(12, 2027), Year(10, 2025), Year(11, 2026)]);
 
         Result<AcademicYearsResponse> result =
-            await new GetAcademicYearsQueryHandler(_repository.Object, _timeProvider.Object)
-                .Handle(new GetAcademicYearsQuery(), CancellationToken.None);
+            await new GetAcademicYearsQueryHandler(_repository.Object, _timeProvider.Object).Handle(
+                new GetAcademicYearsQuery(), CancellationToken.None);
 
         Assert.Equal([10, 11, 12], result.Value.AcademicYears.Select(ay => ay.Id));
         Assert.Equal("2025-2026", result.Value.AcademicYears[0].Name);
@@ -368,14 +379,13 @@ public sealed class AcademicYearHandlersTests
     public async Task NextNumber_IsTheNextFreeNumberOfTheYear()
     {
         var studentContracts = new Mock<IStudentContractsRepository>();
-        studentContracts.Setup(r => r.GetAcademicYear(12, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Year(12, 2027));
+        studentContracts.Setup(r => r.GetAcademicYear(12, It.IsAny<CancellationToken>())).ReturnsAsync(Year(12, 2027));
         studentContracts.Setup(r => r.GetContractNumbers(12, It.IsAny<CancellationToken>()))
             .ReturnsAsync(["7.001", "7.002"]);
 
         Result<StudentContractNextNumberResponse> result =
-            await new GetStudentContractNextNumberQueryHandler(studentContracts.Object)
-                .Handle(new GetStudentContractNextNumberQuery(12), CancellationToken.None);
+            await new GetStudentContractNextNumberQueryHandler(studentContracts.Object).Handle(
+                new GetStudentContractNextNumberQuery(12), CancellationToken.None);
 
         Assert.Equal("7.003", result.Value.ContractNumber);
     }
@@ -384,8 +394,8 @@ public sealed class AcademicYearHandlersTests
     public async Task NextNumber_UnknownYear_IsAnError()
     {
         Result<StudentContractNextNumberResponse> result =
-            await new GetStudentContractNextNumberQueryHandler(new Mock<IStudentContractsRepository>().Object)
-                .Handle(new GetStudentContractNextNumberQuery(99), CancellationToken.None);
+            await new GetStudentContractNextNumberQueryHandler(new Mock<IStudentContractsRepository>().Object).Handle(
+                new GetStudentContractNextNumberQuery(99), CancellationToken.None);
 
         Assert.Equal(StudentContractErrors.AcademicYearNotFound.Code, result.Error.Code);
     }

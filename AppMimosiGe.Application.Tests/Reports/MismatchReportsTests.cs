@@ -18,6 +18,21 @@ public sealed class MismatchReportsTests
     //the academic years' last finish date (Access's vMaxDate): an open end
     private static readonly DateTime MaxFinishDate = Day(2027, 9, 1);
 
+    //decimal literals: since .NET 11 a double such as 24.01 converts to decimal with all its binary digits
+    public static TheoryData<decimal, bool> FeesAroundTheTolerance =>
+        new() { { 24.01m, false }, { 23.99m, false }, { 24.011m, true }, { 23.989m, true } };
+
+    public static TheoryData<decimal, float, float, decimal, bool> FeesWithInexactSingles =>
+        new()
+        {
+            { 10m, 0.3f, 2f, 23.99m, false },
+            { 10m, 0.3f, 2f, 23.989m, true },
+            { 10m, 0.9f, 2f, 72.01m, false },
+            { 10m, 0.9f, 2f, 72.011m, true },
+            { 5m, 1f, 1.1f, 21.99m, false },
+            { 5m, 1f, 1.1f, 21.989m, true }
+        };
+
     private static List<List<object?>> Rows(ReportTable table)
     {
         return Assert.Single(table.Sections).Rows;
@@ -50,7 +65,8 @@ public sealed class MismatchReportsTests
 
         // Assert
         Assert.Equal(["teacher", "groupCode", "contractScheme", "groupScheme"], table.Columns.Select(c => c.Name));
-        Assert.Equal(["მასწავლებელი", "ჯგუფი", "კონტრაქტის სქემა", "ჯგუფის სქემა"], table.Columns.Select(c => c.Caption));
+        Assert.Equal(["მასწავლებელი", "ჯგუფი", "კონტრაქტის სქემა", "ჯგუფის სქემა"],
+            table.Columns.Select(c => c.Caption));
         Assert.All(table.Columns, c => Assert.Equal(ReportColumnTypes.Text, c.Type));
         Assert.Equal(["Alpha A / T7|C1|S2|S1", "Zeta Z / T5|A1|S1|S2"], Rows(table).Select(Text));
         Assert.Empty(table.FooterRows);
@@ -213,8 +229,8 @@ public sealed class MismatchReportsTests
     {
         // Arrange
         GroupRowsSnapshot snapshot = new GroupRowsSnapshotBuilder().Group(1, "A1").DayTime(1, 1, September, null)
-            .DayTime(2, 1, September, October).Teacher(1, 1, 5, September, null)
-            .Student(1, 1, 20, September, null, 72m).Student(2, 1, 21, September, null, 70m).Build();
+            .DayTime(2, 1, September, October).Teacher(1, 1, 5, September, null).Student(1, 1, 20, September, null, 72m)
+            .Student(2, 1, 21, September, null, 70m).Build();
 
         // Act
         ReportTable table = MismatchReports.StudentFeeMismatches(snapshot);
@@ -248,15 +264,28 @@ public sealed class MismatchReportsTests
 
     // Access's Abs(…) > 0.01: one hundredth is still right, a bit more is listed; the coefficient counts
     [Theory]
-    [InlineData(24.01, false)]
-    [InlineData(23.99, false)]
-    [InlineData(24.011, true)]
-    [InlineData(23.989, true)]
-    public void StudentFeeMismatches_ToleratesOneHundredth(double fee, bool listed)
+    [MemberData(nameof(FeesAroundTheTolerance))]
+    public void StudentFeeMismatches_ToleratesOneHundredth(decimal fee, bool listed)
     {
         // Arrange: 6 × 0.5 × 2 hours × 4 = 24
         GroupRowsSnapshot snapshot = new GroupRowsSnapshotBuilder().Group(1, "A1").DayTime(1, 1, September, null, 2f)
-            .Teacher(1, 1, 5, September, null).Student(1, 1, 20, September, null, (decimal)fee, 6m, 0.5f).Build();
+            .Teacher(1, 1, 5, September, null).Student(1, 1, 20, September, null, fee, 6m, 0.5f).Build();
+
+        // Act & Assert
+        Assert.Equal(listed ? 1 : 0, Rows(MismatchReports.StudentFeeMismatches(snapshot)).Count);
+    }
+
+    // the coefficient and the hours are Singles, and 0.3f (0.300000011920928955078125), 0.9f or 1.1f isn't exact in
+    // binary; Access rounds the difference to Currency, so one hundredth is still right with them too
+    [Theory]
+    [MemberData(nameof(FeesWithInexactSingles))]
+    public void StudentFeeMismatches_ToleratesOneHundredthWithInexactSingles(decimal oneHourFee, float hoursCoefficient,
+        float weekHours, decimal fee, bool listed)
+    {
+        // Arrange: 10 × 0.3 × 2 hours × 4 = 24, 10 × 0.9 × 2 × 4 = 72, 5 × 1 × 1.1 × 4 = 22
+        GroupRowsSnapshot snapshot = new GroupRowsSnapshotBuilder().Group(1, "A1")
+            .DayTime(1, 1, September, null, weekHours).Teacher(1, 1, 5, September, null)
+            .Student(1, 1, 20, September, null, fee, oneHourFee, hoursCoefficient).Build();
 
         // Act & Assert
         Assert.Equal(listed ? 1 : 0, Rows(MismatchReports.StudentFeeMismatches(snapshot)).Count);
@@ -290,8 +319,8 @@ public sealed class MismatchReportsTests
     {
         // Arrange
         GroupRowsSnapshot snapshot = new GroupRowsSnapshotBuilder().Group(1, "A1", voidDate: Day(2027, 1, 1))
-            .DayTime(1, 1, September, null, 2f).Teacher(1, 1, 5, September, null)
-            .Student(1, 1, 20, September, null, 48m).Build();
+            .DayTime(1, 1, September, null, 2f).Teacher(1, 1, 5, September, null).Student(1, 1, 20, September, null)
+            .Build();
 
         // Act
         ReportTable table = MismatchReports.StudentFeeMismatches(snapshot);
@@ -320,10 +349,9 @@ public sealed class MismatchReportsTests
         // Arrange
         GroupRowsSnapshot snapshot = new GroupRowsSnapshotBuilder().Group(1, "B1").Group(2, "A1")
             .DayTime(1, 1, September, null).DayTime(2, 2, September, null).DayTime(3, 2, October, null)
-            .Teacher(1, 1, 5, September, null).Teacher(2, 2, 5, September, null)
-            .Student(1, 1, 20, September, null, 1m).Student(2, 2, 21, September, null, 1m)
-            .Student(3, 2, 20, September, null, 1m).StudentName(20, "Zeta", "Z", "6.020")
-            .StudentName(21, "Alpha", "A", "6.021").Build();
+            .Teacher(1, 1, 5, September, null).Teacher(2, 2, 5, September, null).Student(1, 1, 20, September, null, 1m)
+            .Student(2, 2, 21, September, null, 1m).Student(3, 2, 20, September, null, 1m)
+            .StudentName(20, "Zeta", "Z", "6.020").StudentName(21, "Alpha", "A", "6.021").Build();
 
         // Act & Assert
         Assert.Equal(["A1 Alpha 09-01", "A1 Alpha 10-01", "A1 Zeta 09-01", "A1 Zeta 10-01", "B1 Zeta 09-01"],

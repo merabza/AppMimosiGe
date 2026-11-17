@@ -4,13 +4,6 @@ using System.Linq;
 
 namespace AppMimosiGe.Application.BankTransactions.Models;
 
-/// <param name="StudentHumanId">მოსწავლე</param>
-/// <param name="Balance">მოსწავლის ანგარიშის ბალანსი ჩარიცხვის თარიღისთვის (უარყოფითი = ვალი, დადებითი = დეპოზიტი)</param>
-/// <param name="MustPayToEnd">წლის ბოლომდე გადასახდელი (დეპოზიტების სიის MustPayToEnd; ვალის ჩათვლით)</param>
-public sealed record DistributionAccount(int StudentHumanId, decimal Balance, decimal MustPayToEnd);
-
-public sealed record DistributionShare(int StudentHumanId, decimal Amount);
-
 /// <summary>
 ///     ჩარიცხვის განაწილება რამდენიმე მოსწავლეზე (D163): თანხა &lt; ვალების ჯამი → ვალების პროპორციულად; თანხა = ვალების
 ///     ჯამი → ყველას ვალი იფარება; თანხა &gt; ვალების ჯამი → ჯერ ყველა ვალი, ზედმეტი კი წლის ბოლომდე დარჩენილი
@@ -30,7 +23,8 @@ public static class PaymentDistributor
         }
 
         //ბალანსი 4 ათწილადით ითვლება, გადახდას კი მხოლოდ თეთრები აქვს (2 ათწილადი)
-        decimal[] debts = [.. ordered.Select(a => Math.Round(Math.Max(0m, -a.Balance), 2, MidpointRounding.AwayFromZero))];
+        decimal[] debts =
+            [.. ordered.Select(a => Math.Round(Math.Max(0m, -a.Balance), 2, MidpointRounding.AwayFromZero))];
         decimal totalDebt = debts.Sum();
 
         decimal[] shares;

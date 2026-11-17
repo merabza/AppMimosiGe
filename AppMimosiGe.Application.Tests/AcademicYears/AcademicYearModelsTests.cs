@@ -12,13 +12,14 @@ public sealed class AcademicYearModelsTests
     private static DateTime Date(int year, int month, int day) =>
         new(year, month, day, 0, 0, 0, DateTimeKind.Unspecified);
 
-    private static AcademicYear Year(int ayId, int startYear) => new()
-    {
-        AyId = ayId,
-        AcademicYearName = $"{startYear}-{startYear + 1}",
-        StartDate = Date(startYear, 9, 1),
-        FinishDate = Date(startYear + 1, 9, 1)
-    };
+    private static AcademicYear Year(int ayId, int startYear) =>
+        new()
+        {
+            AyId = ayId,
+            AcademicYearName = $"{startYear}-{startYear + 1}",
+            StartDate = Date(startYear, 9, 1),
+            FinishDate = Date(startYear + 1, 9, 1)
+        };
 
     // --- contract numbers: the year's last digit, a dot and the sequence
 

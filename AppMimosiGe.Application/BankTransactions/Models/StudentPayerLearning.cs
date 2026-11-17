@@ -27,8 +27,7 @@ public static class StudentPayerLearning
             .. studentHumanIds.Distinct().Order()
                 .Where(student => !existing.Any(p => p.StudentHumanId == student && (personalNumber is not null
                     ? p.PersonalNumber == personalNumber
-                    : PayerIdentity.Iban(p.AccountIban) == iban)))
-                .Select(student => new StudentPayer
+                    : PayerIdentity.Iban(p.AccountIban) == iban))).Select(student => new StudentPayer
                 {
                     StudentHumanId = student,
                     PersonalNumber = personalNumber,

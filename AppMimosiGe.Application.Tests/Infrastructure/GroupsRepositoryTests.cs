@@ -591,6 +591,15 @@ public sealed class GroupsRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task GetLessonStartTimesById_ReturnsEveryTimeWithoutTracking()
+    {
+        Dictionary<int, TimeOnly> result = await _repository.GetLessonStartTimesById();
+
+        Assert.Equal(new Dictionary<int, TimeOnly> { [1] = new(8, 0), [2] = new(8, 30) }, result);
+        Assert.Empty(_context.ChangeTracker.Entries());
+    }
+
+    [Fact]
     public async Task GetStudentContractsForChange_ReturnsTrackedContracts()
     {
         List<StudentContract> result = await _repository.GetStudentContractsForChange([10, 12, 99]);

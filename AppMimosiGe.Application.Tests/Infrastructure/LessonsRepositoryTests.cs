@@ -506,4 +506,14 @@ public sealed class LessonsRepositoryTests : IDisposable
         Assert.Equal([10, 11, 12], withOwnRow.Select(c => c.ScId).Order());
         Assert.All(withOwnRow, c => Assert.Equal(EntityState.Unchanged, _context.Entry(c).State));
     }
+
+    // "last name first name" of the asked contracts only; an unknown contract is left out
+    [Fact]
+    public async Task GetStudentNames_ReturnsTheNamesOfTheAskedContracts()
+    {
+        Dictionary<int, string> result = await _repository.GetStudentNames([10, 12, 99]);
+
+        Assert.Equal(new Dictionary<int, string> { [10] = "Gamma Gia", [12] = "Epsilon Eva" }, result);
+        Assert.Empty(_context.ChangeTracker.Entries());
+    }
 }

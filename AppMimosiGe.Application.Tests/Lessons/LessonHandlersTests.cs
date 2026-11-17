@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using AppMimosiGe.Application.LessonGenerator;
 using AppMimosiGe.Application.Lessons;
 using AppMimosiGe.Application.Lessons.GetLesson;
 using AppMimosiGe.Application.Lessons.GetLessonFormLookups;
@@ -24,6 +26,7 @@ namespace AppMimosiGe.Application.Tests.Lessons;
 public sealed class LessonHandlersTests
 {
     private static readonly DateTime LessonDt = new(2026, 9, 30, 15, 0, 0, DateTimeKind.Unspecified);
+    private readonly Mock<ILessonGeneratorRepository> _lessonGenerator = new();
 
     private readonly List<StudentContract> _loadedContracts = [];
     private readonly Mock<ILessonsRepository> _repository = new();
@@ -38,6 +41,55 @@ public sealed class LessonHandlersTests
             _loadedContracts.AddRange([Contract(10), Contract(11)]);
             return _loadedContracts;
         });
+        _repository.Setup(r => r.GetStudentNames(It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyCollection<int> ids, CancellationToken _) =>
+                ids.ToDictionary(id => id, id => $"Student {id}"));
+        //the calendar ends in December: the generator's horizon is 31.12.2026. By default the group has the lesson
+        //with both of its students, so the journal makes no lesson erroneous
+        _lessonGenerator.Setup(r => r.GetLastOperationMonth(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new DateTime(2026, 12, 1, 0, 0, 0, DateTimeKind.Unspecified));
+        WithSavedGroup(SavedGroup());
+    }
+
+    //group 7 as the lesson generator loads it: teacher contract 3, students 31 (contract 10) and 32 (contract 11) and
+    //the Wednesday 15:00 schedule since September, with lesson 9 as it is saved
+    private static Group SavedGroup(DateTime? voidDate = null, DateTime? endDateOfContract11 = null)
+    {
+        var start = new DateTime(2026, 9, 1, 0, 0, 0, DateTimeKind.Unspecified);
+        var group = new Group { GrpId = 7, GroupCode = "1001", VoidDate = voidDate };
+        group.GroupsByTeachers.Add(new GroupByTeacher
+        {
+            Id = 1, TeacherContractId = 3, SalarySchemaId = 4, StartDate = start
+        });
+        group.GroupsByStudents.Add(new GroupByStudent { GbsId = 31, StudentContractId = 10, StartDate = start });
+        group.GroupsByStudents.Add(new GroupByStudent
+        {
+            GbsId = 32, StudentContractId = 11, StartDate = start, EndDate = endDateOfContract11
+        });
+        group.GroupDayTimePlaces.Add(new GroupDayTimePlace
+        {
+            GdtpId = 1,
+            WeekDayId = 3,
+            LessonStartTime = new LessonStartTime { LstTime = new TimeOnly(15, 0) },
+            HoursCount = 1.5f,
+            StartDate = start
+        });
+        group.Lessons.Add(ExistingLesson());
+        return group;
+    }
+
+    private void WithSavedGroup(Group group)
+    {
+        _lessonGenerator.Setup(r => r.GetGroupForGeneration(7, false, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(group);
+    }
+
+    private static TimeProvider TimeProviderAt(DateTimeOffset now)
+    {
+        var timeProvider = new Mock<TimeProvider>();
+        timeProvider.Setup(t => t.GetUtcNow()).Returns(now);
+        timeProvider.Setup(t => t.LocalTimeZone).Returns(TimeZoneInfo.Utc);
+        return timeProvider.Object;
     }
 
     private static StudentContract Contract(int scId)
@@ -94,7 +146,8 @@ public sealed class LessonHandlersTests
 
     private Task<Result> Update(LessonRequest request)
     {
-        return new UpdateLessonCommandHandler(_repository.Object, _unitOfWork.Object).Handle(
+        return new UpdateLessonCommandHandler(_repository.Object, _lessonGenerator.Object, _unitOfWork.Object,
+            TimeProviderAt(new DateTimeOffset(2026, 10, 1, 10, 0, 0, TimeSpan.Zero))).Handle(
             new UpdateLessonCommand(9, request), CancellationToken.None);
     }
 
@@ -328,6 +381,132 @@ public sealed class LessonHandlersTests
         Assert.Equal(2, lesson.LessonStatusId);
         Assert.Null(lesson.RecoverDate);
         Assert.All(lesson.LessonsByStudents, s => Assert.False(s.Present));
+        VerifySaved(Times.Once());
+    }
+
+    //D177: contract 11 left the group on the lesson's day, so the generator would delete its row; with attendance it
+    //would stay as an extra student (error 14 of report r13)
+    [Fact]
+    public async Task Update_AttendanceOfAStudentNoLongerInTheGroup_IsConflictNamingHimAndChangesNothing()
+    {
+        // Arrange
+        Lesson lesson = WithExistingLesson();
+        WithSavedGroup(SavedGroup(endDateOfContract11: LessonDt.Date));
+
+        // Act
+        Result result = await Update(new LessonRequest
+        {
+            LessonStatusId = 1, Note = "new", Students = [new LessonStudentRequest { Id = 22, Present = true }]
+        });
+
+        // Assert
+        Assert.Equal(nameof(LessonErrors.ExtraStudentsCannotHaveEnteredData), result.Error.Code);
+        Assert.Equal(ErrorType.Conflict, result.Error.Type);
+        Assert.Contains(": Student 11. ", result.Error.Description, StringComparison.Ordinal);
+        _repository.Verify(r => r.GetStudentNames(
+            It.Is<IReadOnlyCollection<int>>(ids => ids.Count == 1 && ids.Contains(11)), It.IsAny<CancellationToken>()));
+        Assert.Equal("old", lesson.Note);
+        Assert.False(Assert.Single(lesson.LessonsByStudents, s => s.Id == 22).Present);
+        Assert.Empty(_loadedContracts);
+        VerifySaved(Times.Never());
+    }
+
+    //two extra students are named alphabetically, not in the order of their rows
+    [Fact]
+    public async Task Update_DataForTwoStudentsNoLongerInTheGroup_NamesBothAlphabetically()
+    {
+        // Arrange
+        Lesson lesson = WithExistingLesson();
+        lesson.LessonsByStudents.Add(StudentRow23());
+        Group group = SavedGroup(endDateOfContract11: LessonDt.Date);
+        group.GroupsByStudents.Add(new GroupByStudent
+        {
+            GbsId = 33,
+            StudentContractId = 12,
+            StartDate = new DateTime(2026, 9, 1, 0, 0, 0, DateTimeKind.Unspecified),
+            EndDate = LessonDt.Date
+        });
+        group.Lessons.Single().LessonsByStudents.Add(StudentRow23());
+        WithSavedGroup(group);
+        _repository.Setup(r => r.GetStudentNames(It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<int, string> { [11] = "Zeta Zoe", [12] = "Alpha Ann" });
+
+        // Act
+        Result result = await Update(new LessonRequest
+        {
+            LessonStatusId = 1,
+            Students =
+            [
+                new LessonStudentRequest { Id = 22, Present = true },
+                new LessonStudentRequest { Id = 23, Theme = "theme" }
+            ]
+        });
+
+        // Assert
+        Assert.Equal(nameof(LessonErrors.ExtraStudentsCannotHaveEnteredData), result.Error.Code);
+        Assert.Contains(": Alpha Ann, Zeta Zoe. ", result.Error.Description, StringComparison.Ordinal);
+        VerifySaved(Times.Never());
+    }
+
+    //the row of contract 12 (group row 33) without entered data
+    private static LessonByStudent StudentRow23()
+    {
+        return new LessonByStudent
+        {
+            Id = 23,
+            LessonId = 9,
+            StudentContractId = 12,
+            GroupByStudentId = 33,
+            HoursCount = 1.5f
+        };
+    }
+
+    //the lesson starts on the group's void date: it is extra and its attended row 21 keeps it already (error 11)
+    [Fact]
+    public async Task Update_AttendanceInALessonTheGroupNoLongerHas_IsConflictAndChangesNothing()
+    {
+        // Arrange
+        Lesson lesson = WithExistingLesson();
+        WithSavedGroup(SavedGroup(LessonDt.Date));
+
+        // Act
+        Result result = await Update(new LessonRequest
+        {
+            LessonStatusId = 1, Students = [new LessonStudentRequest { Id = 22, Theme = "theme" }]
+        });
+
+        // Assert
+        Assert.Equal(nameof(LessonErrors.ExtraLessonCannotHaveEnteredData), result.Error.Code);
+        Assert.Equal(ErrorType.Conflict, result.Error.Type);
+        Assert.Null(Assert.Single(lesson.LessonsByStudents, s => s.Id == 22).Theme);
+        _repository.Verify(r => r.GetStudentNames(It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+        VerifySaved(Times.Never());
+    }
+
+    //the erroneous row 21 is in report r13 already: editing it or the other fields creates no new error
+    [Fact]
+    public async Task Update_LessonThatWasAlreadyErroneous_IsSavedWithoutNewEnteredData()
+    {
+        // Arrange
+        Lesson lesson = WithExistingLesson();
+        WithSavedGroup(SavedGroup(LessonDt.Date));
+
+        // Act
+        Result result = await Update(new LessonRequest
+        {
+            LessonStatusId = 1,
+            Note = "new",
+            Students =
+            [
+                new LessonStudentRequest { Id = 21, Theme = "new theme" }, new LessonStudentRequest { Id = 22 }
+            ]
+        });
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.Equal("new", lesson.Note);
+        Assert.Equal("new theme", Assert.Single(lesson.LessonsByStudents, s => s.Id == 21).Theme);
         VerifySaved(Times.Once());
     }
 

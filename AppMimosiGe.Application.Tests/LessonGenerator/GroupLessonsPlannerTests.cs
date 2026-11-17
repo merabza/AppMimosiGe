@@ -468,8 +468,7 @@ public sealed class GroupLessonsPlannerTests
         Assert.Equal(SeptemberMonday(7) with { FourWeekHours = 8.0002f }, plan.Changes[0].PreviousValues);
         Assert.Empty(plan.Changes[0].Students);
         Assert.Null(plan.Changes[1].PreviousValues);
-        Assert.Equal([new PlannedStudentRow(EStudentRowChangeKind.Update, 201, 10, 1, 1.5f)],
-            plan.Changes[1].Students);
+        Assert.Equal([new PlannedStudentRow(EStudentRowChangeKind.Update, 201, 10, 1, 1.5f)], plan.Changes[1].Students);
     }
 
     [Fact]
@@ -483,6 +482,7 @@ public sealed class GroupLessonsPlannerTests
         Assert.Empty(plan.Logs);
     }
 
+    //every error 14 entry names its extra student row
     [Fact]
     public void PlanGroup_ExtraStudentWithEnteredData_StaysAndLogsError14()
     {
@@ -493,8 +493,10 @@ public sealed class GroupLessonsPlannerTests
         ]));
 
         Assert.DoesNotContain(plan.Changes, c => c.Kind == ELessonChangeKind.Update);
-        var log = new PlannedLogEntry(LessonGeneratorErrorCodes.ExtraStudentHasEnteredData, Date(9, 7, 15), 100);
-        Assert.Equal([log, log], plan.Logs);
+        Assert.Equal([
+            new PlannedLogEntry(LessonGeneratorErrorCodes.ExtraStudentHasEnteredData, Date(9, 7, 15), 100, 199),
+            new PlannedLogEntry(LessonGeneratorErrorCodes.ExtraStudentHasEnteredData, Date(9, 7, 15), 100, 201)
+        ], plan.Logs);
     }
 
     //the error 14 entry carries the corrected lesson time
@@ -506,7 +508,8 @@ public sealed class GroupLessonsPlannerTests
             Lesson(100, SeptemberMonday(7, 14), LessonStudent(200), LessonStudent(201, 99, null, hasEnteredData: true))
         ]));
 
-        Assert.Equal([new PlannedLogEntry(LessonGeneratorErrorCodes.ExtraStudentHasEnteredData, Date(9, 7, 15), 100)],
+        Assert.Equal(
+            [new PlannedLogEntry(LessonGeneratorErrorCodes.ExtraStudentHasEnteredData, Date(9, 7, 15), 100, 201)],
             plan.Logs);
     }
 
@@ -533,6 +536,20 @@ public sealed class GroupLessonsPlannerTests
 
         Assert.DoesNotContain(plan.Changes, c => c.LessonId is not null);
         Assert.Equal(3, Created(plan).Count);
+    }
+
+    //two lessons at the right time: the one with the lower id is the lesson of the day, the other one is left alone
+    [Fact]
+    public void PlanGroup_TwoLessonsAtTheRightTime_UpdatesTheLowerId()
+    {
+        LessonValues otherTeacher = SeptemberMonday(7) with { TeacherContractId = 6 };
+        GroupLessonsPlan plan = Plan(Input(lessons:
+        [
+            Lesson(101, otherTeacher, LessonStudent(201)), Lesson(100, otherTeacher, LessonStudent(200))
+        ]));
+
+        PlannedLessonChange updated = Assert.Single(plan.Changes, c => c.Kind == ELessonChangeKind.Update);
+        Assert.Equal(100, updated.LessonId);
     }
 
     [Fact]

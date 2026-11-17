@@ -31,9 +31,8 @@ public static class BankTransactionsEndpoints
     {
         debugLogger?.Information("{MethodName} Started", nameof(UseBankTransactionsEndpoints));
 
-        RouteGroupBuilder group = endpoints
-            .MapGroup(Routes.ApiBase + Routes.BankTransactionsRoute.BankTransactionsBase).RequireAuthorization()
-            .AddEndpointFilter<UserMustHaveBankTransactionsRightsFilter>();
+        RouteGroupBuilder group = endpoints.MapGroup(Routes.ApiBase + Routes.BankTransactionsRoute.BankTransactionsBase)
+            .RequireAuthorization().AddEndpointFilter<UserMustHaveBankTransactionsRightsFilter>();
 
         group.MapGet(Routes.BankTransactionsRoute.List, GetList);
         group.MapGet(Routes.BankTransactionsRoute.StudentContracts, GetStudentContracts);
@@ -97,8 +96,8 @@ public static class BankTransactionsEndpoints
 
     // PUT api/v1/banktransactions/{bankTransactionId:int}/allocation
     internal static async Task<Results<Ok, ProblemHttpResult>> SetAllocation([FromRoute] int bankTransactionId,
-        [FromBody] BankTransactionAllocationRequest request, ICommandHandler<SetBankTransactionAllocationCommand> handler,
-        CancellationToken cancellationToken = default)
+        [FromBody] BankTransactionAllocationRequest request,
+        ICommandHandler<SetBankTransactionAllocationCommand> handler, CancellationToken cancellationToken = default)
     {
         Result result = await handler.Handle(new SetBankTransactionAllocationCommand(bankTransactionId, request),
             cancellationToken);

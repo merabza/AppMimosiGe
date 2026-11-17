@@ -25,9 +25,11 @@ public static class TransitionReports
         ];
         List<List<object?>> result =
         [
-            .. rows.Select(r => (r.Row, r.Group, Next: NextStart(r.Row.EndDate,
-                    rows.Where(o => o.Row.StudentContractId == r.Row.StudentContractId &&
-                                    o.Group.CourseId == r.Group.CourseId).Select(o => o.Row.StartDate))))
+            .. rows
+                .Select(r => (r.Row, r.Group,
+                    Next: NextStart(r.Row.EndDate,
+                        rows.Where(o => o.Row.StudentContractId == r.Row.StudentContractId &&
+                                        o.Group.CourseId == r.Group.CourseId).Select(o => o.Row.StartDate))))
                 .Where(r => IsMissed(r.Row.EndDate, r.Next))
                 .DistinctBy(r => (r.Group.CourseId, r.Row.StudentContractId, r.Row.StartDate, r.Row.EndDate))
                 .Select(r => (r.Row, r.Group, r.Next, Student: snapshot.StudentNames[r.Row.StudentContractId]))
@@ -35,7 +37,11 @@ public static class TransitionReports
                 .ThenBy(r => r.Group.CourseName, StringComparer.Ordinal).ThenBy(r => r.Row.StartDate)
                 .ThenBy(r => r.Row.EndDate).ThenBy(r => r.Row.StudentContractId).Select(r => new List<object?>
                 {
-                    r.Group.CourseName, r.Student.NameWithNumber, r.Row.StartDate, r.Row.EndDate, r.Next
+                    r.Group.CourseName,
+                    r.Student.NameWithNumber,
+                    r.Row.StartDate,
+                    r.Row.EndDate,
+                    r.Next
                 })
         ];
         return ReportTable.Flat(columns, result, [ReportFooters.Count(columns, result.Count)]);
@@ -52,8 +58,10 @@ public static class TransitionReports
         ];
         List<List<object?>> result =
         [
-            .. snapshot.Teachers.Select(t => (Row: t, Next: NextStart(t.EndDate,
-                    snapshot.Teachers.Where(o => o.GroupId == t.GroupId).Select(o => o.StartDate))))
+            .. snapshot.Teachers
+                .Select(t => (Row: t,
+                    Next: NextStart(t.EndDate,
+                        snapshot.Teachers.Where(o => o.GroupId == t.GroupId).Select(o => o.StartDate))))
                 .Where(t => IsMissed(t.Row.EndDate, t.Next))
                 .DistinctBy(t => (t.Row.GroupId, t.Row.TeacherContractId, t.Row.StartDate, t.Row.EndDate))
                 .Select(t => (t.Row, t.Next, Group: groups[t.Row.GroupId],
@@ -62,7 +70,11 @@ public static class TransitionReports
                 .ThenBy(t => t.Group.GroupCode, StringComparer.Ordinal).ThenBy(t => t.Row.GroupId)
                 .ThenBy(t => t.Row.StartDate).ThenBy(t => t.Row.EndDate).Select(t => new List<object?>
                 {
-                    t.Group.GroupCode, t.Teacher.NameWithNumber, t.Row.StartDate, t.Row.EndDate, t.Next
+                    t.Group.GroupCode,
+                    t.Teacher.NameWithNumber,
+                    t.Row.StartDate,
+                    t.Row.EndDate,
+                    t.Next
                 })
         ];
         return ReportTable.Flat(columns, result, [ReportFooters.Count(columns, result.Count)]);
@@ -76,8 +88,10 @@ public static class TransitionReports
         List<ReportColumnResponse> columns = [Text("groupCode", "ჯგუფი"), .. PeriodColumns()];
         List<List<object?>> result =
         [
-            .. snapshot.DayTimes.Select(d => (Row: d, Next: NextStart(d.EndDate,
-                    snapshot.DayTimes.Where(o => o.GroupId == d.GroupId).Select(o => o.StartDate))))
+            .. snapshot.DayTimes
+                .Select(d => (Row: d,
+                    Next: NextStart(d.EndDate,
+                        snapshot.DayTimes.Where(o => o.GroupId == d.GroupId).Select(o => o.StartDate))))
                 .Where(d => IsMissed(d.Row.EndDate, d.Next))
                 .DistinctBy(d => (d.Row.GroupId, d.Row.StartDate, d.Row.EndDate))
                 .Select(d => (d.Row, d.Next, Group: groups[d.Row.GroupId]))

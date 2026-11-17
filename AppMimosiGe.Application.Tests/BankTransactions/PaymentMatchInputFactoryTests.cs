@@ -28,8 +28,9 @@ public sealed class PaymentMatchInputFactoryTests
             new MatchStudent(3, "ლუკა", "გელაშვილი")
         ], input.Students);
         Assert.Equal(2, input.Payers.Count);
-        Assert.Equal((100, "01001000100", "თამარ", "ბერიძე"), (input.Payers[0].PayerHumanId,
-            input.Payers[0].PersonalId, input.Payers[0].FirstName, input.Payers[0].LastName));
+        Assert.Equal((100, "01001000100", "თამარ", "ბერიძე"),
+            (input.Payers[0].PayerHumanId, input.Payers[0].PersonalId, input.Payers[0].FirstName,
+                input.Payers[0].LastName));
         Assert.Equal([1, 2], input.Payers[0].StudentHumanIds);
         Assert.Equal([3], input.Payers[1].StudentHumanIds);
         Assert.Same(byNumber, input.StudentByContractNumber);

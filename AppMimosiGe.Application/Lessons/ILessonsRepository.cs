@@ -35,4 +35,8 @@ public interface ILessonsRepository
     //მოსწავლეების კონტრაქტები
     Task<List<StudentContract>> GetStudentContractsForChange(int grpId, int lessonId,
         CancellationToken cancellationToken = default);
+
+    //მოსწავლეების "გვარი სახელი" კონტრაქტის ID-ით (შეცდომის ტექსტისთვის)
+    Task<Dictionary<int, string>> GetStudentNames(IReadOnlyCollection<int> scIds,
+        CancellationToken cancellationToken = default);
 }

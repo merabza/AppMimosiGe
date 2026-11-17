@@ -13,6 +13,7 @@ using AppMimosiGe.Application.Groups.GetGroupsRowsData;
 using AppMimosiGe.Application.Groups.GetGroupStudentContracts;
 using AppMimosiGe.Application.Groups.Models;
 using AppMimosiGe.Application.Groups.UpdateGroup;
+using AppMimosiGe.Application.LessonGenerator;
 using AppMimosiGe.Application.StudentContracts;
 using AppMimosiGe.Application.TeacherContracts;
 using AppMimosiGeShared.Contracts.Errors;
@@ -31,6 +32,11 @@ public sealed class GroupHandlersTests
 {
     private static readonly DateTime OtherDate = new(2026, 10, 1, 0, 0, 0, DateTimeKind.Unspecified);
 
+    //Mondays of the group, which starts on Tuesday 15.09.2026
+    private static readonly DateTime Monday21 = new(2026, 9, 21, 0, 0, 0, DateTimeKind.Unspecified);
+
+    private readonly Mock<ILessonGeneratorRepository> _lessonGenerator = new();
+
     //the student contracts the handler loaded to set their DirtyNextPayDate flag
     private readonly List<StudentContract> _loadedContracts = [];
     private readonly Mock<IGroupsRepository> _repository = RepositoryWhereEverythingExists();
@@ -38,6 +44,14 @@ public sealed class GroupHandlersTests
 
     public GroupHandlersTests()
     {
+        //the calendar ends in December: the generator's horizon is 31.12.2026. By default the saved group has no
+        //lessons, so no change makes a lesson erroneous
+        _lessonGenerator.Setup(r => r.GetLastOperationMonth(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new DateTime(2026, 12, 1, 0, 0, 0, DateTimeKind.Unspecified));
+        WithSavedGroup(SavedGroup());
+        _repository.Setup(r => r.GetLessonStartTimesById(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<int, TimeOnly> { [17] = new(15, 0) });
+
         _repository.Setup(r =>
                 r.GetStudentContractsForChange(It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((IReadOnlyCollection<int> ids, CancellationToken _) =>
@@ -119,6 +133,63 @@ public sealed class GroupHandlersTests
     private void WithExistingGroup(Group group)
     {
         _repository.Setup(r => r.GetForChange(group.GrpId, It.IsAny<CancellationToken>())).ReturnsAsync(group);
+    }
+
+    //group 42 as the lesson generator loads it for the check of erroneous lessons: the schedule with its start time
+    //(Monday 15:00), the lessons with their rows
+    private static Group SavedGroup(DateTime? voidDate = null, params Lesson[] lessons)
+    {
+        Group group = ExistingGroup();
+        group.VoidDate = voidDate;
+        foreach (GroupDayTimePlace dayTimePlace in group.GroupDayTimePlaces)
+        {
+            dayTimePlace.LessonStartTime = new LessonStartTime { LstId = 17, LstTime = new TimeOnly(15, 0) };
+        }
+
+        foreach (Lesson lesson in lessons)
+        {
+            group.Lessons.Add(lesson);
+        }
+
+        return group;
+    }
+
+    //a lesson of group 42 where student 200 (contract 20) was present
+    private static Lesson AttendedLesson(int id, DateTime lessonDt)
+    {
+        var lesson = new Lesson
+        {
+            Id = id,
+            GroupId = 42,
+            LessonDt = lessonDt,
+            TeacherContractId = 5,
+            SalarySchemaId = 8,
+            FourWeekHours = 8f,
+            TeoMinDate = lessonDt,
+            TeoMaxDate = lessonDt
+        };
+        lesson.LessonsByStudents.Add(new LessonByStudent
+        {
+            Id = id * 10,
+            LessonId = id,
+            StudentContractId = 20,
+            GroupByStudentId = 200,
+            HoursCount = 1.5f,
+            Present = true
+        });
+        return lesson;
+    }
+
+    private void WithSavedGroup(Group group)
+    {
+        _lessonGenerator.Setup(r => r.GetGroupForGeneration(group.GrpId, false, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(group);
+    }
+
+    private UpdateGroupCommandHandler UpdateHandler()
+    {
+        return new UpdateGroupCommandHandler(_repository.Object, _lessonGenerator.Object, _unitOfWork.Object,
+            TimeProviderAt(new DateTimeOffset(2026, 10, 1, 10, 0, 0, TimeSpan.Zero)));
     }
 
     [Fact]
@@ -236,7 +307,7 @@ public sealed class GroupHandlersTests
     [Fact]
     public async Task Update_NotFound_ReturnsNotFoundAndDoesNotSave()
     {
-        var handler = new UpdateGroupCommandHandler(_repository.Object, _unitOfWork.Object);
+        UpdateGroupCommandHandler handler = UpdateHandler();
 
         Result result = await handler.Handle(new UpdateGroupCommand(42, ValidRequest()), CancellationToken.None);
 
@@ -252,7 +323,7 @@ public sealed class GroupHandlersTests
     {
         Group group = ExistingGroup();
         WithExistingGroup(group);
-        var handler = new UpdateGroupCommandHandler(_repository.Object, _unitOfWork.Object);
+        UpdateGroupCommandHandler handler = UpdateHandler();
         GroupRequest request = ValidRequest("1099", teachers: [Teacher(teacherId)], students: [Student(studentId)],
             dayTimePlaces: [DayTimePlace(dayTimePlaceId)]);
 
@@ -273,7 +344,7 @@ public sealed class GroupHandlersTests
         GroupRemovedRows? removed = null;
         _repository.Setup(r => r.RemoveRows(It.IsAny<GroupRemovedRows>()))
             .Callback<GroupRemovedRows>(rows => removed = rows);
-        var handler = new UpdateGroupCommandHandler(_repository.Object, _unitOfWork.Object);
+        UpdateGroupCommandHandler handler = UpdateHandler();
         //teacher 100 gets an end, a second teacher follows; student 200 moves to contract 22, student 201 leaves,
         //contract 23 joins; the schedule row 300 is replaced by a new one
         GroupRequest request = ValidRequest("1002", teachers:
@@ -309,7 +380,7 @@ public sealed class GroupHandlersTests
     {
         Group group = ExistingGroup();
         WithExistingGroup(group);
-        var handler = new UpdateGroupCommandHandler(_repository.Object, _unitOfWork.Object);
+        UpdateGroupCommandHandler handler = UpdateHandler();
         GroupRequest request = ValidRequest(teachers: [Teacher(100)], students: [Student(200), Student(201, 21)],
             dayTimePlaces: [DayTimePlace(300)]);
 
@@ -332,7 +403,7 @@ public sealed class GroupHandlersTests
                 It.Is<IReadOnlyCollection<int>>(ids => ids.Count == 1 && ids.Contains(201)),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
-        var handler = new UpdateGroupCommandHandler(_repository.Object, _unitOfWork.Object);
+        UpdateGroupCommandHandler handler = UpdateHandler();
         GroupRequest request = ValidRequest("1099", teachers: [Teacher(100)], students: [Student(200)],
             dayTimePlaces: [DayTimePlace(300)]);
 
@@ -353,7 +424,7 @@ public sealed class GroupHandlersTests
         Group group = ExistingGroup();
         WithExistingGroup(group);
         _repository.Setup(r => r.GetDefaultSalarySchemeId(6, It.IsAny<CancellationToken>())).ReturnsAsync(15);
-        var handler = new UpdateGroupCommandHandler(_repository.Object, _unitOfWork.Object);
+        UpdateGroupCommandHandler handler = UpdateHandler();
         GroupRequest request = ValidRequest(teachers: [Teacher(100, 6, null)], students: [Student(200), Student(201)],
             dayTimePlaces: [DayTimePlace(300)]);
 
@@ -362,6 +433,88 @@ public sealed class GroupHandlersTests
         GroupByTeacher teacher = Assert.Single(group.GroupsByTeachers);
         Assert.Equal(6, teacher.TeacherContractId);
         Assert.Equal(15, teacher.SalarySchemaId);
+    }
+
+    //D177: the lesson of 21.09 with attendance would start after the new void date, so the generator could not
+    //delete it (error 11 of report r13)
+    [Fact]
+    public async Task Update_VoidDateBeforeALessonWithAttendance_IsConflictWithoutChanges()
+    {
+        // Arrange
+        Group group = ExistingGroup();
+        WithExistingGroup(group);
+        WithSavedGroup(SavedGroup(null, AttendedLesson(500, Monday21.AddHours(15)),
+            AttendedLesson(501, Monday21.AddDays(7).AddHours(15))));
+        GroupRequest request = ValidRequest("1099", Monday21, [Teacher(100)], [Student(200), Student(201, 21)],
+            [DayTimePlace(300)]);
+
+        // Act
+        Result result = await UpdateHandler().Handle(new UpdateGroupCommand(42, request), CancellationToken.None);
+
+        // Assert
+        Assert.Equal(nameof(GroupErrors.ChangeCreatesLessonsWithErrors), result.Error.Code);
+        Assert.Equal(ErrorType.Conflict, result.Error.Type);
+        Assert.Contains(": 21.09.2026 15:00, 28.09.2026 15:00. ", result.Error.Description, StringComparison.Ordinal);
+        Assert.Equal("1001", group.GroupCode);
+        Assert.Null(group.VoidDate);
+        Assert.False(group.DirtyLessons);
+        Assert.Empty(_loadedContracts);
+        _repository.Verify(r => r.RemoveRows(It.IsAny<GroupRemovedRows>()), Times.Never);
+        VerifySaved(Times.Never());
+    }
+
+    //D57 lets a student row move to another contract, but the attended row of the old contract would stay in the
+    //lesson as an extra student (error 14)
+    [Fact]
+    public async Task Update_AttendedStudentMovedToAnotherContract_IsConflict()
+    {
+        WithExistingGroup(ExistingGroup());
+        WithSavedGroup(SavedGroup(null, AttendedLesson(500, Monday21.AddHours(15))));
+        GroupRequest request = ValidRequest(teachers: [Teacher(100)], students: [Student(200, 22), Student(201, 21)],
+            dayTimePlaces: [DayTimePlace(300)]);
+
+        Result result = await UpdateHandler().Handle(new UpdateGroupCommand(42, request), CancellationToken.None);
+
+        Assert.Equal(nameof(GroupErrors.ChangeCreatesLessonsWithErrors), result.Error.Code);
+        Assert.Contains(": 21.09.2026 15:00. ", result.Error.Description, StringComparison.Ordinal);
+        VerifySaved(Times.Never());
+    }
+
+    //the lesson of 21.09 was already after the void date: the error is in report r13 and another change is saved
+    [Fact]
+    public async Task Update_LessonThatWasAlreadyErroneous_DoesNotStopTheSave()
+    {
+        Group group = ExistingGroup();
+        group.VoidDate = Monday21;
+        WithExistingGroup(group);
+        WithSavedGroup(SavedGroup(Monday21, AttendedLesson(500, Monday21.AddHours(15))));
+        GroupRequest request = ValidRequest("1002", Monday21, [Teacher(100)], [Student(200), Student(201, 21)],
+            [DayTimePlace(300)]);
+
+        Result result = await UpdateHandler().Handle(new UpdateGroupCommand(42, request), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("1002", group.GroupCode);
+        VerifySaved(Times.Once());
+    }
+
+    //the lesson without attendance is simply deleted by the generator
+    [Fact]
+    public async Task Update_VoidDateBeforeALessonWithoutEnteredData_IsSaved()
+    {
+        Group group = ExistingGroup();
+        WithExistingGroup(group);
+        Lesson lesson = AttendedLesson(500, Monday21.AddHours(15));
+        lesson.LessonsByStudents.Single().Present = false;
+        WithSavedGroup(SavedGroup(null, lesson));
+        GroupRequest request = ValidRequest(voidDate: Monday21, teachers: [Teacher(100)],
+            students: [Student(200), Student(201, 21)], dayTimePlaces: [DayTimePlace(300)]);
+
+        Result result = await UpdateHandler().Handle(new UpdateGroupCommand(42, request), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(Monday21, group.VoidDate);
+        VerifySaved(Times.Once());
     }
 
     [Fact]

@@ -19,8 +19,7 @@ public sealed class GetAcademicYearsQueryHandler(IAcademicYearsRepository reposi
         CancellationToken cancellationToken)
     {
         List<AcademicYear> academicYears = await repository.GetAcademicYears(cancellationToken);
-        return new AcademicYearsResponse(
-        [
+        return new AcademicYearsResponse([
             .. academicYears.OrderBy(ay => ay.StartDate)
                 .Select(ay => new LookupItemResponse(ay.AyId, ay.AcademicYearName))
         ], CurrentAcademicYear.Find(academicYears, timeProvider.GetLocalNow().Date));

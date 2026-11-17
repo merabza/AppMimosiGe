@@ -58,6 +58,9 @@ public static class ReportsCatalog
     private const string ActiveGroupsNote = "მხოლოდ თარიღისთვის აქტიური ჯგუფები: მოქმედი მოსწავლით, მასწავლებლით და " +
                                             "განრიგით, გაუქმების გარეშე.";
 
+    private const string AllGroupRowsNote =
+        "არჩეული სასწავლო წლის (ცარიელი — ყველა წლის) ყველა ჯგუფის ყველა სტრიქონი, თარიღების მიუხედავად.";
+
     //Access-ის ReportCategories, ID-ების რიგით (Access-ის სიაში სახელით ლაგდებოდა)
     public static readonly IReadOnlyList<ReportCategory> Categories =
     [
@@ -69,9 +72,6 @@ public static class ReportsCatalog
         new(FinanceCategoryKey, "ფინანსები"),
         new(ChecksCategoryKey, "შემოწმება")
     ];
-
-    private const string AllGroupRowsNote =
-        "არჩეული სასწავლო წლის (ცარიელი — ყველა წლის) ყველა ჯგუფის ყველა სტრიქონი, თარიღების მიუხედავად.";
 
     //Access-ის რეპორტების სათაურში მხოლოდ თარიღისას "თარიღისთვის" ეწერა (FrmMain-ზე "თარიღამდე:")
     private static readonly ReportParameter[] ForDate =
@@ -91,14 +91,14 @@ public static class ReportsCatalog
         [new(ReportParameterNames.AcademicYearId, ReportParameterCaptions.AcademicYear, false)];
 
     //Access-ის ფილტრები მასწავლებელი, საგანი და მოსწავლე: არასავალდებულო (ცარიელი = ყველა)
-    private static readonly ReportParameter Teacher =
-        new(ReportParameterNames.TeacherId, ReportParameterCaptions.Teacher, false);
+    private static readonly ReportParameter Teacher = new(ReportParameterNames.TeacherId,
+        ReportParameterCaptions.Teacher, false);
 
-    private static readonly ReportParameter Course =
-        new(ReportParameterNames.CourseId, ReportParameterCaptions.Course, false);
+    private static readonly ReportParameter Course = new(ReportParameterNames.CourseId, ReportParameterCaptions.Course,
+        false);
 
-    private static readonly ReportParameter Student =
-        new(ReportParameterNames.StudentId, ReportParameterCaptions.Student, false);
+    private static readonly ReportParameter Student = new(ReportParameterNames.StudentId,
+        ReportParameterCaptions.Student, false);
 
     //Access-ის ReportName-ის (გასაღების) ID-ების რიგით. r02SummaryComments (D8) და r35TeacherLineOver (Q9, D114) არ
     //გადმოდის
@@ -124,8 +124,8 @@ public static class ReportsCatalog
             [ScheduleCategoryKey, ChecksCategoryKey], ForDate, p => new RoomOverlapsReportQuery(p.EndDate!.Value)),
         ReportDefinition.Create("r07UsedDayTimes", "დატვირთვა დღეებისა და საათების მიხედვით",
             "რამდენი გაკვეთილი მიმდინარეობს კვირის თითო დღეს დროის თითო მონაკვეთში (გაკვეთილების დაწყებისა და " +
-            $"დასრულების მიხედვით), დღეების ჯამებით. {ActiveGroupsNote}",
-            [ScheduleCategoryKey, ChecksCategoryKey], ForDate, p => new UsedDayTimesReportQuery(p.EndDate!.Value)),
+            $"დასრულების მიხედვით), დღეების ჯამებით. {ActiveGroupsNote}", [ScheduleCategoryKey, ChecksCategoryKey],
+            ForDate, p => new UsedDayTimesReportQuery(p.EndDate!.Value)),
         ReportDefinition.Create("r08LessSizeGroups", "შეუვსებელი ჯგუფები",
             $"ჯგუფები, რომლებშიც მოსწავლეები ადგილებზე (ჯგუფის ზომაზე) ნაკლებია, ზომების მიხედვით. {ActiveGroupsNote}",
             [GroupsCategoryKey, ChecksCategoryKey], ForDate, p => new LessSizeGroupsReportQuery(p.EndDate!.Value)),
@@ -185,8 +185,8 @@ public static class ReportsCatalog
             p => new WrongWeekDayChangesReportQuery(p.AcademicYearId)),
         ReportDefinition.Create("r23GroupSizesAnalize", "ჯგუფების ზომების ანალიზი",
             "ჯგუფები მოსწავლეების რაოდენობით და შევსების პროცენტით, ზომების მიხედვით; ბოლოს ჯგუფების რაოდენობა, " +
-            $"საშუალო დატვირთვა და შევსების საშუალო პროცენტი. {ActiveGroupsNote}", [GroupsCategoryKey, ChecksCategoryKey],
-            ForDate, p => new GroupSizesAnalysisReportQuery(p.EndDate!.Value)),
+            $"საშუალო დატვირთვა და შევსების საშუალო პროცენტი. {ActiveGroupsNote}",
+            [GroupsCategoryKey, ChecksCategoryKey], ForDate, p => new GroupSizesAnalysisReportQuery(p.EndDate!.Value)),
         ReportDefinition.Create("r24GroupsOptimization", "ჯგუფების ოპტიმიზაციის შესაძლებლობა",
             "ერთი საგნის, მოსწავლეების სტატუსისა და ზომის შეუვსებელი ჯგუფები, რომლებიც იმაზე მეტია, ვიდრე მათ " +
             $"მოსწავლეებს სჭირდება: ჯგუფები მასწავლებლებით და მოსწავლეებით. {ActiveGroupsNote}",
@@ -202,8 +202,8 @@ public static class ReportsCatalog
             AcademicYear, p => new StudentMissedTransitionsReportQuery(p.AcademicYearId)),
         ReportDefinition.Create("r27TeacherMissDate", "მასწავლებლების აცდენილი გადასვლები",
             "ჯგუფში მასწავლებლის სტრიქონის დასრულება არ ემთხვევა ჯგუფის შემდეგი მასწავლებლის სტრიქონის დაწყებას: " +
-            $"შუალედში ჯგუფს მასწავლებელი არ ჰყავს და გაკვეთილები არ იქმნება. {AllGroupRowsNote}",
-            [ChecksCategoryKey], AcademicYear, p => new TeacherMissedTransitionsReportQuery(p.AcademicYearId)),
+            $"შუალედში ჯგუფს მასწავლებელი არ ჰყავს და გაკვეთილები არ იქმნება. {AllGroupRowsNote}", [ChecksCategoryKey],
+            AcademicYear, p => new TeacherMissedTransitionsReportQuery(p.AcademicYearId)),
         ReportDefinition.Create("r28DayTimesMissDate", "დროების აცდენილი გადასვლები",
             "ჯგუფის განრიგის სტრიქონის დასრულება არ ემთხვევა ჯგუფის შემდეგი განრიგის სტრიქონის დაწყებას (კვირის " +
             $"დღის მიუხედავად). {AllGroupRowsNote}", [ChecksCategoryKey], AcademicYear,

@@ -49,7 +49,8 @@ public sealed class PaymentDistributorTests
     public void Distribute_LessThanTheDebts_RoundsToWholeLariAndGivesTheTetriToTheLargestShare()
     {
         // exact 33.33 / 66.67 of 100.50: whole lari 33 + 67 (largest remainder), 0.50 to the largest
-        Assert.Equal([33m, 67.5m], Shares(100.5m, new DistributionAccount(1, -50m, 0m), new DistributionAccount(2, -100m, 0m)));
+        Assert.Equal([33m, 67.5m],
+            Shares(100.5m, new DistributionAccount(1, -50m, 0m), new DistributionAccount(2, -100m, 0m)));
     }
 
     [Fact]
@@ -98,7 +99,8 @@ public sealed class PaymentDistributorTests
     public void Distribute_MoreThanTheDebts_ABigDebtIsCoveredEvenWithLittleLeftToTheEnd()
     {
         // whole amount by MustPayToEnd would give student 1 only 18; the debt comes first (Q-T1)
-        Assert.Equal([100m, 100m], Shares(200m, new DistributionAccount(1, -100m, 100m), new DistributionAccount(2, 0m, 1000m)));
+        Assert.Equal([100m, 100m],
+            Shares(200m, new DistributionAccount(1, -100m, 100m), new DistributionAccount(2, 0m, 1000m)));
     }
 
     [Fact]
@@ -121,6 +123,7 @@ public sealed class PaymentDistributorTests
     [Fact]
     public void Distribute_NoDebts_IsProportionalToWhatRemainsToTheEnd()
     {
-        Assert.Equal([25m, 75m], Shares(100m, new DistributionAccount(1, 0m, 100m), new DistributionAccount(2, 5m, 300m)));
+        Assert.Equal([25m, 75m],
+            Shares(100m, new DistributionAccount(1, 0m, 100m), new DistributionAccount(2, 5m, 300m)));
     }
 }

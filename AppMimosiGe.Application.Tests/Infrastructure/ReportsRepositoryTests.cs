@@ -369,13 +369,14 @@ public sealed class ReportsRepositoryTests : IDisposable
             lookups.AcademicYears);
         return;
 
-        static AcademicYear Year(int id, string name, int startYear) => new()
-        {
-            AyId = id,
-            AcademicYearName = name,
-            StartDate = new DateTime(startYear, 9, 1, 0, 0, 0, DateTimeKind.Unspecified),
-            FinishDate = new DateTime(startYear + 1, 9, 1, 0, 0, 0, DateTimeKind.Unspecified)
-        };
+        static AcademicYear Year(int id, string name, int startYear) =>
+            new()
+            {
+                AyId = id,
+                AcademicYearName = name,
+                StartDate = new DateTime(startYear, 9, 1, 0, 0, 0, DateTimeKind.Unspecified),
+                FinishDate = new DateTime(startYear + 1, 9, 1, 0, 0, 0, DateTimeKind.Unspecified)
+            };
     }
 
     // a student's contract number is unique only in its year: one name twice is in the order of the ids

@@ -30,6 +30,21 @@ public sealed class SalaryCalculatorTests
         [1] = 1, [AdditionType] = 1, [DeductionType] = 2, [NotCountedType] = null
     };
 
+    //decimal literals: since .NET 11 a double such as 10.04 converts to decimal with all its binary digits
+    public static TheoryData<decimal, decimal> FourHundredthsRoundings =>
+        new()
+        {
+            { 10.01m, 10.04m },
+            { 10.04m, 10.04m },
+            { 10.0401m, 10.08m },
+            { 0.001m, 0.04m },
+            { 0m, 0m },
+            { -0.05m, -0.04m }
+        };
+
+    public static TheoryData<decimal, decimal> MoneyRoundings =>
+        new() { { 1.00005m, 1.0000m }, { 1.00015m, 1.0002m }, { 2.123456m, 2.1235m } };
+
     private static DateTime Day(int month, int day, int hour = 10)
     {
         return new DateTime(2026, month, day, hour, 0, 0, DateTimeKind.Unspecified);
@@ -179,21 +194,14 @@ public sealed class SalaryCalculatorTests
     }
 
     [Theory]
-    [InlineData(10.01, 10.04)]
-    [InlineData(10.04, 10.04)]
-    [InlineData(10.0401, 10.08)]
-    [InlineData(0.001, 0.04)]
-    [InlineData(0, 0)]
-    [InlineData(-0.05, -0.04)]
+    [MemberData(nameof(FourHundredthsRoundings))]
     public void RoundUpToFourHundredths_RoundsUpToAMultipleOfFourHundredths(decimal sum, decimal expected)
     {
         Assert.Equal(expected, SalaryCalculator.RoundUpToFourHundredths(sum));
     }
 
     [Theory]
-    [InlineData(1.00005, 1.0000)]
-    [InlineData(1.00015, 1.0002)]
-    [InlineData(2.123456, 2.1235)]
+    [MemberData(nameof(MoneyRoundings))]
     public void Money_RoundsToFourDecimalsHalfToEven(decimal value, decimal expected)
     {
         Assert.Equal(expected, SalaryCalculator.Money(value));

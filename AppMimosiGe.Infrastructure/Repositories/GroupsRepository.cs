@@ -172,6 +172,12 @@ public sealed class GroupsRepository(IMimosiGeDbContext context) : IGroupsReposi
             .Select(x => new LookupItemResponse(x.Id, x.RoomName)).ToListAsync(cancellationToken);
     }
 
+    public Task<Dictionary<int, TimeOnly>> GetLessonStartTimesById(CancellationToken cancellationToken = default)
+    {
+        return context.LessonStartTimes.AsNoTracking()
+            .ToDictionaryAsync(x => x.LstId, x => x.LstTime, cancellationToken);
+    }
+
     public Task<List<StudentContract>> GetStudentContractsForChange(IReadOnlyCollection<int> scIds,
         CancellationToken cancellationToken = default)
     {

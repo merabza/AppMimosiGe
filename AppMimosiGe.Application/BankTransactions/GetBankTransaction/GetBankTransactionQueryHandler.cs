@@ -14,7 +14,8 @@ public sealed class GetBankTransactionQueryHandler(IBankTransactionsRepository r
     public async Task<Result<BankTransactionResponse>> Handle(GetBankTransactionQuery request,
         CancellationToken cancellationToken)
     {
-        BankTransactionResponse? bankTransaction = await repository.GetOne(request.BankTransactionId, cancellationToken);
+        BankTransactionResponse? bankTransaction =
+            await repository.GetOne(request.BankTransactionId, cancellationToken);
         return bankTransaction is null ? BankTransactionErrors.BankTransactionNotFound : bankTransaction;
     }
 }

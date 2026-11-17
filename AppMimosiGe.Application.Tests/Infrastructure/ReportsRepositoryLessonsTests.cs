@@ -63,7 +63,8 @@ public sealed class ReportsRepositoryLessonsTests : IDisposable
         _context.LessonStatuses.AddRange(new LessonStatus { Id = 1, StatusName = "held" },
             new LessonStatus { Id = 2, StatusName = "cancelled" }, new LessonStatus { Id = 3, StatusName = "other" });
         _context.ErrorLogTexts.AddRange(new ErrorLogText { EltId = 6, Text = "no teacher" },
-            new ErrorLogText { EltId = 11, Text = "extra lesson" }, new ErrorLogText { EltId = 14, Text = "extra student" });
+            new ErrorLogText { EltId = 11, Text = "extra lesson" },
+            new ErrorLogText { EltId = 14, Text = "extra student" });
         _context.GroupsByStudents.AddRange(GroupStudent(1, 100, 20, September, null),
             GroupStudent(2, 100, 21, September, null), GroupStudent(3, 101, 21, September, null));
         _context.GroupsByTeachers.AddRange(GroupTeacher(1, 100, 5), GroupTeacher(2, 101, 6));
@@ -73,7 +74,8 @@ public sealed class ReportsRepositoryLessonsTests : IDisposable
                 Day(2026, 9, 29).AddHours(10)),
             Lesson(2, 100, 5, September.AddDays(10).AddHours(10), 2, null, Day(2026, 9, 20), September.AddHours(10),
                 September),
-            Lesson(3, 101, 6, Day(2026, 9, 30).AddHours(23), 1, null, null, Day(2026, 9, 3), Day(2026, 9, 30).AddHours(23)),
+            Lesson(3, 101, 6, Day(2026, 9, 30).AddHours(23), 1, null, null, Day(2026, 9, 3),
+                Day(2026, 9, 30).AddHours(23)),
             Lesson(4, 101, 6, October, 1, null, null, October.AddSeconds(1), Day(2026, 10, 29).AddHours(10)),
             Lesson(5, 100, 5, September, 3, null, null, September.AddHours(10), Day(2026, 9, 29).AddHours(10)));
         _context.LessonsByStudents.AddRange(LessonStudent(1, 1, 20, 1, true), LessonStudent(2, 1, 21, 2, false),
@@ -93,7 +95,11 @@ public sealed class ReportsRepositoryLessonsTests : IDisposable
     {
         return new Human
         {
-            HumId = id, LastName = lastName, FirstName = firstName, PersonalId = $"0100000000{id}", PhoneNumber = phone
+            HumId = id,
+            LastName = lastName,
+            FirstName = firstName,
+            PersonalId = $"0100000000{id}",
+            PhoneNumber = phone
         };
     }
 
@@ -101,7 +107,11 @@ public sealed class ReportsRepositoryLessonsTests : IDisposable
     {
         return new StudentContract
         {
-            ScId = id, ContractNumber = number, StudentHumanId = studentId, PayerHumanId = payerId, AcademicYearId = 1
+            ScId = id,
+            ContractNumber = number,
+            StudentHumanId = studentId,
+            PayerHumanId = payerId,
+            AcademicYearId = 1
         };
     }
 
@@ -109,7 +119,11 @@ public sealed class ReportsRepositoryLessonsTests : IDisposable
     {
         return new GroupByStudent
         {
-            GbsId = id, GroupId = groupId, StudentContractId = contractId, StartDate = start, EndDate = end
+            GbsId = id,
+            GroupId = groupId,
+            StudentContractId = contractId,
+            StartDate = start,
+            EndDate = end
         };
     }
 
@@ -122,12 +136,17 @@ public sealed class ReportsRepositoryLessonsTests : IDisposable
     {
         return new GroupDayTimePlace
         {
-            GdtpId = id, GroupId = groupId, WeekDayId = 1, LessonStartTimeId = 1, RoomId = 1, StartDate = September
+            GdtpId = id,
+            GroupId = groupId,
+            WeekDayId = 1,
+            LessonStartTimeId = 1,
+            RoomId = 1,
+            StartDate = September
         };
     }
 
-    private static Lesson Lesson(int id, int groupId, int teacherId, DateTime lessonDt, int statusId,
-        int? substituteId, DateTime? recoverDate, DateTime teoMinDate, DateTime teoMaxDate)
+    private static Lesson Lesson(int id, int groupId, int teacherId, DateTime lessonDt, int statusId, int? substituteId,
+        DateTime? recoverDate, DateTime teoMinDate, DateTime teoMaxDate)
     {
         return new Lesson
         {
@@ -149,7 +168,10 @@ public sealed class ReportsRepositoryLessonsTests : IDisposable
     {
         return new LessonByStudent
         {
-            Id = id, LessonId = lessonId, StudentContractId = contractId, GroupByStudentId = groupStudentId,
+            Id = id,
+            LessonId = lessonId,
+            StudentContractId = contractId,
+            GroupByStudentId = groupStudentId,
             Present = present
         };
     }
@@ -196,10 +218,15 @@ public sealed class ReportsRepositoryLessonsTests : IDisposable
         ], errors.OrderBy(e => e.LogId));
         return;
 
-        static LessonCheckCreateErrorLog Log(int id, int groupId, int? lessonId, int errorId) => new()
-        {
-            Id = id, CreatedDate = October, GroupId = groupId, LessonId = lessonId, ErrorLogTextId = errorId
-        };
+        static LessonCheckCreateErrorLog Log(int id, int groupId, int? lessonId, int errorId) =>
+            new()
+            {
+                Id = id,
+                CreatedDate = October,
+                GroupId = groupId,
+                LessonId = lessonId,
+                ErrorLogTextId = errorId
+            };
     }
 
     //sync EF calls stay out of the async tests
@@ -227,10 +254,15 @@ public sealed class ReportsRepositoryLessonsTests : IDisposable
         Assert.Equal([3], lessons.Select(l => l.LessonId));
         return;
 
-        static LessonCheckCreateErrorLog Log(int id, int groupId, int? lessonId, int errorId) => new()
-        {
-            Id = id, CreatedDate = October, GroupId = groupId, LessonId = lessonId, ErrorLogTextId = errorId
-        };
+        static LessonCheckCreateErrorLog Log(int id, int groupId, int? lessonId, int errorId) =>
+            new()
+            {
+                Id = id,
+                CreatedDate = October,
+                GroupId = groupId,
+                LessonId = lessonId,
+                ErrorLogTextId = errorId
+            };
     }
 
     // a theoretical date at 00:00:00 (hours, minutes and seconds); 00:00:01 is not
@@ -286,15 +318,17 @@ public sealed class ReportsRepositoryLessonsTests : IDisposable
         MissingsInRowData data = await _repository.GetMissingsInRow(Day(2026, 9, 30), October);
 
         // Assert
-        Assert.Equal([(20, September), (21, September), (21, Day(2026, 9, 10).AddHours(10)),
-                (21, Day(2026, 9, 30).AddHours(23))],
-            data.Absences.Select(a => (a.StudentContractId, a.LessonDt)).Order());
+        Assert.Equal([
+            (20, September), (21, September), (21, Day(2026, 9, 10).AddHours(10)),
+            (21, Day(2026, 9, 30).AddHours(23))
+        ], data.Absences.Select(a => (a.StudentContractId, a.LessonDt)).Order());
         Assert.Equal(new Dictionary<int, DateTime> { [20] = Day(2026, 9, 10).AddHours(10) }, data.LastPresences);
-        Assert.Equal(new Dictionary<int, StudentContact>
-        {
-            [20] = new(new SchedulePerson("Gamma", "Cid", "6.020"), "555000003", "Delta Eve", "555000005"),
-            [21] = new(new SchedulePerson("Beta", "Dan", "6.021"), "555000004", "Beta Dan", "555000004")
-        }, data.Students);
+        Assert.Equal(
+            new Dictionary<int, StudentContact>
+            {
+                [20] = new(new SchedulePerson("Gamma", "Cid", "6.020"), "555000003", "Delta Eve", "555000005"),
+                [21] = new(new SchedulePerson("Beta", "Dan", "6.021"), "555000004", "Beta Dan", "555000004")
+            }, data.Students);
     }
 
     // a limit before the presence: neither the presence nor the later absences count

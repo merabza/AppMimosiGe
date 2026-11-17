@@ -33,7 +33,11 @@ public sealed class GroupClosingTests
         group.GroupsByTeachers.Add(new GroupByTeacher { Id = 1, StartDate = Date(9, 1, 2026) });
         group.GroupsByStudents.Add(new GroupByStudent
         {
-            GbsId = 1, StudentContractId = 10, FourWeekFee = 48m, FourWeekHours = 8f, StartDate = Date(9, 1, 2026)
+            GbsId = 1,
+            StudentContractId = 10,
+            FourWeekFee = 48m,
+            FourWeekHours = 8f,
+            StartDate = Date(9, 1, 2026)
         });
         group.GroupsByStudents.Add(new GroupByStudent
         {
@@ -55,7 +59,7 @@ public sealed class GroupClosingTests
         //a cancelled lesson is no charge
         group.Lessons.Add(Lesson(302, Date(9, 13, 2027, 15), 2, Student(403)));
         //a student without a row or with the row of another contract is no charge
-        group.Lessons.Add(Lesson(303, Date(9, 20, 2027, 15), 1, Student(404, gbsId: null), Student(405, 11, 1)));
+        group.Lessons.Add(Lesson(303, Date(9, 20, 2027, 15), 1, Student(404, gbsId: null), Student(405, 11)));
         //exactly at the close date: counted (2 hours of 48 / 8 = -12)
         group.Lessons.Add(Lesson(304, CloseDate, 1, Student(406, hours: 2f)));
         return group;
@@ -110,7 +114,11 @@ public sealed class GroupClosingTests
         var group = new Group { GrpId = 43, GroupCode = "E2" };
         group.GroupsByStudents.Add(new GroupByStudent
         {
-            GbsId = 1, StudentContractId = 10, FourWeekFee = 50m, FourWeekHours = 3f, StartDate = Date(9, 1, 2026)
+            GbsId = 1,
+            StudentContractId = 10,
+            FourWeekFee = 50m,
+            FourWeekHours = 3f,
+            StartDate = Date(9, 1, 2026)
         });
         group.Lessons.Add(Lesson(400, Date(9, 6, 2027, 15), 1, Student(500, hours: 1f)));
 

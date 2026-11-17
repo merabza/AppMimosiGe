@@ -23,9 +23,8 @@ public static partial class ContractNumberFinder
 
         return
         [
-            .. ContractNumberRegex().Matches(text)
-                .Select(m => string.Create(CultureInfo.InvariantCulture, $"{m.Groups[1].Value}.{m.Groups[2].Value}"))
-                .Distinct()
+            .. ContractNumberRegex().Matches(text).Select(m =>
+                string.Create(CultureInfo.InvariantCulture, $"{m.Groups[1].Value}.{m.Groups[2].Value}")).Distinct()
         ];
     }
 

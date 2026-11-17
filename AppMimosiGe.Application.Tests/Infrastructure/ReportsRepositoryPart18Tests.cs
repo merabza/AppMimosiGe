@@ -89,7 +89,10 @@ public sealed class ReportsRepositoryPart18Tests : IDisposable
     {
         return new Human
         {
-            HumId = id, LastName = lastName, FirstName = firstName, LegalName = legalName,
+            HumId = id,
+            LastName = lastName,
+            FirstName = firstName,
+            LegalName = legalName,
             PersonalId = $"0100000000{id}"
         };
     }
@@ -98,16 +101,23 @@ public sealed class ReportsRepositoryPart18Tests : IDisposable
     {
         return new StudentContract
         {
-            ScId = id, ContractNumber = number, StudentHumanId = studentId, PayerHumanId = payerId, AcademicYearId = 1
+            ScId = id,
+            ContractNumber = number,
+            StudentHumanId = studentId,
+            PayerHumanId = payerId,
+            AcademicYearId = 1
         };
     }
 
-    private static Group Group(int id, string code, int courseId, int sizeId, int statusId,
-        DateTime? voidDate = null)
+    private static Group Group(int id, string code, int courseId, int sizeId, int statusId, DateTime? voidDate = null)
     {
         return new Group
         {
-            GrpId = id, GroupCode = code, CourseId = courseId, GroupSizeId = sizeId, StudentStatusId = statusId,
+            GrpId = id,
+            GroupCode = code,
+            CourseId = courseId,
+            GroupSizeId = sizeId,
+            StudentStatusId = statusId,
             VoidDate = voidDate
         };
     }
@@ -116,8 +126,14 @@ public sealed class ReportsRepositoryPart18Tests : IDisposable
     {
         return new GroupByStudent
         {
-            GbsId = id, GroupId = groupId, StudentContractId = contractId, StartDate = start, EndDate = end,
-            FourWeekHours = 6f + id, FourWeekFee = 40m + id, HoursCoefficient = id / 2f
+            GbsId = id,
+            GroupId = groupId,
+            StudentContractId = contractId,
+            StartDate = start,
+            EndDate = end,
+            FourWeekHours = 6f + id,
+            FourWeekFee = 40m + id,
+            HoursCoefficient = id / 2f
         };
     }
 
@@ -126,7 +142,11 @@ public sealed class ReportsRepositoryPart18Tests : IDisposable
     {
         return new GroupByTeacher
         {
-            Id = id, GroupId = groupId, TeacherContractId = contractId, SalarySchemaId = schemeId, StartDate = start,
+            Id = id,
+            GroupId = groupId,
+            TeacherContractId = contractId,
+            SalarySchemaId = schemeId,
+            StartDate = start,
             EndDate = end
         };
     }
@@ -135,7 +155,12 @@ public sealed class ReportsRepositoryPart18Tests : IDisposable
     {
         return new GroupDayTimePlace
         {
-            GdtpId = id, GroupId = groupId, WeekDayId = 1, LessonStartTimeId = 1, RoomId = 1, StartDate = September
+            GdtpId = id,
+            GroupId = groupId,
+            WeekDayId = 1,
+            LessonStartTimeId = 1,
+            RoomId = 1,
+            StartDate = September
         };
     }
 
@@ -144,9 +169,16 @@ public sealed class ReportsRepositoryPart18Tests : IDisposable
     {
         return new Lesson
         {
-            Id = id, GroupId = groupId, TeacherContractId = teacherId, SubstituteTeacherContractId = substituteId,
-            LessonDt = lessonDt, LessonStatusId = statusId, RecoverDate = recoverDate, TeoMinDate = lessonDt,
-            TeoMaxDate = lessonDt, FourWeekHours = 8
+            Id = id,
+            GroupId = groupId,
+            TeacherContractId = teacherId,
+            SubstituteTeacherContractId = substituteId,
+            LessonDt = lessonDt,
+            LessonStatusId = statusId,
+            RecoverDate = recoverDate,
+            TeoMinDate = lessonDt,
+            TeoMaxDate = lessonDt,
+            FourWeekHours = 8
         };
     }
 
@@ -155,8 +187,12 @@ public sealed class ReportsRepositoryPart18Tests : IDisposable
     {
         return new LessonByStudent
         {
-            Id = id, LessonId = lessonId, StudentContractId = contractId, HoursCount = hours,
-            TeacherComment = teacherComment, StudentComment = studentComment
+            Id = id,
+            LessonId = lessonId,
+            StudentContractId = contractId,
+            HoursCount = hours,
+            TeacherComment = teacherComment,
+            StudentComment = studentComment
         };
     }
 
@@ -171,11 +207,10 @@ public sealed class ReportsRepositoryPart18Tests : IDisposable
             GroupStudent(1, 100, 20, September, null), GroupStudent(2, 100, 21, September, Today),
             GroupStudent(3, 100, 22, Today, null), GroupStudent(4, 100, 21, Tomorrow, null),
             GroupStudent(5, 101, 21, September, null), GroupStudent(6, 102, 21, September, null),
-            GroupStudent(7, 100, 22, September, Tomorrow),
-            GroupTeacher(1, 100, 5, 1, September, null), GroupTeacher(2, 100, 6, 2, September, Tomorrow),
-            GroupTeacher(3, 100, 6, 1, Tomorrow, null), GroupTeacher(4, 101, 6, 1, September, null),
-            GroupTeacher(5, 102, 5, 1, September, null), GroupTeacher(6, 100, 5, 2, September, Today),
-            Schedule(1, 100), Schedule(2, 101));
+            GroupStudent(7, 100, 22, September, Tomorrow), GroupTeacher(1, 100, 5, 1, September, null),
+            GroupTeacher(2, 100, 6, 2, September, Tomorrow), GroupTeacher(3, 100, 6, 1, Tomorrow, null),
+            GroupTeacher(4, 101, 6, 1, September, null), GroupTeacher(5, 102, 5, 1, September, null),
+            GroupTeacher(6, 100, 5, 2, September, Today), Schedule(1, 100), Schedule(2, 101));
 
         // Act
         GroupsSnapshot snapshot = await _repository.GetGroups(Today);
@@ -211,9 +246,9 @@ public sealed class ReportsRepositoryPart18Tests : IDisposable
 
     private void SaveCommentLessons()
     {
-        Save(Group(100, "A1", 3, 2, 1), Group(101, "B1", 4, 1, 2),
-            Lesson(1, 100, 5, September), Lesson(2, 101, 6, October.AddMinutes(-1), 2, 5, Day(2026, 10, 5)),
-            Lesson(3, 100, 5, October), Lesson(4, 100, 5, Day(2026, 9, 15)), Lesson(5, 100, 5, September.AddHours(-1)),
+        Save(Group(100, "A1", 3, 2, 1), Group(101, "B1", 4, 1, 2), Lesson(1, 100, 5, September),
+            Lesson(2, 101, 6, October.AddMinutes(-1), 2, 5, Day(2026, 10, 5)), Lesson(3, 100, 5, October),
+            Lesson(4, 100, 5, Day(2026, 9, 15)), Lesson(5, 100, 5, September.AddHours(-1)),
             LessonStudent(1, 1, 20, teacherComment: "good", studentComment: "late"), LessonStudent(2, 1, 21),
             LessonStudent(3, 2, 22, studentComment: "sick"), LessonStudent(4, 3, 20), LessonStudent(5, 5, 20));
     }
@@ -269,8 +304,14 @@ public sealed class ReportsRepositoryPart18Tests : IDisposable
     {
         // Arrange
         Save(new BankAccount { BaId = 1, BankName = "Bank", BankCode = "B1", AccountNumber = "1" },
-            new BankAccount { BaId = 2, BankName = "Debt", BankCode = "D1", AccountNumber = "2", DesperateDebt = true },
-            Payment(1, 20, 2, 100m), Payment(2, 21, 1, 30m), Payment(3, 21, null, 40m), Payment(4, 21, 2, -20m));
+            new BankAccount
+            {
+                BaId = 2,
+                BankName = "Debt",
+                BankCode = "D1",
+                AccountNumber = "2",
+                DesperateDebt = true
+            }, Payment(1, 20, 2, 100m), Payment(2, 21, 1, 30m), Payment(3, 21, null, 40m), Payment(4, 21, 2, -20m));
 
         // Act
         BlackListData data = await _repository.GetDesperateDebts();
@@ -282,10 +323,15 @@ public sealed class ReportsRepositoryPart18Tests : IDisposable
         Assert.Equal(new Debtor("Gamma", "Dan", "01000000003"), data.Humans[3]);
         return;
 
-        static Payment Payment(int id, int contractId, int? bankId, decimal amount) => new()
-        {
-            Id = id, StudentContractId = contractId, BankAccountId = bankId, Amount = amount, PayDate = September
-        };
+        static Payment Payment(int id, int contractId, int? bankId, decimal amount) =>
+            new()
+            {
+                Id = id,
+                StudentContractId = contractId,
+                BankAccountId = bankId,
+                Amount = amount,
+                PayDate = September
+            };
     }
 
     [Fact]
@@ -307,16 +353,19 @@ public sealed class ReportsRepositoryPart18Tests : IDisposable
             Detail(1, 1, 100), Detail(2, 2, 100), Detail(3, 3, 101), Detail(4, 4, 100));
         return;
 
-        static SalaryLine Line(int id, int teacherId, DateTime month) => new()
-        {
-            SaId = id, ShId = 1, TeacherContractId = teacherId, SaMonthDate = month
-        };
+        static SalaryLine Line(int id, int teacherId, DateTime month) =>
+            new() { SaId = id, ShId = 1, TeacherContractId = teacherId, SaMonthDate = month };
 
-        static SalaryLineDetail Detail(int id, int lineId, int groupId) => new()
-        {
-            SadId = id, SaId = lineId, GroupId = groupId, SadHoursCount = id * 1.5f, SadHourCost = 10m + id,
-            SadAmount = 20m * id
-        };
+        static SalaryLineDetail Detail(int id, int lineId, int groupId) =>
+            new()
+            {
+                SadId = id,
+                SaId = lineId,
+                GroupId = groupId,
+                SadHoursCount = id * 1.5f,
+                SadHourCost = 10m + id,
+                SadAmount = 20m * id
+            };
     }
 
     // the details whose line's month is in [from, to] (first days), with the month, the teacher (the legal name
@@ -369,16 +418,15 @@ public sealed class ReportsRepositoryPart18Tests : IDisposable
     public async Task GetWorkTime_LoadsTheLessonsAndTheRecords()
     {
         // Arrange
-        Save(Group(100, "A1", 3, 2, 1),
-            Lesson(1, 100, 5, September), Lesson(2, 100, 5, Day(2026, 9, 30).AddHours(23), 2),
-            Lesson(3, 100, 5, Day(2026, 9, 10), 3, 6), Lesson(4, 100, 5, October),
-            Lesson(5, 100, 5, Day(2026, 8, 31).AddHours(10), recoverDate: Day(2026, 9, 2)),
+        Save(Group(100, "A1", 3, 2, 1), Lesson(1, 100, 5, September),
+            Lesson(2, 100, 5, Day(2026, 9, 30).AddHours(23), 2), Lesson(3, 100, 5, Day(2026, 9, 10), 3, 6),
+            Lesson(4, 100, 5, October), Lesson(5, 100, 5, Day(2026, 8, 31).AddHours(10), recoverDate: Day(2026, 9, 2)),
             Lesson(6, 100, 5, Day(2026, 9, 29).AddHours(10), recoverDate: October), Lesson(7, 100, 5, Day(2026, 9, 15)),
-            LessonStudent(1, 1, 20, 1.5f), LessonStudent(2, 1, 21, 2f), LessonStudent(3, 2, 20),
-            LessonStudent(4, 3, 20, 1f), LessonStudent(5, 4, 20), LessonStudent(6, 5, 20, 2f), LessonStudent(7, 6, 20),
+            LessonStudent(1, 1, 20), LessonStudent(2, 1, 21, 2f), LessonStudent(3, 2, 20), LessonStudent(4, 3, 20, 1f),
+            LessonStudent(5, 4, 20), LessonStudent(6, 5, 20, 2f), LessonStudent(7, 6, 20),
             Record(1, 5, September, September.AddHours(8)), Record(2, 6, September.AddHours(-1), September.AddHours(1)),
-            Record(3, 5, Day(2026, 9, 30).AddHours(22), October), Record(4, 5, Day(2026, 9, 30).AddHours(22),
-                October.AddMinutes(-1)), Record(5, 6, Day(2026, 9, 5), null));
+            Record(3, 5, Day(2026, 9, 30).AddHours(22), October),
+            Record(4, 5, Day(2026, 9, 30).AddHours(22), October.AddMinutes(-1)), Record(5, 6, Day(2026, 9, 5), null));
 
         // Act
         WorkTimeData data = await _repository.GetWorkTime(September, October);
@@ -396,10 +444,8 @@ public sealed class ReportsRepositoryPart18Tests : IDisposable
         Assert.Equal(Teacher5, data.Employees[5]);
         return;
 
-        static WorkHour Record(int id, int contractId, DateTime start, DateTime? end) => new()
-        {
-            WhId = id, TeacherContractId = contractId, WhStart = start, WhEnd = end
-        };
+        static WorkHour Record(int id, int contractId, DateTime start, DateTime? end) =>
+            new() { WhId = id, TeacherContractId = contractId, WhStart = start, WhEnd = end };
     }
 
     [Fact]

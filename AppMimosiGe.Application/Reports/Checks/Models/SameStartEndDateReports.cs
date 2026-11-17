@@ -46,8 +46,8 @@ public static class SameStartEndDateReports
         Dictionary<int, CheckGroup> groups = snapshot.Groups.ToDictionary(g => g.GroupId);
         return Build([Text("groupCode", "ჯგუფი"), .. PeriodColumns()], [
             .. snapshot.DayTimes.Where(d => d.StartDate == d.EndDate).Select(d => (Row: d, Group: groups[d.GroupId]))
-                .OrderBy(d => d.Group.GroupCode, StringComparer.Ordinal).ThenBy(d => d.Row.StartDate)
-                .Select(d => new List<object?> { d.Group.GroupCode, d.Row.StartDate, d.Row.EndDate })
+                .OrderBy(d => d.Group.GroupCode, StringComparer.Ordinal).ThenBy(d => d.Row.StartDate).Select(d =>
+                    new List<object?> { d.Group.GroupCode, d.Row.StartDate, d.Row.EndDate })
         ]);
     }
 

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -23,16 +24,15 @@ public sealed class BogBonlineClientTests : IDisposable
 
     private const string Iban = "GE29BG0000000123456789";
     private const string OurInn = "204567890";
+
+    private const string TokenUrl = "https://account.bog.ge/auth/realms/bog/protocol/openid-connect/token";
+    private const string BaseUrl = "https://api.businessonline.ge/api";
     private static readonly DateOnly From = new(2026, 9, 1);
     private static readonly DateOnly To = new(2026, 9, 30);
     private static readonly DateTimeOffset Now = new(2026, 11, 10, 10, 0, 0, TimeSpan.Zero);
 
     private readonly FakeHandler _handler = new();
     private readonly HttpClient _httpClient;
-    private readonly Mock<TimeProvider> _timeProvider = new();
-
-    private const string TokenUrl = "https://account.bog.ge/auth/realms/bog/protocol/openid-connect/token";
-    private const string BaseUrl = "https://api.businessonline.ge/api";
 
     private readonly BogBonlineSettings _settings = new()
     {
@@ -42,6 +42,8 @@ public sealed class BogBonlineClientTests : IDisposable
         ClientSecret = "secret",
         AccountIban = Iban
     };
+
+    private readonly Mock<TimeProvider> _timeProvider = new();
 
     public BogBonlineClientTests()
     {
@@ -77,8 +79,8 @@ public sealed class BogBonlineClientTests : IDisposable
     private static string Entry(string entryId, decimal credit = 150.5m, decimal debit = 0m,
         string senderInn = "01001054321")
     {
-        string amount = credit > 0 ? credit.ToString(System.Globalization.CultureInfo.InvariantCulture) : "0.0";
-        string debitText = debit.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        string amount = credit > 0 ? credit.ToString(CultureInfo.InvariantCulture) : "0.0";
+        string debitText = debit.ToString(CultureInfo.InvariantCulture);
         return $$"""
                  {"entryDate":"2026-09-15T16:26:53.4094325+04:00","entryDocumentNumber":"DOC-1",
                   "entryAccountNumber":"{{Iban}}GEL","entryAmountDebit":{{debitText}},"entryAmountDebitBase":0.0,
@@ -99,7 +101,8 @@ public sealed class BogBonlineClientTests : IDisposable
 
     private static string Statement(long id, int totalCount, params string[] entries)
     {
-        return $$"""{"id":{{id}},"count":{{entries.Length}},"totalCount":{{totalCount}},"records":[{{string.Join(",", entries)}}]}""";
+        return
+            $$"""{"id":{{id}},"count":{{entries.Length}},"totalCount":{{totalCount}},"records":[{{string.Join(",", entries)}}]}""";
     }
 
     [Fact]
@@ -159,9 +162,9 @@ public sealed class BogBonlineClientTests : IDisposable
         // Assert: the bank's wall-clock time (+04:00) and the entry id without the trailing zeros
         Assert.Equal(
             new BankMovement("1001", new DateTime(2026, 9, 15, 16, 26, 53, DateTimeKind.Unspecified).AddTicks(4094325),
-                new DateTime(2026, 9, 14, 0, 0, 0, DateTimeKind.Unspecified), 150.5m, "GEL", "სწავლის საფასური",
-                "info", null, "DOC-1", "Partner Name", "GE61TB9876543210987654", "TBCBGE22", "01001054321",
-                "01001012345"), Assert.Single(result.Value));
+                new DateTime(2026, 9, 14, 0, 0, 0, DateTimeKind.Unspecified), 150.5m, "GEL", "სწავლის საფასური", "info",
+                null, "DOC-1", "Partner Name", "GE61TB9876543210987654", "TBCBGE22", "01001054321", "01001012345"),
+            Assert.Single(result.Value));
     }
 
     [Fact]
@@ -170,8 +173,8 @@ public sealed class BogBonlineClientTests : IDisposable
         // Arrange: outgoing, zero, own-account transfer, no id, then the one incoming credit
         _handler.Respond(HttpStatusCode.OK, TokenJson);
         _handler.Respond(HttpStatusCode.OK,
-            Statement(77, 5, Entry("1", 0m, 20m), Entry("2", 0m), Entry("3", senderInn: $" {OurInn}"),
-                Entry("null"), Entry("5")));
+            Statement(77, 5, Entry("1", 0m, 20m), Entry("2", 0m), Entry("3", senderInn: $" {OurInn}"), Entry("null"),
+                Entry("5")));
 
         // Act
         Result<IReadOnlyList<BankMovement>> result = await CreateClient().GetIncomingPayments(From, To, default);

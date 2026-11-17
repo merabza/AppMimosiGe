@@ -14,8 +14,8 @@ public sealed class BankTransactionReportsTests
     private static BankTransactionRowResponse Row(int id, int day, decimal amount, decimal allocated,
         bool ignored = false)
     {
-        return new BankTransactionRowResponse(id, $"bank {id}", Day.AddDays(day), amount, $"payer {id}", $"purpose {id}", 0, false,
-            ignored, allocated, false);
+        return new BankTransactionRowResponse(id, $"bank {id}", Day.AddDays(day), amount, $"payer {id}",
+            $"purpose {id}", 0, false, ignored, allocated, false);
     }
 
     // only the not fully allocated ones (ignored ones not), oldest first, with the remainder and the totals
@@ -29,7 +29,8 @@ public sealed class BankTransactionReportsTests
 
         Assert.Equal(["transactionDate", "bankName", "partnerName", "purpose", "amount", "allocated", "remainder"],
             table.Columns.ConvertAll(c => c.Name));
-        Assert.Equal([ReportColumnTypes.Date, ReportColumnTypes.Text, ReportColumnTypes.Text, ReportColumnTypes.Text,
+        Assert.Equal([
+            ReportColumnTypes.Date, ReportColumnTypes.Text, ReportColumnTypes.Text, ReportColumnTypes.Text,
             ReportColumnTypes.Number, ReportColumnTypes.Number, ReportColumnTypes.Number
         ], table.Columns.ConvertAll(c => c.Type));
         List<List<object?>> expected =

@@ -34,7 +34,8 @@ public static class TimeSheetReport
         return new ReportTable(Columns(), [
             .. days.GroupBy(d => ReportMonths.Start(d.Day)).OrderBy(month => month.Key).Select(month =>
                 new ReportSectionResponse(ReportMonths.Name(month.Key, monthNames), [
-                    .. month.GroupBy(d => d.EmployeeId).Select(employee => (Person: data.Employees[employee.Key],
+                    .. month.GroupBy(d => d.EmployeeId)
+                        .Select(employee => (Person: data.Employees[employee.Key],
                             Hours: employee.ToDictionary(d => d.Day.Day, d => d.Hours)))
                         .OrderBy(e => e.Person.FullName, StringComparer.Ordinal)
                         .ThenBy(e => e.Person.ContractNumber, StringComparer.Ordinal)
@@ -90,11 +91,10 @@ public static class TimeSheetReport
     private static IEnumerable<WorkInterval> Intervals(WorkTimeData data)
     {
         return data.Lessons.Select(l =>
-            {
-                DateTime start = l.RecoverDate is { } recoverDate ? recoverDate.Date + l.LessonDt.TimeOfDay : l.LessonDt;
-                return new WorkInterval(l.EmployeeId, start, start.AddHours(l.Hours));
-            }).Concat(data.Records.Select(r => new WorkInterval(r.EmployeeId, r.Start, r.End)))
-            .Where(i => i.End > i.Start);
+        {
+            DateTime start = l.RecoverDate is { } recoverDate ? recoverDate.Date + l.LessonDt.TimeOfDay : l.LessonDt;
+            return new WorkInterval(l.EmployeeId, start, start.AddHours(l.Hours));
+        }).Concat(data.Records.Select(r => new WorkInterval(r.EmployeeId, r.Start, r.End))).Where(i => i.End > i.Start);
     }
 
     //შუალედების გაერთიანების ხანგრძლივობა საათებში, 2 ათწილადით (როგორც სამუშაო საათების სიაში, D102). დაწყებით
@@ -102,7 +102,7 @@ public static class TimeSheetReport
     private static decimal UnionHours(IEnumerable<WorkInterval> intervals)
     {
         long ticks = 0;
-        DateTime coveredUntil = DateTime.MinValue;
+        var coveredUntil = DateTime.MinValue;
         foreach (WorkInterval interval in intervals.OrderBy(i => i.Start))
         {
             DateTime[] starts = [interval.Start, coveredUntil];

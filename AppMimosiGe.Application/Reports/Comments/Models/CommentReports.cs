@@ -26,11 +26,9 @@ public static class CommentReports
     {
         List<CommentLesson> ordered =
         [
-            .. lessons.OrderBy(l => l.GroupCode, StringComparer.Ordinal).ThenBy(l => l.LessonDt)
-                .ThenBy(l => l.LessonId)
+            .. lessons.OrderBy(l => l.GroupCode, StringComparer.Ordinal).ThenBy(l => l.LessonDt).ThenBy(l => l.LessonId)
         ];
-        return new ReportTable(
-        [
+        return new ReportTable([
             new ReportColumnResponse("number", "№", ReportColumnTypes.WholeNumber),
             new ReportColumnResponse("student", "მოსწავლე", ReportColumnTypes.Text),
             new ReportColumnResponse("teacherComment", "მასწავლებლის კომენტარი", ReportColumnTypes.Text),

@@ -77,8 +77,7 @@ public static class AcademicYearEndpoints
 
     // POST api/v1/academicyear/{ayId:int}/closegroups?closeDate=yyyy-MM-dd&dryRun={bool}
     internal static async Task<Results<Ok<CloseAcademicYearGroupsResponse>, ProblemHttpResult>> CloseGroups(
-        [FromRoute] int ayId,
-        ICommandHandler<CloseAcademicYearGroupsCommand, CloseAcademicYearGroupsResponse> handler,
+        [FromRoute] int ayId, ICommandHandler<CloseAcademicYearGroupsCommand, CloseAcademicYearGroupsResponse> handler,
         [FromQuery] DateTime? closeDate = null, [FromQuery] bool dryRun = false,
         CancellationToken cancellationToken = default)
     {

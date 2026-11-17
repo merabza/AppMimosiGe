@@ -43,9 +43,10 @@ public static class AbsenceReports
         ];
         List<List<object?>> rows =
         [
-            .. data.Absences.GroupBy(a => a.StudentContractId).Select(absences => (ContractId: absences.Key,
-                    Count: absences.Count(a => IsAfterLastPresence(a, data.LastPresences))))
-                .Where(c => c.Count > 1).Select(c => (c.ContractId, c.Count, Contact: data.Students[c.ContractId]))
+            .. data.Absences.GroupBy(a => a.StudentContractId)
+                .Select(absences => (ContractId: absences.Key,
+                    Count: absences.Count(a => IsAfterLastPresence(a, data.LastPresences)))).Where(c => c.Count > 1)
+                .Select(c => (c.ContractId, c.Count, Contact: data.Students[c.ContractId]))
                 .OrderByDescending(c => c.Count).ThenBy(c => c.Contact.Student.NameWithNumber, StringComparer.Ordinal)
                 .ThenBy(c => c.ContractId).Select(c => new List<object?>
                 {
