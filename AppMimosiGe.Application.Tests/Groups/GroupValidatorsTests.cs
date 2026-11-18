@@ -121,6 +121,32 @@ public sealed class GroupValidatorsTests
         ], await ErrorCodes(ValidRequest()));
     }
 
+    //D181, report r22: a lesson's theoretical dates are a schedule day + its start time, so only a start at 00:00 (hours,
+    //minutes and seconds 0, as r22 checks) gives them the time 00:00:00
+    [Theory]
+    [InlineData(0)]
+    [InlineData(500)]
+    public async Task StartTimeAtMidnight_IsError(int milliseconds)
+    {
+        _repository.Setup(r => r.GetLessonStartTime(17, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new TimeOnly(0, 0, 0, milliseconds));
+
+        Assert.Equal([GroupErrors.LessonStartTimeIsMidnight.Code], await ErrorCodes(ValidRequest()));
+    }
+
+    [Theory]
+    [InlineData(0, 0, 1)]
+    [InlineData(0, 1, 0)]
+    [InlineData(1, 0, 0)]
+    [InlineData(15, 0, 0)]
+    public async Task StartTimeAfterMidnight_IsAllowed(int hour, int minute, int second)
+    {
+        _repository.Setup(r => r.GetLessonStartTime(17, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new TimeOnly(hour, minute, second));
+
+        Assert.Empty(await ErrorCodes(ValidRequest()));
+    }
+
     [Fact]
     public async Task TeacherWithoutScheme_TakesTheContractsDefaultScheme()
     {

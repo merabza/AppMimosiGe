@@ -584,6 +584,13 @@ public sealed class GroupsRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task GetLessonStartTime_ReturnsTheTimeOrNull()
+    {
+        Assert.Equal(new TimeOnly(8, 30), await _repository.GetLessonStartTime(2));
+        Assert.Null(await _repository.GetLessonStartTime(99));
+    }
+
+    [Fact]
     public async Task GetTeacherContracts_AreSortedByNameAndNumberWithTheirDefaultScheme()
     {
         AddAndSave(new TeacherContract { Id = 3, ContractNumber = "T0.01", TeacherHumanId = 2, RsCountryId = 1 });

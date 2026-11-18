@@ -62,6 +62,11 @@ public sealed class GroupErrorsTests
         { GroupErrors.NoteIsTooLong, ErrorType.Problem, "შენიშვნა 255 სიმბოლოზე გრძელი ვერ იქნება" },
         { GroupErrors.WeekDayNotFound, ErrorType.Problem, "კვირის დღე ვერ მოიძებნა" },
         { GroupErrors.LessonStartTimeNotFound, ErrorType.Problem, "გაკვეთილის დაწყების დრო ვერ მოიძებნა" },
+        {
+            GroupErrors.LessonStartTimeIsMidnight, ErrorType.Problem,
+            "გაკვეთილი 00:00-ზე ვერ დაიწყება: ასეთი განრიგით გაკვეთილების თეორიული თარიღები 00:00:00 გამოვა " +
+            "(რეპორტი „კვირის დღეების არასწორი ცვლილებები\"). აირჩიეთ სხვა დაწყების დრო"
+        },
         { GroupErrors.RoomNotFound, ErrorType.Problem, "ოთახი ვერ მოიძებნა" },
         { GroupErrors.HoursCountMustBePositive, ErrorType.Problem, "გაკვეთილის საათები 0-ზე მეტი უნდა იყოს" },
         { GroupErrors.StartDateIsRequired, ErrorType.Problem, "დაწყების თარიღი შევსებული უნდა იყოს" },
@@ -90,6 +95,17 @@ public sealed class GroupErrorsTests
             GroupErrors.GroupStudentIsInUse, ErrorType.Conflict,
             "მოსწავლის ჯგუფიდან წაშლა შეუძლებელია: მას ამ ჯგუფში უკვე აქვს გაკვეთილები. წაშლის ნაცვლად " +
             "მიუთითეთ დასრულების თარიღი"
+        },
+        {
+            GroupErrors.StartedDayTimePlaceWeekDayCannotChange, ErrorType.Conflict,
+            "განრიგის სტრიქონის კვირის დღის შეცვლა შეუძლებელია: სტრიქონი დღემდე დაიწყო და ცვლილება მის წარსულ " +
+            "გაკვეთილებსაც სხვა დღეზე გადაიტანდა. შეცვლის ნაცვლად სტრიქონს მიუთითეთ დასრულების თარიღი და ახალი " +
+            "კვირის დღე ახალ სტრიქონად დაამატეთ"
+        },
+        {
+            GroupErrors.StartedDayTimePlaceCannotBeRemoved, ErrorType.Conflict,
+            "განრიგის სტრიქონის წაშლა შეუძლებელია: სტრიქონი დღემდე დაიწყო და წაშლა მის წარსულ გაკვეთილებსაც " +
+            "წაშლიდა. წაშლის ნაცვლად მიუთითეთ დასრულების თარიღი"
         },
         {
             GroupErrors.GroupIsInUse, ErrorType.Conflict,

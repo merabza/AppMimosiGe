@@ -39,6 +39,9 @@ public interface IGroupsRepository
     //მასწავლებლის კონტრაქტის ხელფასის ძირითადი სქემა (SalarySchemaByHours); null, თუ კონტრაქტს სქემა არ აქვს
     Task<int?> GetDefaultSalarySchemeId(int teacherContractId, CancellationToken cancellationToken = default);
 
+    //განრიგის დაწყების დრო (00:00-ის შესამოწმებლად, D181); null, თუ ასეთი დრო არ არის
+    Task<TimeOnly?> GetLessonStartTime(int lstId, CancellationToken cancellationToken = default);
+
     //"გვარი სახელი / ნომერი"-თ დალაგებული, როგორც Access-ის ფორმის ჩამოსაშლელ სიებში
     Task<List<GroupTeacherContractLookupResponse>> GetTeacherContracts(CancellationToken cancellationToken = default);
 

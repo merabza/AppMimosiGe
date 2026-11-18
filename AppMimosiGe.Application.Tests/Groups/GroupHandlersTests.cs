@@ -238,10 +238,11 @@ public sealed class GroupHandlersTests
                 It.IsAny<CancellationToken>()), Times.Once);
     }
 
-    private UpdateGroupCommandHandler UpdateHandler()
+    //today is 01.10.2026 unless given
+    private UpdateGroupCommandHandler UpdateHandler(DateTimeOffset? now = null)
     {
         return new UpdateGroupCommandHandler(_repository.Object, _lessonGenerator.Object, _unitOfWork.Object,
-            TimeProviderAt(new DateTimeOffset(2026, 10, 1, 10, 0, 0, TimeSpan.Zero)));
+            TimeProviderAt(now ?? new DateTimeOffset(2026, 10, 1, 10, 0, 0, TimeSpan.Zero)));
     }
 
     [Fact]
@@ -484,7 +485,8 @@ public sealed class GroupHandlersTests
         GroupRemovedRows? removed = null;
         _repository.Setup(r => r.RemoveRows(It.IsAny<GroupRemovedRows>()))
             .Callback<GroupRemovedRows>(rows => removed = rows);
-        UpdateGroupCommandHandler handler = UpdateHandler();
+        //on 14.09 the schedule row 300 has not started yet, so it may be removed (D181)
+        UpdateGroupCommandHandler handler = UpdateHandler(new DateTimeOffset(2026, 9, 14, 10, 0, 0, TimeSpan.Zero));
         //teacher 100 gets an end, a second teacher follows; student 200 moves to contract 22, student 201 leaves,
         //contract 23 joins; the schedule row 300 is replaced by a new one
         GroupRequest request = ValidRequest("1002", teachers:
@@ -683,7 +685,8 @@ public sealed class GroupHandlersTests
         VerifySaved(Times.Never());
     }
 
-    //the request's schedule is checked, not the saved one: the lesson moves to Wednesdays, when group 7 has none
+    //the request's schedule is checked, not the saved one: the lesson moves to Wednesdays, when group 7 has none. On
+    //14.09 the row has not started yet, so its week day may change (D181)
     [Fact]
     public async Task Update_ScheduleMovedAwayFromTheOtherGroup_IsSaved()
     {
@@ -693,7 +696,8 @@ public sealed class GroupHandlersTests
         GroupRequest request = ValidRequest(teachers: [Teacher(100)], students: [Student(200), Student(201, 21)],
             dayTimePlaces: [DayTimePlace(300, 3)]);
 
-        Result result = await UpdateHandler().Handle(new UpdateGroupCommand(42, request), CancellationToken.None);
+        Result result = await UpdateHandler(new DateTimeOffset(2026, 9, 14, 10, 0, 0, TimeSpan.Zero))
+            .Handle(new UpdateGroupCommand(42, request), CancellationToken.None);
 
         Assert.True(result.IsSuccess);
         Assert.Equal(3, Assert.Single(group.GroupDayTimePlaces).WeekDayId);
@@ -741,6 +745,71 @@ public sealed class GroupHandlersTests
 
         Assert.True(result.IsSuccess);
         Assert.Equal(OtherDate, group.GroupsByStudents.Single(s => s.GbsId == 200).EndDate);
+        VerifySaved(Times.Once());
+    }
+
+    //D181: the Monday row 300 started on 15.09, before today (01.10), so its week day is not changed in place
+    [Fact]
+    public async Task Update_WeekDayOfAStartedScheduleRow_IsConflictWithoutChanges()
+    {
+        // Arrange
+        Group group = ExistingGroup();
+        WithExistingGroup(group);
+        GroupRequest request = ValidRequest("1002", teachers: [Teacher(100)],
+            students: [Student(200), Student(201, 21)], dayTimePlaces: [DayTimePlace(300, 3)]);
+
+        // Act
+        Result result = await UpdateHandler().Handle(new UpdateGroupCommand(42, request), CancellationToken.None);
+
+        // Assert
+        Assert.Equal(nameof(GroupErrors.StartedDayTimePlaceWeekDayCannotChange), result.Error.Code);
+        Assert.Equal(ErrorType.Conflict, result.Error.Type);
+        Assert.Equal(1, Assert.Single(group.GroupDayTimePlaces).WeekDayId);
+        Assert.Equal("1001", group.GroupCode);
+        Assert.False(group.DirtyLessons);
+        Assert.Empty(_loadedContracts);
+        _repository.Verify(r => r.RemoveRows(It.IsAny<GroupRemovedRows>()), Times.Never);
+        VerifySaved(Times.Never());
+    }
+
+    //D181: the Monday row 300 started on 15.09, before today (01.10), so it is not removed, not even for a new row
+    [Fact]
+    public async Task Update_RemovingAStartedScheduleRow_IsConflictWithoutChanges()
+    {
+        // Arrange
+        Group group = ExistingGroup();
+        WithExistingGroup(group);
+        GroupRequest request = ValidRequest("1002", teachers: [Teacher(100)],
+            students: [Student(200), Student(201, 21)], dayTimePlaces: [DayTimePlace(weekDayId: 3)]);
+
+        // Act
+        Result result = await UpdateHandler().Handle(new UpdateGroupCommand(42, request), CancellationToken.None);
+
+        // Assert
+        Assert.Equal(nameof(GroupErrors.StartedDayTimePlaceCannotBeRemoved), result.Error.Code);
+        Assert.Equal(ErrorType.Conflict, result.Error.Type);
+        Assert.Equal(300, Assert.Single(group.GroupDayTimePlaces).GdtpId);
+        Assert.Equal("1001", group.GroupCode);
+        Assert.False(group.DirtyLessons);
+        Assert.Empty(_loadedContracts);
+        _repository.Verify(r => r.RemoveRows(It.IsAny<GroupRemovedRows>()), Times.Never);
+        VerifySaved(Times.Never());
+    }
+
+    //the right way: row 300 ends on 01.10 and a Wednesday row starts that day
+    [Fact]
+    public async Task Update_WeekDayChangedByANewScheduleRow_IsSaved()
+    {
+        Group group = ExistingGroup();
+        WithExistingGroup(group);
+        GroupRequest request = ValidRequest(teachers: [Teacher(100)], students: [Student(200), Student(201, 21)],
+            dayTimePlaces: [DayTimePlace(300, endDate: OtherDate), DayTimePlace(weekDayId: 3, startDate: OtherDate)]);
+
+        Result result = await UpdateHandler().Handle(new UpdateGroupCommand(42, request), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal([1, 3], group.GroupDayTimePlaces.Select(d => d.WeekDayId));
+        Assert.Equal([OtherDate, null], group.GroupDayTimePlaces.Select(d => d.EndDate));
         VerifySaved(Times.Once());
     }
 

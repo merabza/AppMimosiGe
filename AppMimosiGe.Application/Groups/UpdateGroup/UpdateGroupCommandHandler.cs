@@ -38,8 +38,21 @@ public sealed class UpdateGroupCommandHandler(
             return Result.Failure(GroupErrors.RowNotFound);
         }
 
-        //მოსწავლის სტრიქონს, რომელზეც უკვე არის გაკვეთილები, LessonsByStudents Restrict-ით ებმის (Access-ის RI)
+        //დღემდე დაწყებული განრიგის სტრიქონის კვირის დღე ადგილზე არ იცვლება და სტრიქონი არ იშლება (D181): წარსული
+        //გაკვეთილები სხვა დღეზე არ გადადის და არ იშლება. სტრიქონი სრულდება, ახალი დღე კი ახალ სტრიქონად ემატება
+        DateTime today = timeProvider.GetLocalNow().DateTime.Date;
+        if (GroupScheduleWeekDayChangeRule.ChangesStartedRowWeekDay(group, request, today))
+        {
+            return Result.Failure(GroupErrors.StartedDayTimePlaceWeekDayCannotChange);
+        }
+
         GroupRemovedRows removedRows = GroupMapper.FindRemovedRows(group, request);
+        if (GroupScheduleWeekDayChangeRule.RemovesStartedRow(removedRows.DayTimePlaces, today))
+        {
+            return Result.Failure(GroupErrors.StartedDayTimePlaceCannotBeRemoved);
+        }
+
+        //მოსწავლის სტრიქონს, რომელზეც უკვე არის გაკვეთილები, LessonsByStudents Restrict-ით ებმის (Access-ის RI)
         if (removedRows.Students.Count > 0 && await repository.AnyStudentRowIsInUse(
                 [.. removedRows.Students.Select(x => x.GbsId)], cancellationToken))
         {

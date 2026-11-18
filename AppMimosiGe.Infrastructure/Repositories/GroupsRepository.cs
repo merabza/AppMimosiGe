@@ -120,6 +120,12 @@ public sealed class GroupsRepository(IMimosiGeDbContext context) : IGroupsReposi
             .SingleOrDefaultAsync(cancellationToken);
     }
 
+    public Task<TimeOnly?> GetLessonStartTime(int lstId, CancellationToken cancellationToken = default)
+    {
+        return context.LessonStartTimes.Where(x => x.LstId == lstId).Select(x => (TimeOnly?)x.LstTime)
+            .SingleOrDefaultAsync(cancellationToken);
+    }
+
     public Task<List<GroupTeacherContractLookupResponse>> GetTeacherContracts(
         CancellationToken cancellationToken = default)
     {
