@@ -46,4 +46,9 @@ public interface ILessonsRepository
     //(აღდგენის თარიღი, თუ აქვს) [fromDay, toDay)-შია, exceptLessonId-ის გარდა
     Task<List<TeacherLesson>> GetTeacherLessons(int teacherContractId, DateTime fromDay, DateTime toDay,
         int exceptLessonId, CancellationToken cancellationToken = default);
+
+    //მოსწავლეების დროების შესამოწმებლად (D179): ამ კონტრაქტების სტრიქონები ჩასატარებელ გაკვეთილებში (სტატუსი
+    //"არ გაუქმებულა"), რომელთა ფაქტობრივი დღე (აღდგენის თარიღი, თუ აქვს) [fromDay, toDay)-შია, exceptLessonId-ის გარდა
+    Task<List<StudentLesson>> GetStudentLessons(IReadOnlyCollection<int> studentContractIds, DateTime fromDay,
+        DateTime toDay, int exceptLessonId, CancellationToken cancellationToken = default);
 }

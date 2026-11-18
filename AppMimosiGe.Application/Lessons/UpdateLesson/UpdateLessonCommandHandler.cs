@@ -62,6 +62,14 @@ public sealed class UpdateLessonCommandHandler(
             return Result.Failure(teacherOverlap);
         }
 
+        //ჟურნალი მოსწავლეების დროების ახალ გადაფარვას არ ქმნის (D179): გაკვეთილის მოსწავლეებს იმავე დროს სხვა
+        //ჩასატარებელი გაკვეთილი არ ექნებათ
+        Error? studentsOverlap = await FindNewStudentsOverlap(lesson, request, cancellationToken);
+        if (studentsOverlap is not null)
+        {
+            return Result.Failure(studentsOverlap);
+        }
+
         //ჟურნალი შეცდომიან გაკვეთილს არ ქმნის (რეპორტი r13, D177): ჯგუფის შეცვლის შემდეგ ზედმეტ გაკვეთილს ან
         //მოსწავლეს, რომელიც გენერატორს ჯერ არ წაუშლია, შეტანილი მონაცემი არ ემატება
         IReadOnlyList<ErroneousLessonStudent> newErrors = await GroupLessonsGeneration.FindNewLessonErrors(
@@ -98,13 +106,8 @@ public sealed class UpdateLessonCommandHandler(
     private async Task<Error?> FindNewTeacherOverlap(Lesson lesson, LessonRequest request,
         CancellationToken cancellationToken)
     {
-        float hours = lesson.LessonsByStudents.Select(x => x.HoursCount).DefaultIfEmpty().Max();
-        LessonTeacherTime? after = TeacherLessonOverlapsRule.TeacherTime(request.LessonStatusId,
-            lesson.TeacherContractId, request.SubstituteTeacherContractId, lesson.LessonDt, request.RecoverDate?.Date,
-            hours);
-        if (after is null || after == TeacherLessonOverlapsRule.TeacherTime(lesson.LessonStatusId,
-                lesson.TeacherContractId, lesson.SubstituteTeacherContractId, lesson.LessonDt, lesson.RecoverDate,
-                hours))
+        (LessonTeacherTime? before, LessonTeacherTime? after) = TeacherTimes(lesson, request);
+        if (after is null || after == before)
         {
             return null;
         }
@@ -121,6 +124,46 @@ public sealed class UpdateLessonCommandHandler(
             (await repository.GetTeacherContracts(cancellationToken)).ToDictionary(x => x.Id, x => x.Name);
         return LessonErrors.TeacherHasAnotherLessonAtThisTime(teacherNames[after.TeacherContractId],
             overlapping.Select(x => x.Describe()));
+    }
+
+    //შენახვის შემდეგ გაკვეთილის მოსწავლეების სხვა ჩასატარებელი გაკვეთილები, რომლებიც მის დროს ფარავს
+    //(StudentLessonOverlapsRule). შემოწმდება მხოლოდ, როცა გაკვეთილი ჩასატარებელი გახდა ან სხვა დღეზე გადავიდა:
+    //შემცვლელი მოსწავლეების დროს არ ცვლის, უკვე შენახული გადაფარვა კი სხვა ცვლილებას არ აბრკოლებს
+    private async Task<Error?> FindNewStudentsOverlap(Lesson lesson, LessonRequest request,
+        CancellationToken cancellationToken)
+    {
+        (LessonTeacherTime? before, LessonTeacherTime? after) = TeacherTimes(lesson, request);
+        if (after is null || after.Start == before?.Start)
+        {
+            return null;
+        }
+
+        (DateTime fromDay, DateTime toDay) = TeacherLessonOverlapsRule.SearchDays(after);
+        IReadOnlyList<StudentLesson> overlapping = StudentLessonOverlapsRule.Overlapping(after.Start, after.End,
+            await repository.GetStudentLessons([.. lesson.LessonsByStudents.Select(x => x.StudentContractId).Distinct()],
+                fromDay, toDay, lesson.Id, cancellationToken));
+        if (overlapping.Count == 0)
+        {
+            return null;
+        }
+
+        Dictionary<int, string> studentNames = await repository.GetStudentNames(
+            [.. overlapping.Select(x => x.StudentContractId).Distinct()], cancellationToken);
+        return LessonErrors.StudentsHaveAnotherLessonAtThisTime(
+            overlapping.Select(x => x.Describe(studentNames[x.StudentContractId])));
+    }
+
+    //გაკვეთილის ჩამტარებელი და დრო (TeacherLessonOverlapsRule.TeacherTime) შენახვამდე და შენახვის შემდეგ. საათები
+    //მოსწავლეების მაქსიმუმია (r36) და ჟურნალში არ იცვლება
+    private static (LessonTeacherTime? Before, LessonTeacherTime? After) TeacherTimes(Lesson lesson,
+        LessonRequest request)
+    {
+        float hours = lesson.LessonsByStudents.Select(x => x.HoursCount).DefaultIfEmpty().Max();
+        return (
+            TeacherLessonOverlapsRule.TeacherTime(lesson.LessonStatusId, lesson.TeacherContractId,
+                lesson.SubstituteTeacherContractId, lesson.LessonDt, lesson.RecoverDate, hours),
+            TeacherLessonOverlapsRule.TeacherTime(request.LessonStatusId, lesson.TeacherContractId,
+                request.SubstituteTeacherContractId, lesson.LessonDt, request.RecoverDate?.Date, hours));
     }
 
     //ზედმეტი გაკვეთილი (შეცდომა 11) ან ზედმეტი მოსწავლეები სახელებით (შეცდომა 14). ახალი შეცდომები მხოლოდ ამ

@@ -39,6 +39,14 @@ public sealed class CreateGroupCommandHandler(IGroupsRepository repository, IUni
             return Result.Failure<int>(teacherTimesOverlap);
         }
 
+        //მოსწავლეს სხვა ჯგუფთან დროების გადაფარვა არ ექნება (რეპორტი r19, D179)
+        Error? studentTimesOverlap = await repository.FindStudentTimesOverlap(
+            GroupMapper.ToStudentSchedule(group.GrpId, request, lessonStartTimes), cancellationToken);
+        if (studentTimesOverlap is not null)
+        {
+            return Result.Failure<int>(studentTimesOverlap);
+        }
+
         Dictionary<int, int> defaultSalarySchemes =
             await repository.GetDefaultSalarySchemes(request.Teachers, cancellationToken);
         GroupMapper.ApplyFields(group, request);

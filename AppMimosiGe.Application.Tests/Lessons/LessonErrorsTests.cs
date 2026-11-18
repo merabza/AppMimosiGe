@@ -108,4 +108,17 @@ public sealed class LessonErrorsTests
             "Alpha Ann / T5 ამ გაკვეთილის დროს სხვა გაკვეთილს ატარებს: first; second. ერთი მასწავლებელი ერთსა და " +
             "იმავე დროს ორ გაკვეთილს ვერ ჩაატარებს: შეცვალეთ შემცვლელი ან აღდგენის თარიღი", error.Description);
     }
+
+    //D179: the students' lessons in the given order, separated by semicolons
+    [Fact]
+    public void StudentsHaveAnotherLessonAtThisTime_ListsTheLessons()
+    {
+        Error error = LessonErrors.StudentsHaveAnotherLessonAtThisTime(["first", "second"]);
+
+        Assert.Equal(nameof(LessonErrors.StudentsHaveAnotherLessonAtThisTime), error.Code);
+        Assert.Equal(ErrorType.Conflict, error.Type);
+        Assert.Equal(
+            "გაკვეთილის მოსწავლეებს ამ დროს სხვა გაკვეთილიც აქვთ: first; second. ერთი მოსწავლე ერთსა და იმავე დროს " +
+            "ორ გაკვეთილს ვერ დაესწრება: შეცვალეთ აღდგენის თარიღი", error.Description);
+    }
 }

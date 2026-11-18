@@ -178,17 +178,41 @@ public sealed class GroupsRepository(IMimosiGeDbContext context) : IGroupsReposi
             .ToDictionaryAsync(x => x.LstId, x => x.LstTime, cancellationToken);
     }
 
-    public Task<List<TeacherScheduleGroup>> GetTeacherSchedules(IReadOnlyCollection<int> teacherContractIds,
+    public Task<List<GroupSchedule>> GetTeacherSchedules(IReadOnlyCollection<int> teacherContractIds,
         int exceptGrpId, CancellationToken cancellationToken = default)
     {
         return context.Groups.AsNoTracking()
             .Where(g => g.GrpId != exceptGrpId &&
                         g.GroupsByTeachers.Any(t => teacherContractIds.Contains(t.TeacherContractId))).Select(g =>
-                new TeacherScheduleGroup(g.GrpId, g.GroupCode, g.VoidDate,
+                new GroupSchedule(g.GrpId, g.GroupCode, g.VoidDate,
                     g.GroupsByTeachers.Where(t => teacherContractIds.Contains(t.TeacherContractId)).Select(t =>
-                        new TeacherScheduleTeacher(t.TeacherContractId, t.StartDate, t.EndDate)).ToList(),
-                    g.GroupDayTimePlaces.Select(d => new TeacherScheduleDayTime(d.WeekDayId, d.LessonStartTime.LstTime,
+                        new GroupScheduleMember(t.TeacherContractId, t.StartDate, t.EndDate)).ToList(),
+                    g.GroupDayTimePlaces.Select(d => new GroupScheduleDayTime(d.WeekDayId, d.LessonStartTime.LstTime,
                         d.HoursCount, d.StartDate, d.EndDate)).ToList())).ToListAsync(cancellationToken);
+    }
+
+    public Task<List<GroupSchedule>> GetStudentSchedules(IReadOnlyCollection<int> studentContractIds,
+        int exceptGrpId, CancellationToken cancellationToken = default)
+    {
+        return context.Groups.AsNoTracking()
+            .Where(g => g.GrpId != exceptGrpId &&
+                        g.GroupsByStudents.Any(s => studentContractIds.Contains(s.StudentContractId))).Select(g =>
+                new GroupSchedule(g.GrpId, g.GroupCode, g.VoidDate,
+                    g.GroupsByStudents.Where(s => studentContractIds.Contains(s.StudentContractId)).Select(s =>
+                        new GroupScheduleMember(s.StudentContractId, s.StartDate, s.EndDate)).ToList(),
+                    g.GroupDayTimePlaces.Select(d => new GroupScheduleDayTime(d.WeekDayId, d.LessonStartTime.LstTime,
+                        d.HoursCount, d.StartDate, d.EndDate)).ToList())).ToListAsync(cancellationToken);
+    }
+
+    public Task<Dictionary<int, string>> GetStudentContractNames(IReadOnlyCollection<int> scIds,
+        CancellationToken cancellationToken = default)
+    {
+        //ToDictionaryAsync-ის სელექტორები ჩატვირთვის შემდეგ მუშაობს, ამიტომ სახელი ჯერ SQL-ში იკრიბება
+        return context.StudentContracts.AsNoTracking().Where(x => scIds.Contains(x.ScId))
+            .Select(x => new
+            {
+                x.ScId, Name = x.StudentHuman.LastName + " " + x.StudentHuman.FirstName + " / " + x.ContractNumber
+            }).ToDictionaryAsync(x => x.ScId, x => x.Name, cancellationToken);
     }
 
     public Task<List<StudentContract>> GetStudentContractsForChange(IReadOnlyCollection<int> scIds,

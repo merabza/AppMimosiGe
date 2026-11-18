@@ -87,24 +87,54 @@ public sealed class GroupMapperTests
             dayTimePlaces: [DayTimePlace(300, 1, 17, 2f, endDate: OtherDate), DayTimePlace(0, 3, 18)]);
 
         // Act
-        TeacherScheduleGroup scheduleGroup = GroupMapper.ToTeacherSchedule(42, request, LessonStartTimes);
+        GroupSchedule schedule = GroupMapper.ToTeacherSchedule(42, request, LessonStartTimes);
 
         // Assert
-        Assert.Equal(42, scheduleGroup.GrpId);
-        Assert.Equal("1011", scheduleGroup.GroupCode);
-        Assert.Equal(new DateTime(2026, 12, 20, 0, 0, 0, DateTimeKind.Unspecified), scheduleGroup.VoidDate);
-        Assert.Equal(
-            [new TeacherScheduleTeacher(5, StartDate, OtherDate), new TeacherScheduleTeacher(6, OtherDate, null)],
-            scheduleGroup.Teachers);
+        Assert.Equal(42, schedule.GrpId);
+        Assert.Equal("1011", schedule.GroupCode);
+        Assert.Equal(new DateTime(2026, 12, 20, 0, 0, 0, DateTimeKind.Unspecified), schedule.VoidDate);
+        Assert.Equal([new GroupScheduleMember(5, StartDate, OtherDate), new GroupScheduleMember(6, OtherDate, null)],
+            schedule.Members);
         Assert.Equal([
-            new TeacherScheduleDayTime(1, new TimeOnly(15, 0), 2f, StartDate, OtherDate),
-            new TeacherScheduleDayTime(3, new TimeOnly(17, 30), 1.5f, StartDate, null)
-        ], scheduleGroup.DayTimes);
+            new GroupScheduleDayTime(1, new TimeOnly(15, 0), 2f, StartDate, OtherDate),
+            new GroupScheduleDayTime(3, new TimeOnly(17, 30), 1.5f, StartDate, null)
+        ], schedule.DayTimes);
     }
 
     [Fact]
     public void ToTeacherSchedule_RequestWithoutVoidDate_HasNone()
     {
         Assert.Null(GroupMapper.ToTeacherSchedule(0, ValidRequest(), LessonStartTimes).VoidDate);
+    }
+
+    //D179: the same group with the students' rows instead of the teachers'
+    [Fact]
+    public void ToStudentSchedule_TakesTheRequestsVoidDateStudentsAndSchedule()
+    {
+        // Arrange
+        GroupRequest request = ValidRequest(" 1011 ", new DateTime(2026, 12, 20, 13, 45, 0, DateTimeKind.Unspecified),
+            [Teacher(100)],
+            [Student(200, endDate: OtherDate.AddHours(10)), Student(studentContractId: 21, startDate: OtherDate)],
+            [DayTimePlace(300, 1, 17, 2f, endDate: OtherDate), DayTimePlace(0, 3, 18)]);
+
+        // Act
+        GroupSchedule schedule = GroupMapper.ToStudentSchedule(42, request, LessonStartTimes);
+
+        // Assert
+        Assert.Equal(42, schedule.GrpId);
+        Assert.Equal("1011", schedule.GroupCode);
+        Assert.Equal(new DateTime(2026, 12, 20, 0, 0, 0, DateTimeKind.Unspecified), schedule.VoidDate);
+        Assert.Equal([new GroupScheduleMember(20, StartDate, OtherDate), new GroupScheduleMember(21, OtherDate, null)],
+            schedule.Members);
+        Assert.Equal([
+            new GroupScheduleDayTime(1, new TimeOnly(15, 0), 2f, StartDate, OtherDate),
+            new GroupScheduleDayTime(3, new TimeOnly(17, 30), 1.5f, StartDate, null)
+        ], schedule.DayTimes);
+    }
+
+    [Fact]
+    public void ToStudentSchedule_RequestWithoutVoidDate_HasNone()
+    {
+        Assert.Null(GroupMapper.ToStudentSchedule(0, ValidRequest(), LessonStartTimes).VoidDate);
     }
 }

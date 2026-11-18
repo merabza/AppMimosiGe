@@ -164,6 +164,31 @@ public sealed class LessonsRepository(IMimosiGeDbContext context) : ILessonsRepo
         ];
     }
 
+    //საათები გაკვეთილის მოსწავლეების მაქსიმუმია, როგორც GetTeacherLessons-ში; ფაქტობრივ დაწყებას
+    //TeacherLessonOverlapsRule ითვლის
+    public async Task<List<StudentLesson>> GetStudentLessons(IReadOnlyCollection<int> studentContractIds,
+        DateTime fromDay, DateTime toDay, int exceptLessonId, CancellationToken cancellationToken = default)
+    {
+        var rows = await context.LessonsByStudents.AsNoTracking().Where(s =>
+            studentContractIds.Contains(s.StudentContractId) && s.LessonId != exceptLessonId &&
+            s.Lesson.LessonStatusId == HeldLessonStatusId &&
+            (s.Lesson.RecoverDate ?? s.Lesson.LessonDt) >= fromDay &&
+            (s.Lesson.RecoverDate ?? s.Lesson.LessonDt) < toDay).Select(s => new
+        {
+            s.StudentContractId,
+            s.LessonId,
+            s.Lesson.Group.GroupCode,
+            s.Lesson.LessonDt,
+            s.Lesson.RecoverDate,
+            Hours = s.Lesson.LessonsByStudents.Max(x => x.HoursCount)
+        }).ToListAsync(cancellationToken);
+        return
+        [
+            .. rows.Select(r => new StudentLesson(r.StudentContractId, r.LessonId, r.GroupCode,
+                TeacherLessonOverlapsRule.ActualStart(r.LessonDt, r.RecoverDate), r.Hours))
+        ];
+    }
+
     private static IQueryable<Lesson> ApplyFilter(IQueryable<Lesson> lessons, LessonsListQuery query)
     {
         if (query.GrpId is { } grpId)

@@ -66,6 +66,14 @@ public sealed class UpdateGroupCommandHandler(
             return Result.Failure(teacherTimesOverlap);
         }
 
+        //მოსწავლეს სხვა ჯგუფთან დროების გადაფარვა არ ექნება (რეპორტი r19, D179), არც უკვე არსებული
+        Error? studentTimesOverlap = await repository.FindStudentTimesOverlap(
+            GroupMapper.ToStudentSchedule(group.GrpId, request, lessonStartTimes), cancellationToken);
+        if (studentTimesOverlap is not null)
+        {
+            return Result.Failure(studentTimesOverlap);
+        }
+
         //ცვლილება შეცდომიან გაკვეთილებს არ ქმნის (რეპორტი r13, D177): შეტანილი მონაცემის მქონე გაკვეთილი ან მოსწავლე
         //ზედმეტი არ ხდება. Access ამას არ ამოწმებდა და გენერატორი შეცდომებს 11 და 14 წერდა
         IReadOnlyList<ErroneousLessonStudent> newErrors = await GroupLessonsGeneration.FindNewLessonErrors(

@@ -583,4 +583,64 @@ public sealed class LessonsRepositoryTests : IDisposable
 
         Assert.Empty(await TeacherLessons(1, At(10, 4), At(10, 5)));
     }
+
+    private async Task<List<StudentLesson>> StudentLessons(IReadOnlyCollection<int> studentContractIds,
+        DateTime fromDay, DateTime toDay, int exceptLessonId = 0)
+    {
+        return
+        [
+            .. (await _repository.GetStudentLessons(studentContractIds, fromDay, toDay, exceptLessonId))
+            .OrderBy(l => l.LessonId).ThenBy(l => l.StudentContractId)
+        ];
+    }
+
+    //D179: student 10's held lessons 100 and 101 with their 1.5 hours; 102 is on the first day after, 103 is cancelled
+    [Fact]
+    public async Task GetStudentLessons_ReturnsTheHeldLessonsOfTheStudentInTheDays()
+    {
+        Assert.Equal([
+            new StudentLesson(10, 100, "1001", At(9, 29, 15), 1.5f), new StudentLesson(10, 101, "1001", At(9, 30, 15), 1.5f)
+        ], await StudentLessons([10], At(9, 29), At(10, 1)));
+        Assert.Empty(_context.ChangeTracker.Entries());
+    }
+
+    [Fact]
+    public async Task GetStudentLessons_LeavesOutTheGivenLesson()
+    {
+        Assert.Equal([100, 102], (await StudentLessons([10], At(9, 29), At(10, 2), 101)).Select(l => l.LessonId));
+    }
+
+    //every asked contract with its own rows; contract 12 has no lesson rows, contract 13 is on no lesson
+    [Fact]
+    public async Task GetStudentLessons_ReturnsTheRowsOfEveryAskedContract()
+    {
+        Assert.Equal([(101, 10), (101, 11)],
+            (await StudentLessons([10, 11, 12, 13], At(9, 30), At(10, 1))).Select(l =>
+                (l.LessonId, l.StudentContractId)));
+        Assert.Empty(await StudentLessons([12, 13], At(9, 29), At(10, 2)));
+    }
+
+    //lesson 104 lasts as long as its longest student row, for each of its students
+    [Fact]
+    public async Task GetStudentLessons_TheLessonLastsAsLongAsItsLongestStudentRow()
+    {
+        AddAndSave(Lesson(104, 1, At(9, 30, 12), 1),
+            new LessonByStudent { Id = 7, LessonId = 104, StudentContractId = 10, HoursCount = 2f },
+            new LessonByStudent { Id = 8, LessonId = 104, StudentContractId = 11, HoursCount = 1f });
+
+        Assert.Equal([new StudentLesson(11, 104, "1001", At(9, 30, 12), 2f)],
+            (await StudentLessons([11], At(9, 30), At(10, 1))).Where(l => l.LessonId == 104));
+    }
+
+    //recovered on 05.10, lesson 100 is held that day at its time
+    [Fact]
+    public async Task GetStudentLessons_RecoveredLessonIsOnItsRecoverDay()
+    {
+        RecoverLesson100On(At(10, 5));
+
+        Assert.Equal([new StudentLesson(10, 100, "1001", At(10, 5, 15), 1.5f)],
+            await StudentLessons([10], At(10, 5), At(10, 6)));
+        Assert.Empty(await StudentLessons([10], At(9, 29), At(9, 30)));
+        Assert.Empty(await StudentLessons([10], At(10, 4), At(10, 5)));
+    }
 }

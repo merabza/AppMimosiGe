@@ -35,16 +35,15 @@ public static class GroupsRepositoryExtensions
     }
 
     /// <summary>
-    ///     მასწავლებლების დროების შემოწმება შენახვამდე (TeacherScheduleOverlapsRule, D178): ჯგუფის მასწავლებლების განრიგი
+    ///     მასწავლებლების დროების შემოწმება შენახვამდე (GroupScheduleOverlapsRule, D178): ჯგუფის მასწავლებლების განრიგი
     ///     შენახვის შემდეგ მათ სხვა ჯგუფებს ედრება. აბრუნებს შეცდომას გადაფარვების აღწერებით, ან null-ს, თუ გადაფარვა არ არის
     /// </summary>
     public static async Task<Error?> FindTeacherTimesOverlap(this IGroupsRepository repository,
-        TeacherScheduleGroup scheduleGroup, CancellationToken cancellationToken)
+        GroupSchedule schedule, CancellationToken cancellationToken)
     {
-        List<TeacherScheduleGroup> otherGroups = await repository.GetTeacherSchedules(
-            [.. scheduleGroup.Teachers.Select(x => x.TeacherContractId).Distinct()], scheduleGroup.GrpId,
-            cancellationToken);
-        IReadOnlyList<TeacherScheduleOverlap> overlaps = TeacherScheduleOverlapsRule.Find(scheduleGroup, otherGroups);
+        List<GroupSchedule> otherSchedules = await repository.GetTeacherSchedules(ContractIds(schedule),
+            schedule.GrpId, cancellationToken);
+        IReadOnlyList<GroupScheduleOverlap> overlaps = GroupScheduleOverlapsRule.Find(schedule, otherSchedules);
         if (overlaps.Count == 0)
         {
             return null;
@@ -52,11 +51,45 @@ public static class GroupsRepositoryExtensions
 
         Dictionary<int, string> teacherNames =
             (await repository.GetTeacherContracts(cancellationToken)).ToDictionary(x => x.Id, x => x.Name);
+        return GroupErrors.TeacherTimesOverlap(
+            await DescribeOverlaps(repository, overlaps, teacherNames, cancellationToken));
+    }
+
+    /// <summary>
+    ///     მოსწავლეების დროების შემოწმება შენახვამდე (GroupScheduleOverlapsRule, D179): ჯგუფის მოსწავლეების განრიგი
+    ///     შენახვის შემდეგ მათ სხვა ჯგუფებს ედრება. აბრუნებს შეცდომას გადაფარვების აღწერებით, ან null-ს, თუ გადაფარვა არ არის
+    /// </summary>
+    public static async Task<Error?> FindStudentTimesOverlap(this IGroupsRepository repository,
+        GroupSchedule schedule, CancellationToken cancellationToken)
+    {
+        List<GroupSchedule> otherSchedules = await repository.GetStudentSchedules(ContractIds(schedule),
+            schedule.GrpId, cancellationToken);
+        IReadOnlyList<GroupScheduleOverlap> overlaps = GroupScheduleOverlapsRule.Find(schedule, otherSchedules);
+        if (overlaps.Count == 0)
+        {
+            return null;
+        }
+
+        Dictionary<int, string> studentNames = await repository.GetStudentContractNames(
+            [.. overlaps.Select(o => o.ContractId).Distinct()], cancellationToken);
+        return GroupErrors.StudentTimesOverlap(
+            await DescribeOverlaps(repository, overlaps, studentNames, cancellationToken));
+    }
+
+    //ჯგუფის მასწავლებლების ან მოსწავლეების კონტრაქტები, თითო ერთხელ
+    private static int[] ContractIds(GroupSchedule schedule)
+    {
+        return [.. schedule.Members.Select(x => x.ContractId).Distinct()];
+    }
+
+    //გადაფარვების აღწერები იმავე რიგით: წევრის სახელი (კონტრაქტის ID-ით) და კვირის დღის სახელი
+    private static async Task<List<string>> DescribeOverlaps(IGroupsRepository repository,
+        IReadOnlyList<GroupScheduleOverlap> overlaps, Dictionary<int, string> memberNames,
+        CancellationToken cancellationToken)
+    {
         Dictionary<int, string> weekDayNames =
             (await repository.GetWeekDays(cancellationToken)).ToDictionary(x => x.Id, x => x.Name);
-        return GroupErrors.TeacherTimesOverlap([
-            .. overlaps.Select(o => o.Describe(teacherNames[o.TeacherContractId], weekDayNames[o.WeekDayId]))
-        ]);
+        return [.. overlaps.Select(o => o.Describe(memberNames[o.ContractId], weekDayNames[o.WeekDayId]))];
     }
 
     /// <summary>
