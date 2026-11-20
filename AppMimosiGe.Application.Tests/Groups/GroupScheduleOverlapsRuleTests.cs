@@ -29,9 +29,14 @@ public sealed class GroupScheduleOverlapsRuleTests
     private static GroupSchedule Edited(DateTime? voidDate = null) =>
         Group(42, "1001", [Member()], [DayTime(15)], voidDate);
 
+    //today is 01.08, before every day of the groups, so no overlap is over yet
     private static IReadOnlyList<GroupScheduleOverlap> Find(GroupSchedule schedule,
         params GroupSchedule[] otherSchedules) =>
-        GroupScheduleOverlapsRule.Find(schedule, otherSchedules);
+        FindOn(Day(8, 1), schedule, otherSchedules);
+
+    private static IReadOnlyList<GroupScheduleOverlap> FindOn(DateTime today, GroupSchedule schedule,
+        params GroupSchedule[] otherSchedules) =>
+        GroupScheduleOverlapsRule.Find(schedule, otherSchedules, today);
 
     //the days are those when both groups have the member and the Monday row: 15.09 until 05.10
     [Fact]
@@ -45,6 +50,45 @@ public sealed class GroupScheduleOverlapsRuleTests
             new GroupScheduleOverlap(5, 7, "1002", Monday, new TimeOnly(16, 0), new TimeOnly(17, 30), Day(9, 15),
                 Day(10, 5))
         ], overlaps);
+    }
+
+    //D203: the common days are 15.09 until 05.10, so the last one is 04.10. An overlap that is over does not count
+    [Theory]
+    [InlineData(9, 1, true)]
+    [InlineData(9, 20, true)]
+    [InlineData(10, 4, true)]
+    [InlineData(10, 5, false)]
+    [InlineData(11, 20, false)]
+    public void Find_OverlapCountsUntilItsLastDay(int todayMonth, int todayDay, bool counts)
+    {
+        IReadOnlyList<GroupScheduleOverlap> overlaps = FindOn(Day(todayMonth, todayDay), Edited(),
+            Group(7, "1002", [Member(startDate: Day(9, 15), endDate: Day(10, 5))], [DayTime(16)]));
+
+        Assert.Equal(counts, overlaps.Count == 1);
+    }
+
+    //D203: an overlap that goes on after today keeps its first day, which is before today
+    [Fact]
+    public void Find_OverlapThatGoesOnAfterToday_HasAllItsDays()
+    {
+        GroupScheduleOverlap overlap = Assert.Single(FindOn(Day(11, 20), Edited(),
+            Group(7, "1002", [Member(startDate: Day(10, 1))], [DayTime(14, 30)])));
+
+        Assert.Equal(Day(10, 1), overlap.FromDate);
+        Assert.Null(overlap.ToDate);
+    }
+
+    //D203: of the two Monday rows of the other group only the one at the same time ended before today (20.11)
+    [Fact]
+    public void Find_OnlyTheOverlapsThatAreOver_DoNotCount()
+    {
+        GroupSchedule other = Group(7, "1002", [Member()],
+            [DayTime(15, endDate: Day(10, 5)), DayTime(16, startDate: Day(10, 5), endDate: Day(11, 21))]);
+
+        GroupScheduleOverlap overlap = Assert.Single(FindOn(Day(11, 20), Edited(), other));
+
+        Assert.Equal(new TimeOnly(16, 0), overlap.OtherStartTime);
+        Assert.Equal(Day(11, 21), overlap.ToDate);
     }
 
     [Fact]

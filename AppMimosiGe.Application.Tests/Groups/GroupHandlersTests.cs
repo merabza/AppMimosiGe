@@ -191,14 +191,15 @@ public sealed class GroupHandlersTests
             .ReturnsAsync(group);
     }
 
-    //group 7 ("1002"), where teacher contract 5 teaches on Mondays 15:30–17:00 since 01.09, and the names of the error
-    private void WithOtherGroupOfTeacher5()
+    //group 7 ("1002"), where teacher contract 5 teaches on Mondays 15:30–17:00 since 01.09 (until the given day, if
+    //any), and the names of the error
+    private void WithOtherGroupOfTeacher5(DateTime? mondayEndDate = null)
     {
         var september1 = new DateTime(2026, 9, 1, 0, 0, 0, DateTimeKind.Unspecified);
         _repository.Setup(r => r.GetTeacherSchedules(It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<int>(),
             It.IsAny<CancellationToken>())).ReturnsAsync([
             new GroupSchedule(7, "1002", null, [new GroupScheduleMember(5, september1, null)],
-                [new GroupScheduleDayTime(1, new TimeOnly(15, 30), 1.5f, september1, null)])
+                [new GroupScheduleDayTime(1, new TimeOnly(15, 30), 1.5f, september1, mondayEndDate)])
         ]);
         _repository.Setup(r => r.GetTeacherContracts(It.IsAny<CancellationToken>()))
             .ReturnsAsync([new GroupTeacherContractLookupResponse(5, "Alpha Ann / T5", 8)]);
@@ -213,14 +214,15 @@ public sealed class GroupHandlersTests
                 It.IsAny<CancellationToken>()), Times.Once);
     }
 
-    //group 8 ("1003"), where student contract 20 learns on Mondays 15:30–17:00 from the given day (01.09 by default),
-    //and the names of the error
-    private void WithOtherGroupOfStudent20(DateTime? studentStartDate = null)
+    //group 8 ("1003"), where student contract 20 learns on Mondays 15:30–17:00 from the given day (01.09 by default)
+    //until the given day (if any), and the names of the error
+    private void WithOtherGroupOfStudent20(DateTime? studentStartDate = null, DateTime? studentEndDate = null)
     {
         var september1 = new DateTime(2026, 9, 1, 0, 0, 0, DateTimeKind.Unspecified);
         _repository.Setup(r => r.GetStudentSchedules(It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<int>(),
             It.IsAny<CancellationToken>())).ReturnsAsync([
-            new GroupSchedule(8, "1003", null, [new GroupScheduleMember(20, studentStartDate ?? september1, null)],
+            new GroupSchedule(8, "1003", null,
+                [new GroupScheduleMember(20, studentStartDate ?? september1, studentEndDate)],
                 [new GroupScheduleDayTime(1, new TimeOnly(15, 30), 1.5f, september1, null)])
         ]);
         _repository.Setup(r =>
@@ -245,6 +247,13 @@ public sealed class GroupHandlersTests
             TimeProviderAt(now ?? new DateTimeOffset(2026, 10, 1, 10, 0, 0, TimeSpan.Zero)));
     }
 
+    //today is 01.10.2026
+    private CreateGroupCommandHandler CreateHandler()
+    {
+        return new CreateGroupCommandHandler(_repository.Object, _unitOfWork.Object,
+            TimeProviderAt(new DateTimeOffset(2026, 10, 1, 10, 0, 0, TimeSpan.Zero)));
+    }
+
     [Fact]
     public async Task Create_AddsGroupWithRowsMarksItDirtyAndSaves()
     {
@@ -254,7 +263,7 @@ public sealed class GroupHandlersTests
             added = g;
             g.GrpId = 52;
         });
-        var handler = new CreateGroupCommandHandler(_repository.Object, _unitOfWork.Object);
+        CreateGroupCommandHandler handler = CreateHandler();
         GroupRequest request = ValidRequest(" 1011 ", OtherDate.AddHours(10), [Teacher(endDate: OtherDate.AddHours(3))],
             [Student(studentContractId: 20, note: "  შენიშვნა "), Student(studentContractId: 21, note: " ")],
             [DayTimePlace(weekDayId: 3, hoursCount: 2), DayTimePlace(weekDayId: 5)]);
@@ -299,7 +308,7 @@ public sealed class GroupHandlersTests
         Group? added = null;
         _repository.Setup(r => r.Add(It.IsAny<Group>())).Callback<Group>(g => added = g);
         _repository.Setup(r => r.GetDefaultSalarySchemeId(6, It.IsAny<CancellationToken>())).ReturnsAsync(14);
-        var handler = new CreateGroupCommandHandler(_repository.Object, _unitOfWork.Object);
+        CreateGroupCommandHandler handler = CreateHandler();
         GroupRequest request = ValidRequest(teachers:
         [
             Teacher(teacherContractId: 5, salarySchemaId: null, endDate: OtherDate),
@@ -318,7 +327,7 @@ public sealed class GroupHandlersTests
     [Fact]
     public async Task Create_SameContractInSeveralRowsWithoutScheme_IsLookedUpOnce()
     {
-        var handler = new CreateGroupCommandHandler(_repository.Object, _unitOfWork.Object);
+        CreateGroupCommandHandler handler = CreateHandler();
         GroupRequest request = ValidRequest(teachers:
         [
             Teacher(salarySchemaId: null, endDate: OtherDate), Teacher(salarySchemaId: null, startDate: OtherDate)
@@ -332,7 +341,7 @@ public sealed class GroupHandlersTests
     [Fact]
     public async Task Create_RowWithId_FailsWithoutSaving()
     {
-        var handler = new CreateGroupCommandHandler(_repository.Object, _unitOfWork.Object);
+        CreateGroupCommandHandler handler = CreateHandler();
 
         Result<int> result = await handler.Handle(new CreateGroupCommand(ValidRequest(students: [Student(7)])),
             CancellationToken.None);
@@ -345,7 +354,7 @@ public sealed class GroupHandlersTests
     [Fact]
     public async Task Create_WithoutStudents_LoadsNoContracts()
     {
-        var handler = new CreateGroupCommandHandler(_repository.Object, _unitOfWork.Object);
+        CreateGroupCommandHandler handler = CreateHandler();
 
         Result<int> result = await handler.Handle(new CreateGroupCommand(ValidRequest(students: [])),
             CancellationToken.None);
@@ -363,7 +372,7 @@ public sealed class GroupHandlersTests
     {
         // Arrange
         WithOtherGroupOfTeacher5();
-        var handler = new CreateGroupCommandHandler(_repository.Object, _unitOfWork.Object);
+        CreateGroupCommandHandler handler = CreateHandler();
 
         // Act
         Result<int> result = await handler.Handle(new CreateGroupCommand(ValidRequest()), CancellationToken.None);
@@ -383,10 +392,36 @@ public sealed class GroupHandlersTests
     public async Task Create_TeacherFreeAtThatTime_IsSaved()
     {
         WithOtherGroupOfTeacher5();
-        var handler = new CreateGroupCommandHandler(_repository.Object, _unitOfWork.Object);
+        CreateGroupCommandHandler handler = CreateHandler();
 
         Result<int> result = await handler.Handle(
             new CreateGroupCommand(ValidRequest(dayTimePlaces: [DayTimePlace(weekDayId: 3)])), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        VerifySaved(Times.Once());
+    }
+
+    //D203: group 7's Monday lesson at that time ended on 01.10, today, so the overlap of 15.09–01.10 is over
+    [Fact]
+    public async Task Create_TeacherBusyOnlyBeforeToday_IsSaved()
+    {
+        WithOtherGroupOfTeacher5(OtherDate);
+
+        Result<int> result = await CreateHandler().Handle(new CreateGroupCommand(ValidRequest()),
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        VerifySaved(Times.Once());
+    }
+
+    //D203: student 20 learned in group 8 at that time only until 01.10, today
+    [Fact]
+    public async Task Create_StudentBusyOnlyBeforeToday_IsSaved()
+    {
+        WithOtherGroupOfStudent20(studentEndDate: OtherDate);
+
+        Result<int> result = await CreateHandler().Handle(new CreateGroupCommand(ValidRequest()),
+            CancellationToken.None);
 
         Assert.True(result.IsSuccess);
         VerifySaved(Times.Once());
@@ -398,7 +433,7 @@ public sealed class GroupHandlersTests
     {
         // Arrange
         WithOtherGroupOfStudent20();
-        var handler = new CreateGroupCommandHandler(_repository.Object, _unitOfWork.Object);
+        CreateGroupCommandHandler handler = CreateHandler();
 
         // Act
         Result<int> result = await handler.Handle(new CreateGroupCommand(ValidRequest()), CancellationToken.None);
@@ -420,7 +455,7 @@ public sealed class GroupHandlersTests
     {
         WithOtherGroupOfTeacher5();
         WithOtherGroupOfStudent20();
-        var handler = new CreateGroupCommandHandler(_repository.Object, _unitOfWork.Object);
+        CreateGroupCommandHandler handler = CreateHandler();
 
         Result<int> result = await handler.Handle(new CreateGroupCommand(ValidRequest()), CancellationToken.None);
 
@@ -435,7 +470,7 @@ public sealed class GroupHandlersTests
     public async Task Create_WithoutStudents_IsSavedWithoutStudentOverlaps()
     {
         WithOtherGroupOfStudent20();
-        var handler = new CreateGroupCommandHandler(_repository.Object, _unitOfWork.Object);
+        CreateGroupCommandHandler handler = CreateHandler();
 
         Result<int> result = await handler.Handle(new CreateGroupCommand(ValidRequest(students: [])),
             CancellationToken.None);
@@ -659,7 +694,8 @@ public sealed class GroupHandlersTests
         VerifySaved(Times.Once());
     }
 
-    //D178: the saved group already overlapped group 7 on Mondays; any save of it is refused until that is fixed
+    //D178: the saved group already overlaps group 7 on Mondays, and the overlap goes on (D203); any save of it is
+    //refused until that is fixed
     [Fact]
     public async Task Update_TeacherTimesOverlap_IsConflictWithoutChangesEvenWhenItWasAlreadySaved()
     {
@@ -704,8 +740,8 @@ public sealed class GroupHandlersTests
         VerifySaved(Times.Once());
     }
 
-    //D179: student 20 of the saved group already learned in group 8 on Mondays at that time; any save of the group is
-    //refused until that is fixed
+    //D179: student 20 of the saved group already learns in group 8 on Mondays at that time, and the overlap goes on
+    //(D203); any save of the group is refused until that is fixed
     [Fact]
     public async Task Update_StudentTimesOverlap_IsConflictWithoutChangesEvenWhenItWasAlreadySaved()
     {
@@ -745,6 +781,43 @@ public sealed class GroupHandlersTests
 
         Assert.True(result.IsSuccess);
         Assert.Equal(OtherDate, group.GroupsByStudents.Single(s => s.GbsId == 200).EndDate);
+        VerifySaved(Times.Once());
+    }
+
+    //D203, like group 1202 on 20.11.2026: its teacher also had group 7's Monday lesson at that time until 01.10
+    //(15.09–01.10). That overlap is over, so a student's leaving is saved
+    [Fact]
+    public async Task Update_TeacherOverlapThatIsOver_IsSaved()
+    {
+        Group group = ExistingGroup();
+        WithExistingGroup(group);
+        WithOtherGroupOfTeacher5(OtherDate);
+        var leaveDate = new DateTime(2026, 11, 16, 0, 0, 0, DateTimeKind.Unspecified);
+        GroupRequest request = ValidRequest(teachers: [Teacher(100)],
+            students: [Student(200), Student(201, 21, endDate: leaveDate)], dayTimePlaces: [DayTimePlace(300)]);
+
+        Result result = await UpdateHandler(new DateTimeOffset(2026, 11, 20, 10, 0, 0, TimeSpan.Zero))
+            .Handle(new UpdateGroupCommand(42, request), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(leaveDate, group.GroupsByStudents.Single(s => s.GbsId == 201).EndDate);
+        VerifySaved(Times.Once());
+    }
+
+    //D203: student 20 of the saved group learned in group 8 on Mondays at that time only until 01.10, today
+    [Fact]
+    public async Task Update_StudentOverlapThatIsOver_IsSaved()
+    {
+        Group group = ExistingGroup();
+        WithExistingGroup(group);
+        WithOtherGroupOfStudent20(studentEndDate: OtherDate);
+        GroupRequest request = ValidRequest("1002", teachers: [Teacher(100)],
+            students: [Student(200), Student(201, 21)], dayTimePlaces: [DayTimePlace(300)]);
+
+        Result result = await UpdateHandler().Handle(new UpdateGroupCommand(42, request), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("1002", group.GroupCode);
         VerifySaved(Times.Once());
     }
 

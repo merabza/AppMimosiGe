@@ -119,6 +119,9 @@ public sealed class GroupsRepositoryExtensionsTests
 
     private static DateTime Day(int month, int day) => new(2026, month, day, 0, 0, 0, DateTimeKind.Unspecified);
 
+    //the last day of the overlap with group 7 (15.09–01.10), so it still counts (D203)
+    private static readonly DateTime Today = Day(9, 30);
+
     //group 42: contract 5 until 01.10 and again since 01.11, contract 6 in between; Mondays 15:00–16:30
     private static GroupSchedule Schedule() =>
         new(42, "1001", null, [
@@ -160,7 +163,7 @@ public sealed class GroupsRepositoryExtensionsTests
         WithOtherGroup(new TimeOnly(16, 30));
 
         // Act
-        Error? error = await _repository.Object.FindTeacherTimesOverlap(Schedule(), CancellationToken.None);
+        Error? error = await _repository.Object.FindTeacherTimesOverlap(Schedule(), Today, CancellationToken.None);
 
         // Assert
         Assert.Null(error);
@@ -168,6 +171,23 @@ public sealed class GroupsRepositoryExtensionsTests
             r => r.GetTeacherSchedules(
                 It.Is<IReadOnlyCollection<int>>(ids => ids.Count == 2 && ids.Contains(5) && ids.Contains(6)), 42,
                 It.IsAny<CancellationToken>()), Times.Once);
+        _repository.Verify(r => r.GetTeacherContracts(It.IsAny<CancellationToken>()), Times.Never);
+        _repository.Verify(r => r.GetWeekDays(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    //D203: on 01.10 the overlap with group 7 (15.09–01.10) is over
+    [Fact]
+    public async Task FindTeacherTimesOverlap_OverlapThatIsOver_IsNullWithoutLoadingNames()
+    {
+        // Arrange
+        WithOtherGroup(new TimeOnly(16, 0));
+
+        // Act
+        Error? error =
+            await _repository.Object.FindTeacherTimesOverlap(Schedule(), Day(10, 1), CancellationToken.None);
+
+        // Assert
+        Assert.Null(error);
         _repository.Verify(r => r.GetTeacherContracts(It.IsAny<CancellationToken>()), Times.Never);
         _repository.Verify(r => r.GetWeekDays(It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -184,7 +204,7 @@ public sealed class GroupsRepositoryExtensionsTests
         WithWeekDays();
 
         // Act
-        Error? error = await _repository.Object.FindTeacherTimesOverlap(Schedule(), CancellationToken.None);
+        Error? error = await _repository.Object.FindTeacherTimesOverlap(Schedule(), Today, CancellationToken.None);
 
         // Assert
         Assert.NotNull(error);
@@ -202,7 +222,7 @@ public sealed class GroupsRepositoryExtensionsTests
         WithOtherGroupOfStudent(new TimeOnly(16, 30));
 
         // Act
-        Error? error = await _repository.Object.FindStudentTimesOverlap(Schedule(), CancellationToken.None);
+        Error? error = await _repository.Object.FindStudentTimesOverlap(Schedule(), Today, CancellationToken.None);
 
         // Assert
         Assert.Null(error);
@@ -212,6 +232,25 @@ public sealed class GroupsRepositoryExtensionsTests
                 It.IsAny<CancellationToken>()), Times.Once);
         _repository.Verify(r => r.GetTeacherSchedules(It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<int>(),
             It.IsAny<CancellationToken>()), Times.Never);
+        _repository.Verify(
+            r => r.GetStudentContractNames(It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+        _repository.Verify(r => r.GetWeekDays(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    //D203: on 01.10 the overlap with group 7 (15.09–01.10) is over
+    [Fact]
+    public async Task FindStudentTimesOverlap_OverlapThatIsOver_IsNullWithoutLoadingNames()
+    {
+        // Arrange
+        WithOtherGroupOfStudent(new TimeOnly(16, 0));
+
+        // Act
+        Error? error =
+            await _repository.Object.FindStudentTimesOverlap(Schedule(), Day(10, 1), CancellationToken.None);
+
+        // Assert
+        Assert.Null(error);
         _repository.Verify(
             r => r.GetStudentContractNames(It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<CancellationToken>()),
             Times.Never);
@@ -231,7 +270,7 @@ public sealed class GroupsRepositoryExtensionsTests
         WithWeekDays();
 
         // Act
-        Error? error = await _repository.Object.FindStudentTimesOverlap(Schedule(), CancellationToken.None);
+        Error? error = await _repository.Object.FindStudentTimesOverlap(Schedule(), Today, CancellationToken.None);
 
         // Assert
         Assert.NotNull(error);

@@ -70,18 +70,20 @@ public sealed class UpdateGroupCommandHandler(
             await repository.GetDefaultSalarySchemes(request.Teachers, cancellationToken);
         Dictionary<int, TimeOnly> lessonStartTimes = await repository.GetLessonStartTimesById(cancellationToken);
 
-        //მასწავლებელს სხვა ჯგუფთან დროების გადაფარვა არ ექნება (რეპორტი r18, D178), არც უკვე არსებული. Access ამას
-        //მხოლოდ რეპორტით აჩვენებდა
+        //მასწავლებელს სხვა ჯგუფთან დროების გადაფარვა დღეს ან მომავალში არ ექნება (რეპორტი r18, D178), არც უკვე
+        //არსებული. დღემდე დასრულებული გადაფარვა შენახვას არ აბრკოლებს (D203, დროებით). Access ამას მხოლოდ რეპორტით
+        //აჩვენებდა
         Error? teacherTimesOverlap = await repository.FindTeacherTimesOverlap(
-            GroupMapper.ToTeacherSchedule(group.GrpId, request, lessonStartTimes), cancellationToken);
+            GroupMapper.ToTeacherSchedule(group.GrpId, request, lessonStartTimes), today, cancellationToken);
         if (teacherTimesOverlap is not null)
         {
             return Result.Failure(teacherTimesOverlap);
         }
 
-        //მოსწავლეს სხვა ჯგუფთან დროების გადაფარვა არ ექნება (რეპორტი r19, D179), არც უკვე არსებული
+        //მოსწავლეს სხვა ჯგუფთან დროების გადაფარვა დღეს ან მომავალში არ ექნება (რეპორტი r19, D179, D203), არც უკვე
+        //არსებული
         Error? studentTimesOverlap = await repository.FindStudentTimesOverlap(
-            GroupMapper.ToStudentSchedule(group.GrpId, request, lessonStartTimes), cancellationToken);
+            GroupMapper.ToStudentSchedule(group.GrpId, request, lessonStartTimes), today, cancellationToken);
         if (studentTimesOverlap is not null)
         {
             return Result.Failure(studentTimesOverlap);

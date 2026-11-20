@@ -11,18 +11,20 @@ namespace AppMimosiGe.Application.Groups.Models;
 ///     ჯგუფში მოქმედებს მისი სტრიქონიც და ამ კვირის დღის განრიგის სტრიქონიც, ჯგუფი კი გაუქმებული არ არის (თარიღისთვის
 ///     მოქმედი განრიგი, როგორც r18-სა და r19-ში). რეპორტებისგან განსხვავებით მეორე მხარე არ მოწმდება: მოსწავლის გარეშე
 ///     ჯგუფიც იკავებს მასწავლებლის დროს, მასწავლებლის გარეშე ჯგუფი კი მოსწავლისას. ჯგუფის რედაქტორი არ ინახავს ჯგუფს,
-///     რომლის მასწავლებელსაც ან მოსწავლესაც სხვა ჯგუფთან გადაფარვა აქვს, მათ შორის უკვე არსებულიც. ერთი ჯგუფის შიგნით
-///     გადაფარვას ვალიდატორი არ უშვებს (D55)
+///     რომლის მასწავლებელსაც ან მოსწავლესაც სხვა ჯგუფთან გადაფარვა აქვს დღეს ან მომავალში, მათ შორის უკვე არსებულიც.
+///     დღემდე დასრულებული გადაფარვა შენახვას არ აბრკოლებს (D203: დროებით, ბრძანებებზე გადასვლისას გამკაცრდება). ერთი
+///     ჯგუფის შიგნით გადაფარვას ვალიდატორი არ უშვებს (D55)
 /// </summary>
 public static class GroupScheduleOverlapsRule
 {
     /// <summary>
-    ///     schedule-ის (შენახვის შემდგომი მდგომარეობით) გადაფარვები სხვა ჯგუფებთან. იმავე GrpId-ის ჯგუფი არ ედრება.
+    ///     schedule-ის (შენახვის შემდგომი მდგომარეობით) გადაფარვები სხვა ჯგუფებთან, რომელთა დღეები today-ს ან მის
+    ///     შემდეგ დღეებსაც ეხება (D203); ასეთი გადაფარვა თავისი ყველა დღით ბრუნდება. იმავე GrpId-ის ჯგუფი არ ედრება.
     ///     რიგი: პირველი დღე, სხვა ჯგუფის კოდი, კვირის დღე, სხვა ჯგუფის დრო, კონტრაქტი (ერთ ჯგუფში ერთ დღეს ორი
     ///     მასწავლებელი ვალიდატორით ვერ იქნება, მოსწავლე კი ბევრია)
     /// </summary>
     public static IReadOnlyList<GroupScheduleOverlap> Find(GroupSchedule schedule,
-        IEnumerable<GroupSchedule> otherSchedules)
+        IEnumerable<GroupSchedule> otherSchedules, DateTime today)
     {
         List<Occupancy> own = [.. Occupancies(schedule)];
         List<GroupScheduleOverlap> overlaps = [];
@@ -41,9 +43,16 @@ public static class GroupScheduleOverlapsRule
 
         return
         [
-            .. overlaps.OrderBy(o => o.FromDate).ThenBy(o => o.OtherGroupCode, StringComparer.Ordinal)
-                .ThenBy(o => o.WeekDayId).ThenBy(o => o.OtherStartTime).ThenBy(o => o.ContractId)
+            .. overlaps.Where(o => IsCurrentOrFuture(o, today)).OrderBy(o => o.FromDate)
+                .ThenBy(o => o.OtherGroupCode, StringComparer.Ordinal).ThenBy(o => o.WeekDayId)
+                .ThenBy(o => o.OtherStartTime).ThenBy(o => o.ContractId)
         ];
+    }
+
+    //გადაფარვის დღეებიდან [FromDate, ToDate) ერთი მაინც today-ა ან მის შემდეგაა
+    private static bool IsCurrentOrFuture(GroupScheduleOverlap overlap, DateTime today)
+    {
+        return GroupPeriods.Overlap(overlap.FromDate, overlap.ToDate, today, null);
     }
 
     //წევრის (მასწავლებლის ან მოსწავლის) სტრიქონი × განრიგის სტრიქონი, თუ მათ საერთო დღე აქვთ

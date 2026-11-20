@@ -36,14 +36,15 @@ public static class GroupsRepositoryExtensions
 
     /// <summary>
     ///     მასწავლებლების დროების შემოწმება შენახვამდე (GroupScheduleOverlapsRule, D178): ჯგუფის მასწავლებლების განრიგი
-    ///     შენახვის შემდეგ მათ სხვა ჯგუფებს ედრება. აბრუნებს შეცდომას გადაფარვების აღწერებით, ან null-ს, თუ გადაფარვა არ არის
+    ///     შენახვის შემდეგ მათ სხვა ჯგუფებს ედრება; today-მდე დასრულებული გადაფარვა არ ითვლება (D203). აბრუნებს შეცდომას
+    ///     გადაფარვების აღწერებით, ან null-ს, თუ გადაფარვა არ არის
     /// </summary>
     public static async Task<Error?> FindTeacherTimesOverlap(this IGroupsRepository repository,
-        GroupSchedule schedule, CancellationToken cancellationToken)
+        GroupSchedule schedule, DateTime today, CancellationToken cancellationToken)
     {
         List<GroupSchedule> otherSchedules = await repository.GetTeacherSchedules(ContractIds(schedule),
             schedule.GrpId, cancellationToken);
-        IReadOnlyList<GroupScheduleOverlap> overlaps = GroupScheduleOverlapsRule.Find(schedule, otherSchedules);
+        IReadOnlyList<GroupScheduleOverlap> overlaps = GroupScheduleOverlapsRule.Find(schedule, otherSchedules, today);
         if (overlaps.Count == 0)
         {
             return null;
@@ -57,14 +58,15 @@ public static class GroupsRepositoryExtensions
 
     /// <summary>
     ///     მოსწავლეების დროების შემოწმება შენახვამდე (GroupScheduleOverlapsRule, D179): ჯგუფის მოსწავლეების განრიგი
-    ///     შენახვის შემდეგ მათ სხვა ჯგუფებს ედრება. აბრუნებს შეცდომას გადაფარვების აღწერებით, ან null-ს, თუ გადაფარვა არ არის
+    ///     შენახვის შემდეგ მათ სხვა ჯგუფებს ედრება; today-მდე დასრულებული გადაფარვა არ ითვლება (D203). აბრუნებს შეცდომას
+    ///     გადაფარვების აღწერებით, ან null-ს, თუ გადაფარვა არ არის
     /// </summary>
     public static async Task<Error?> FindStudentTimesOverlap(this IGroupsRepository repository,
-        GroupSchedule schedule, CancellationToken cancellationToken)
+        GroupSchedule schedule, DateTime today, CancellationToken cancellationToken)
     {
         List<GroupSchedule> otherSchedules = await repository.GetStudentSchedules(ContractIds(schedule),
             schedule.GrpId, cancellationToken);
-        IReadOnlyList<GroupScheduleOverlap> overlaps = GroupScheduleOverlapsRule.Find(schedule, otherSchedules);
+        IReadOnlyList<GroupScheduleOverlap> overlaps = GroupScheduleOverlapsRule.Find(schedule, otherSchedules, today);
         if (overlaps.Count == 0)
         {
             return null;
