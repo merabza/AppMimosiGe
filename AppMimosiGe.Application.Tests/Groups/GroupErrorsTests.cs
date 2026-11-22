@@ -115,6 +115,10 @@ public sealed class GroupErrorsTests
         {
             GroupErrors.FilterSortRequestIsInvalid, ErrorType.Problem,
             "სიის ფილტრის ან დალაგების პარამეტრები არასწორია"
+        },
+        {
+            GroupErrors.GroupsAreManagedByOrders, ErrorType.Conflict,
+            "ჯგუფი ჯგუფის ფორმით აღარ იქმნება, არ იცვლება და არ იშლება: ჯგუფის ყოველი ცვლილება ბრძანებით კეთდება"
         }
     };
 
