@@ -648,9 +648,9 @@ public sealed class GroupsRepositoryTests : IDisposable
     }
 
     //D178: contract 1 teaches in groups 1 (row 11) and 2 (row 13); group 1's row 12 of contract 2 is left out, its whole
-    //schedule comes with the start times
+    //schedule comes with the start times. The other side is every student row of the group (D201)
     [Fact]
-    public async Task GetTeacherSchedules_ReturnsTheGroupsOfTheContractsWithOnlyTheirTeacherRows()
+    public async Task GetTeacherSchedules_ReturnsTheGroupsOfTheContractsWithOnlyTheirTeacherRowsAndAllStudentPeriods()
     {
         List<GroupSchedule> result = [.. (await _repository.GetTeacherSchedules([1], 0)).OrderBy(g => g.GrpId)];
 
@@ -663,10 +663,15 @@ public sealed class GroupsRepositoryTests : IDisposable
             new GroupScheduleDayTime(1, new TimeOnly(8, 0), 2f, Date(8, 1), Date(9, 1)),
             new GroupScheduleDayTime(3, new TimeOnly(8, 30), 1.5f, Date(9, 1), null)
         ], group1.DayTimes.OrderBy(d => d.WeekDayId));
+        Assert.Equal([
+            new GroupSchedulePeriod(Date(9, 1), null), new GroupSchedulePeriod(Date(9, 1), Today),
+            new GroupSchedulePeriod(Date(10, 1), null)
+        ], group1.OtherSidePeriods.OrderBy(p => p.StartDate).ThenBy(p => p.EndDate ?? DateTime.MinValue));
         GroupSchedule group2 = result[1];
         Assert.Equal(Today, group2.VoidDate);
         Assert.Equal([new GroupScheduleMember(1, Date(9, 1), null)], group2.Members);
         Assert.Empty(group2.DayTimes);
+        Assert.Equal([new GroupSchedulePeriod(Date(9, 1), null)], group2.OtherSidePeriods);
     }
 
     //group 1 is the edited group; group 2 has no row of contract 2
@@ -678,12 +683,14 @@ public sealed class GroupsRepositoryTests : IDisposable
         GroupSchedule group = Assert.Single(result);
         Assert.Equal(3, group.GrpId);
         Assert.Equal([new GroupScheduleMember(2, Date(10, 5), null)], group.Members);
+        Assert.Equal([new GroupSchedulePeriod(new DateTime(2025, 9, 1, 0, 0, 0, DateTimeKind.Unspecified), null)],
+            group.OtherSidePeriods);
     }
 
     //D179: contract 10 learns in groups 1 (row 21) and 2 (row 24); group 1's rows 22 and 23 of contract 11 are left out,
-    //its whole schedule comes with the start times
+    //its whole schedule comes with the start times. The other side is every teacher row of the group (D201)
     [Fact]
-    public async Task GetStudentSchedules_ReturnsTheGroupsOfTheContractsWithOnlyTheirStudentRows()
+    public async Task GetStudentSchedules_ReturnsTheGroupsOfTheContractsWithOnlyTheirStudentRowsAndAllTeacherPeriods()
     {
         List<GroupSchedule> result = [.. (await _repository.GetStudentSchedules([10], 0)).OrderBy(g => g.GrpId)];
 
@@ -696,11 +703,14 @@ public sealed class GroupsRepositoryTests : IDisposable
             new GroupScheduleDayTime(1, new TimeOnly(8, 0), 2f, Date(8, 1), Date(9, 1)),
             new GroupScheduleDayTime(3, new TimeOnly(8, 30), 1.5f, Date(9, 1), null)
         ], group1.DayTimes.OrderBy(d => d.WeekDayId));
+        Assert.Equal([new GroupSchedulePeriod(Date(9, 1), Date(9, 20)), new GroupSchedulePeriod(Date(9, 20), null)],
+            group1.OtherSidePeriods.OrderBy(p => p.StartDate));
         GroupSchedule group2 = result[1];
         Assert.Equal("201", group2.GroupCode);
         Assert.Equal(Today, group2.VoidDate);
         Assert.Equal([new GroupScheduleMember(10, Date(9, 1), null)], group2.Members);
         Assert.Empty(group2.DayTimes);
+        Assert.Equal([new GroupSchedulePeriod(Date(9, 1), null)], group2.OtherSidePeriods);
         Assert.Empty(_context.ChangeTracker.Entries());
     }
 
@@ -714,6 +724,7 @@ public sealed class GroupsRepositoryTests : IDisposable
         Assert.Equal(3, group.GrpId);
         Assert.Equal([new GroupScheduleMember(12, new DateTime(2025, 9, 1, 0, 0, 0, DateTimeKind.Unspecified), null)],
             group.Members);
+        Assert.Equal([new GroupSchedulePeriod(Date(10, 5), null)], group.OtherSidePeriods);
         Assert.Equal([
             new GroupScheduleMember(11, Date(9, 1), Today), new GroupScheduleMember(11, Date(10, 1), null)
         ], Assert.Single(await _repository.GetStudentSchedules([11], 0)).Members.OrderBy(m => m.StartDate));

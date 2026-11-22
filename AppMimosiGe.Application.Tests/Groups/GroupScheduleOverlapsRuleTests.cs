@@ -11,6 +11,10 @@ public sealed class GroupScheduleOverlapsRuleTests
     private const int Monday = 1;
     private const int Wednesday = 3;
 
+    //by default a group has the other side all year, so it is active whenever its member and schedule rows are (D201)
+    private static readonly GroupSchedulePeriod[] AllYear = [Period(Day(1, 1))];
+    private static readonly GroupSchedulePeriod[] Nobody = [];
+
     private static DateTime Day(int month, int day) => new(2026, month, day, 0, 0, 0, DateTimeKind.Unspecified);
 
     //a teacher or student row: the rule is the same for both (D178, D179)
@@ -21,9 +25,12 @@ public sealed class GroupScheduleOverlapsRuleTests
         int weekDayId = Monday, DateTime? startDate = null, DateTime? endDate = null) =>
         new(weekDayId, new TimeOnly(hour, minute), hoursCount, startDate ?? Day(9, 1), endDate);
 
+    //the other side's row (a student when the teachers are checked, a teacher when the students are, D201)
+    private static GroupSchedulePeriod Period(DateTime startDate, DateTime? endDate = null) => new(startDate, endDate);
+
     private static GroupSchedule Group(int grpId, string groupCode, GroupScheduleMember[] members,
-        GroupScheduleDayTime[] dayTimes, DateTime? voidDate = null) =>
-        new(grpId, groupCode, voidDate, members, dayTimes);
+        GroupScheduleDayTime[] dayTimes, DateTime? voidDate = null, GroupSchedulePeriod[]? otherSide = null) =>
+        new(grpId, groupCode, voidDate, members, dayTimes, otherSide ?? AllYear);
 
     //the saved group 42: contract 5 since 01.09, Monday 15:00–16:30 since 01.09
     private static GroupSchedule Edited(DateTime? voidDate = null) =>
@@ -205,6 +212,112 @@ public sealed class GroupScheduleOverlapsRuleTests
     {
         Assert.Empty(Find(Group(42, "1001", [], [DayTime(15)]), Group(7, "1002", [Member()], [DayTime(15)])));
         Assert.Empty(Find(Group(42, "1001", [Member()], []), Group(7, "1002", [Member()], [DayTime(15)])));
+    }
+
+    //D201: a group without the other side (no student when the teachers are checked, no teacher when the students are)
+    //is inactive and takes no one's time, whichever of the two groups it is
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Find_GroupWithoutTheOtherSide_TakesNoTime(bool editedGroup)
+    {
+        GroupSchedule edited = Group(42, "1001", [Member()], [DayTime(15)], otherSide: editedGroup ? Nobody : AllYear);
+        GroupSchedule other = Group(7, "1002", [Member()], [DayTime(15)], otherSide: editedGroup ? AllYear : Nobody);
+
+        Assert.Empty(Find(edited, other));
+    }
+
+    //D201: the other group has students only from 15.09 until 05.10, so its teacher is busy only then
+    [Fact]
+    public void Find_OtherSideOfTheOtherGroupCoversPartOfThePeriod_IsAnOverlapOnlyForThatPart()
+    {
+        GroupScheduleOverlap overlap = Assert.Single(Find(Edited(),
+            Group(7, "1002", [Member()], [DayTime(15)], otherSide: [Period(Day(9, 15), Day(10, 5))])));
+
+        Assert.Equal(Day(9, 15), overlap.FromDate);
+        Assert.Equal(Day(10, 5), overlap.ToDate);
+    }
+
+    //D201: the edited group gets its first student on 01.10
+    [Fact]
+    public void Find_OtherSideOfTheEditedGroupCoversPartOfThePeriod_IsAnOverlapOnlyForThatPart()
+    {
+        GroupSchedule edited = Group(42, "1001", [Member()], [DayTime(15)], otherSide: [Period(Day(10, 1))]);
+
+        GroupScheduleOverlap overlap = Assert.Single(Find(edited, Group(7, "1002", [Member()], [DayTime(15)])));
+
+        Assert.Equal(Day(10, 1), overlap.FromDate);
+        Assert.Null(overlap.ToDate);
+    }
+
+    //D201: both groups are active only from 15.10 (group 7's students) until 01.11 (group 42's), whichever is saved
+    [Fact]
+    public void Find_OtherSidesOfBothGroups_GiveTheSameDaysFromEitherGroup()
+    {
+        GroupSchedule group42 = Group(42, "1001", [Member()], [DayTime(15)],
+            otherSide: [Period(Day(9, 1), Day(11, 1))]);
+        GroupSchedule group7 = Group(7, "1002", [Member()], [DayTime(15, 30)], otherSide: [Period(Day(10, 15))]);
+
+        GroupScheduleOverlap from42 = Assert.Single(Find(group42, group7));
+        GroupScheduleOverlap from7 = Assert.Single(Find(group7, group42));
+
+        Assert.Equal(("1002", Day(10, 15), (DateTime?)Day(11, 1)),
+            (from42.OtherGroupCode, from42.FromDate, from42.ToDate));
+        Assert.Equal(("1001", Day(10, 15), (DateTime?)Day(11, 1)),
+            (from7.OtherGroupCode, from7.FromDate, from7.ToDate));
+    }
+
+    //D201: one student until 01.10, another from that day, a third from 15.09 until 15.10, listed in no order: the group
+    //has a student every day, so the overlap is one period
+    [Fact]
+    public void Find_OtherSideRowsThatFollowOrOverlapEachOther_AreOnePeriod()
+    {
+        GroupScheduleOverlap overlap = Assert.Single(Find(Edited(), Group(7, "1002", [Member()], [DayTime(15)],
+            otherSide: [Period(Day(10, 1)), Period(Day(9, 15), Day(10, 15)), Period(Day(9, 1), Day(10, 1))])));
+
+        Assert.Equal(Day(9, 1), overlap.FromDate);
+        Assert.Null(overlap.ToDate);
+    }
+
+    //D201: a row inside a longer one adds no day: the group has students from 01.09 until 01.11
+    [Fact]
+    public void Find_OtherSideRowInsideAnother_EndsWithTheLongerOne()
+    {
+        GroupScheduleOverlap overlap = Assert.Single(Find(Edited(), Group(7, "1002", [Member()], [DayTime(15)],
+            otherSide: [Period(Day(9, 1), Day(11, 1)), Period(Day(9, 15), Day(10, 1))])));
+
+        Assert.Equal(Day(9, 1), overlap.FromDate);
+        Assert.Equal(Day(11, 1), overlap.ToDate);
+    }
+
+    //D201: group 7 has no student from 01.10 until 15.10, so the overlap is two periods
+    [Fact]
+    public void Find_GapInTheOtherSide_SplitsTheOverlap()
+    {
+        (DateTime, DateTime?)[] expected = [(Day(9, 1), Day(10, 1)), (Day(10, 15), null)];
+
+        IReadOnlyList<GroupScheduleOverlap> overlaps = Find(Edited(), Group(7, "1002", [Member()], [DayTime(15)],
+            otherSide: [Period(Day(9, 1), Day(10, 1)), Period(Day(10, 15), Day(11, 1)), Period(Day(11, 1))]));
+
+        Assert.Equal(expected, overlaps.Select(o => (o.FromDate, o.ToDate)));
+    }
+
+    //D201 and D203: on 20.10 the first period of the overlap is over, so only the second one counts
+    [Fact]
+    public void Find_GapInTheOtherSide_OnlyThePeriodThatIsNotOverCounts()
+    {
+        GroupScheduleOverlap overlap = Assert.Single(FindOn(Day(10, 20), Edited(), Group(7, "1002", [Member()],
+            [DayTime(15)], otherSide: [Period(Day(9, 1), Day(10, 1)), Period(Day(11, 1))])));
+
+        Assert.Equal(Day(11, 1), overlap.FromDate);
+    }
+
+    //D201 and D203: group 7 has had no student since 01.10, so on 20.11 its teacher's overlap is over
+    [Fact]
+    public void Find_OtherSideThatEndedBeforeToday_IsNoOverlap()
+    {
+        Assert.Empty(FindOn(Day(11, 20), Edited(),
+            Group(7, "1002", [Member()], [DayTime(15)], otherSide: [Period(Day(9, 1), Day(10, 1))])));
     }
 
     //every member row of the edited group: contract 5 until 01.10, then contract 6 on Mondays and Wednesdays

@@ -192,14 +192,15 @@ public sealed class GroupHandlersTests
     }
 
     //group 7 ("1002"), where teacher contract 5 teaches on Mondays 15:30–17:00 since 01.09 (until the given day, if
-    //any), and the names of the error
-    private void WithOtherGroupOfTeacher5(DateTime? mondayEndDate = null)
+    //any) to students since 01.09 (unless the group has none, D201), and the names of the error
+    private void WithOtherGroupOfTeacher5(DateTime? mondayEndDate = null, bool withStudents = true)
     {
         var september1 = new DateTime(2026, 9, 1, 0, 0, 0, DateTimeKind.Unspecified);
         _repository.Setup(r => r.GetTeacherSchedules(It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<int>(),
             It.IsAny<CancellationToken>())).ReturnsAsync([
             new GroupSchedule(7, "1002", null, [new GroupScheduleMember(5, september1, null)],
-                [new GroupScheduleDayTime(1, new TimeOnly(15, 30), 1.5f, september1, mondayEndDate)])
+                [new GroupScheduleDayTime(1, new TimeOnly(15, 30), 1.5f, september1, mondayEndDate)],
+                withStudents ? [new GroupSchedulePeriod(september1, null)] : [])
         ]);
         _repository.Setup(r => r.GetTeacherContracts(It.IsAny<CancellationToken>()))
             .ReturnsAsync([new GroupTeacherContractLookupResponse(5, "Alpha Ann / T5", 8)]);
@@ -215,15 +216,18 @@ public sealed class GroupHandlersTests
     }
 
     //group 8 ("1003"), where student contract 20 learns on Mondays 15:30–17:00 from the given day (01.09 by default)
-    //until the given day (if any), and the names of the error
-    private void WithOtherGroupOfStudent20(DateTime? studentStartDate = null, DateTime? studentEndDate = null)
+    //until the given day (if any) with a teacher since 01.09 (unless the group has none, D201), and the names of the
+    //error
+    private void WithOtherGroupOfStudent20(DateTime? studentStartDate = null, DateTime? studentEndDate = null,
+        bool withTeacher = true)
     {
         var september1 = new DateTime(2026, 9, 1, 0, 0, 0, DateTimeKind.Unspecified);
         _repository.Setup(r => r.GetStudentSchedules(It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<int>(),
             It.IsAny<CancellationToken>())).ReturnsAsync([
             new GroupSchedule(8, "1003", null,
                 [new GroupScheduleMember(20, studentStartDate ?? september1, studentEndDate)],
-                [new GroupScheduleDayTime(1, new TimeOnly(15, 30), 1.5f, september1, null)])
+                [new GroupScheduleDayTime(1, new TimeOnly(15, 30), 1.5f, september1, null)],
+                withTeacher ? [new GroupSchedulePeriod(september1, null)] : [])
         ]);
         _repository.Setup(r =>
                 r.GetStudentContractNames(It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<CancellationToken>()))
@@ -477,6 +481,60 @@ public sealed class GroupHandlersTests
 
         Assert.True(result.IsSuccess);
         VerifyStudentSchedulesExcept(0);
+        VerifySaved(Times.Once());
+    }
+
+    //D201: a new group without students is inactive, so it takes no time of its teacher, who teaches group 7 then
+    [Fact]
+    public async Task Create_WithoutStudents_TakesNoTimeOfTheTeacher()
+    {
+        WithOtherGroupOfTeacher5();
+
+        Result<int> result = await CreateHandler().Handle(new CreateGroupCommand(ValidRequest(students: [])),
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        VerifyTeacherSchedulesOfContract5Except(0);
+        VerifySaved(Times.Once());
+    }
+
+    //D201: group 7 has no students, so its teacher is free at that time
+    [Fact]
+    public async Task Create_TeacherOfAnotherGroupWithoutStudents_IsSaved()
+    {
+        WithOtherGroupOfTeacher5(withStudents: false);
+
+        Result<int> result = await CreateHandler().Handle(new CreateGroupCommand(ValidRequest()),
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        VerifySaved(Times.Once());
+    }
+
+    //D201: a new group without a teacher is inactive, so it takes no time of its student, who learns in group 8 then
+    [Fact]
+    public async Task Create_WithoutTeacher_TakesNoTimeOfTheStudents()
+    {
+        WithOtherGroupOfStudent20();
+
+        Result<int> result = await CreateHandler().Handle(new CreateGroupCommand(ValidRequest(teachers: [])),
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        VerifyStudentSchedulesExcept(0, 20);
+        VerifySaved(Times.Once());
+    }
+
+    //D201: group 8 has no teacher, so its student is free at that time
+    [Fact]
+    public async Task Create_StudentOfAnotherGroupWithoutTeacher_IsSaved()
+    {
+        WithOtherGroupOfStudent20(withTeacher: false);
+
+        Result<int> result = await CreateHandler().Handle(new CreateGroupCommand(ValidRequest()),
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
         VerifySaved(Times.Once());
     }
 
@@ -819,6 +877,95 @@ public sealed class GroupHandlersTests
         Assert.True(result.IsSuccess);
         Assert.Equal("1002", group.GroupCode);
         VerifySaved(Times.Once());
+    }
+
+    //D201: the saved group's teacher also teaches group 7 at that time, but group 7 has no students
+    [Fact]
+    public async Task Update_TeacherOfAnotherGroupWithoutStudents_IsSaved()
+    {
+        Group group = ExistingGroup();
+        WithExistingGroup(group);
+        WithOtherGroupOfTeacher5(withStudents: false);
+        GroupRequest request = ValidRequest("1002", teachers: [Teacher(100)],
+            students: [Student(200), Student(201, 21)], dayTimePlaces: [DayTimePlace(300)]);
+
+        Result result = await UpdateHandler().Handle(new UpdateGroupCommand(42, request), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("1002", group.GroupCode);
+        VerifySaved(Times.Once());
+    }
+
+    //D201: student 20 of the saved group also learns in group 8 at that time, but group 8 has no teacher
+    [Fact]
+    public async Task Update_StudentOfAnotherGroupWithoutTeacher_IsSaved()
+    {
+        Group group = ExistingGroup();
+        WithExistingGroup(group);
+        WithOtherGroupOfStudent20(withTeacher: false);
+        GroupRequest request = ValidRequest("1002", teachers: [Teacher(100)],
+            students: [Student(200), Student(201, 21)], dayTimePlaces: [DayTimePlace(300)]);
+
+        Result result = await UpdateHandler().Handle(new UpdateGroupCommand(42, request), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("1002", group.GroupCode);
+        VerifySaved(Times.Once());
+    }
+
+    //D201 and D203: both students leave on 01.10, today. From then the group has none and takes no time of its teacher,
+    //so the teacher's overlap with group 7 (15.09–01.10) is over
+    [Fact]
+    public async Task Update_StudentsLeave_TheTeachersOverlapEndsWithThem()
+    {
+        Group group = ExistingGroup();
+        WithExistingGroup(group);
+        WithOtherGroupOfTeacher5();
+        GroupRequest request = ValidRequest(teachers: [Teacher(100)],
+            students: [Student(200, endDate: OtherDate), Student(201, 21, endDate: OtherDate)],
+            dayTimePlaces: [DayTimePlace(300)]);
+
+        Result result = await UpdateHandler().Handle(new UpdateGroupCommand(42, request), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.All(group.GroupsByStudents, s => Assert.Equal(OtherDate, s.EndDate));
+        VerifySaved(Times.Once());
+    }
+
+    //D201 and D203: the teacher leaves on 01.10, today. From then the group has none and takes no time of its students,
+    //so student 20's overlap with group 8 (15.09–01.10) is over
+    [Fact]
+    public async Task Update_TeacherLeaves_TheStudentsOverlapEndsWithTheTeacher()
+    {
+        Group group = ExistingGroup();
+        WithExistingGroup(group);
+        WithOtherGroupOfStudent20();
+        GroupRequest request = ValidRequest(teachers: [Teacher(100, endDate: OtherDate)],
+            students: [Student(200), Student(201, 21)], dayTimePlaces: [DayTimePlace(300)]);
+
+        Result result = await UpdateHandler().Handle(new UpdateGroupCommand(42, request), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(OtherDate, Assert.Single(group.GroupsByTeachers).EndDate);
+        VerifySaved(Times.Once());
+    }
+
+    //D201: the teacher leaves on 15.10, after today, so the overlap with group 8 (15.09–15.10) still blocks
+    [Fact]
+    public async Task Update_TeacherLeavesAfterToday_StudentOverlapStillBlocksUntilThen()
+    {
+        Group group = ExistingGroup();
+        WithExistingGroup(group);
+        WithOtherGroupOfStudent20();
+        GroupRequest request = ValidRequest(teachers: [Teacher(100, endDate: OtherDate.AddDays(14))],
+            students: [Student(200), Student(201, 21)], dayTimePlaces: [DayTimePlace(300)]);
+
+        Result result = await UpdateHandler().Handle(new UpdateGroupCommand(42, request), CancellationToken.None);
+
+        Assert.Equal(nameof(GroupErrors.StudentTimesOverlap), result.Error.Code);
+        Assert.Contains(": Gamma Gia / 6.020 — ჯგუფი 1003, ორშაბათი 15:30–17:00, 15.09.2026–15.10.2026. ",
+            result.Error.Description, StringComparison.Ordinal);
+        VerifySaved(Times.Never());
     }
 
     //D181: the Monday row 300 started on 15.09, before today (01.10), so its week day is not changed in place

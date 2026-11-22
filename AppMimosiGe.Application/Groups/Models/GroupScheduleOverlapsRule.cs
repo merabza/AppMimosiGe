@@ -8,12 +8,12 @@ namespace AppMimosiGe.Application.Groups.Models;
 ///     ჯგუფების განრიგის დროების გადაფარვის წესი: მასწავლებლებისა (რეპორტი r18 "მასწავლებლების დროების გადაფარვა",
 ///     D178) და მოსწავლეების (რეპორტი r19 "მოსწავლეების დროების გადაფარვა", D179). მასწავლებელს ან მოსწავლეს ორ ჯგუფში
 ///     კვირის ერთსა და იმავე დღეს დროით გადამფარავი გაკვეთილი [დაწყება, დაწყება + საათები) აქვს იმ დღეებში, როცა ორივე
-///     ჯგუფში მოქმედებს მისი სტრიქონიც და ამ კვირის დღის განრიგის სტრიქონიც, ჯგუფი კი გაუქმებული არ არის (თარიღისთვის
-///     მოქმედი განრიგი, როგორც r18-სა და r19-ში). რეპორტებისგან განსხვავებით მეორე მხარე არ მოწმდება: მოსწავლის გარეშე
-///     ჯგუფიც იკავებს მასწავლებლის დროს, მასწავლებლის გარეშე ჯგუფი კი მოსწავლისას. ჯგუფის რედაქტორი არ ინახავს ჯგუფს,
-///     რომლის მასწავლებელსაც ან მოსწავლესაც სხვა ჯგუფთან გადაფარვა აქვს დღეს ან მომავალში, მათ შორის უკვე არსებულიც.
-///     დღემდე დასრულებული გადაფარვა შენახვას არ აბრკოლებს (D203: დროებით, ბრძანებებზე გადასვლისას გამკაცრდება). ერთი
-///     ჯგუფის შიგნით გადაფარვას ვალიდატორი არ უშვებს (D55)
+///     ჯგუფში მოქმედებს მისი სტრიქონიც და ამ კვირის დღის განრიგის სტრიქონიც, ორივე ჯგუფი კი მოქმედია (D201, როგორც
+///     r18-სა და r19-ში): გაუქმებული არ არის და მეორე მხარე ჰყავს, ანუ მასწავლებლის შემოწმებისას ერთი მოსწავლე მაინც,
+///     მოსწავლისას მასწავლებელი. უმოქმედო ჯგუფი არავის დროს არ იკავებს. ჯგუფის რედაქტორი არ ინახავს ჯგუფს, რომლის
+///     მასწავლებელსაც ან მოსწავლესაც სხვა ჯგუფთან გადაფარვა აქვს დღეს ან მომავალში, მათ შორის უკვე არსებულიც. დღემდე
+///     დასრულებული გადაფარვა შენახვას არ აბრკოლებს (D203: დროებით, ბრძანებებზე გადასვლისას გამკაცრდება). ერთი ჯგუფის
+///     შიგნით გადაფარვას ვალიდატორი არ უშვებს (D55)
 /// </summary>
 public static class GroupScheduleOverlapsRule
 {
@@ -55,23 +55,57 @@ public static class GroupScheduleOverlapsRule
         return GroupPeriods.Overlap(overlap.FromDate, overlap.ToDate, today, null);
     }
 
-    //წევრის (მასწავლებლის ან მოსწავლის) სტრიქონი × განრიგის სტრიქონი, თუ მათ საერთო დღე აქვთ
+    //წევრის (მასწავლებლის ან მოსწავლის) სტრიქონი × განრიგის სტრიქონი × მეორე მხარის უწყვეტი პერიოდი, თუ მათ საერთო
+    //დღე აქვთ (D201). მეორე მხარის წყვეტა წევრის გაკვეთილს, და მასთან გადაფარვასაც, ორ მონაკვეთად ყოფს
     private static IEnumerable<Occupancy> Occupancies(GroupSchedule schedule)
     {
+        List<GroupSchedulePeriod> otherSide = Union(schedule.OtherSidePeriods);
         return schedule.Members
-            .SelectMany(_ => schedule.DayTimes,
-                (member, dayTime) => CreateOccupancy(member, dayTime, schedule.VoidDate))
+            .SelectMany(member => schedule.DayTimes.SelectMany(dayTime =>
+                otherSide.Select(period => CreateOccupancy(member, dayTime, period, schedule.VoidDate))))
             .Where(o => o.EndDate is null || o.StartDate < o.EndDate);
     }
 
-    //დღეები [StartDate, EndDate), როცა წევრის და განრიგის სტრიქონი ორივე მოქმედებს და ჯგუფი გაუქმებული არ არის.
-    //EndDate null დაუსრულებელს ნიშნავს: nullable-ის Min null-ებს არ ითვლის
+    //დღეები [StartDate, EndDate), როცა წევრის და განრიგის სტრიქონი ორივე მოქმედებს, ჯგუფს მეორე მხარე ჰყავს და
+    //გაუქმებული არ არის. EndDate null დაუსრულებელს ნიშნავს: nullable-ის Min null-ებს არ ითვლის
     private static Occupancy CreateOccupancy(GroupScheduleMember member, GroupScheduleDayTime dayTime,
-        DateTime? voidDate)
+        GroupSchedulePeriod otherSide, DateTime? voidDate)
     {
-        DateTime[] starts = [member.StartDate, dayTime.StartDate];
-        DateTime?[] ends = [member.EndDate, dayTime.EndDate, voidDate];
+        DateTime[] starts = [member.StartDate, dayTime.StartDate, otherSide.StartDate];
+        DateTime?[] ends = [member.EndDate, dayTime.EndDate, otherSide.EndDate, voidDate];
         return new Occupancy(member.ContractId, dayTime, starts.Max(), ends.Min());
+    }
+
+    //მეორე მხარის სტრიქონების დღეები უწყვეტ პერიოდებად: გადამფარავი და ერთმანეთის მომდევნო სტრიქონები ერთდება, რომ
+    //ერთმანეთის შემცვლელმა მოსწავლეებმა ან მასწავლებლებმა გადაფარვა არ დაყონ
+    private static List<GroupSchedulePeriod> Union(IEnumerable<GroupSchedulePeriod> periods)
+    {
+        List<GroupSchedulePeriod> union = [];
+        foreach (GroupSchedulePeriod period in periods.OrderBy(p => p.StartDate))
+        {
+            GroupSchedulePeriod? last = union.LastOrDefault();
+            if (last is not null && (last.EndDate is null || period.StartDate <= last.EndDate))
+            {
+                union[^1] = last with { EndDate = LaterEnd(last.EndDate, period.EndDate) };
+            }
+            else
+            {
+                union.Add(period);
+            }
+        }
+
+        return union;
+    }
+
+    //null დაუსრულებელს ნიშნავს
+    private static DateTime? LaterEnd(DateTime? end1, DateTime? end2)
+    {
+        if (end1 is null || end2 is null)
+        {
+            return null;
+        }
+
+        return end1 > end2 ? end1 : end2;
     }
 
     //დღეები, როცა ორივე გაკვეთილი განრიგშია: გვიანი დაწყებიდან ადრეულ დასრულებამდე

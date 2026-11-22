@@ -122,18 +122,21 @@ public sealed class GroupsRepositoryExtensionsTests
     //the last day of the overlap with group 7 (15.09–01.10), so it still counts (D203)
     private static readonly DateTime Today = Day(9, 30);
 
-    //group 42: contract 5 until 01.10 and again since 01.11, contract 6 in between; Mondays 15:00–16:30
+    //group 42: contract 5 until 01.10 and again since 01.11, contract 6 in between; Mondays 15:00–16:30; the other side
+    //(D201) all the time
     private static GroupSchedule Schedule() =>
         new(42, "1001", null, [
             new GroupScheduleMember(5, StartDate, Day(10, 1)), new GroupScheduleMember(6, Day(10, 1), Day(11, 1)),
             new GroupScheduleMember(5, Day(11, 1), null)
-        ], [new GroupScheduleDayTime(1, new TimeOnly(15, 0), 1.5f, StartDate, null)]);
+        ], [new GroupScheduleDayTime(1, new TimeOnly(15, 0), 1.5f, StartDate, null)],
+        [new GroupSchedulePeriod(StartDate, null)]);
 
-    //group 7 ("1002"), where contract 5 teaches or learns on Mondays at the given time until 01.10
+    //group 7 ("1002"), where contract 5 teaches or learns on Mondays at the given time until 01.10, with the other side
     private static List<GroupSchedule> OtherSchedules(TimeOnly mondayStartTime) =>
     [
         new(7, "1002", null, [new GroupScheduleMember(5, Day(9, 1), Day(10, 1))],
-            [new GroupScheduleDayTime(1, mondayStartTime, 1.5f, Day(9, 1), null)])
+            [new GroupScheduleDayTime(1, mondayStartTime, 1.5f, Day(9, 1), null)],
+            [new GroupSchedulePeriod(Day(9, 1), null)])
     ];
 
     private void WithOtherGroup(TimeOnly mondayStartTime)

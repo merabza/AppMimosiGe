@@ -58,12 +58,12 @@ public interface IGroupsRepository
     Task<Dictionary<int, TimeOnly>> GetLessonStartTimesById(CancellationToken cancellationToken = default);
 
     //მასწავლებლების დროების შესამოწმებლად (D178): ჯგუფები exceptGrpId-ის გარდა, სადაც ეს კონტრაქტები ასწავლის, მხოლოდ
-    //ამ კონტრაქტების მასწავლებლის სტრიქონებით და ჯგუფის მთელი განრიგით
+    //ამ კონტრაქტების მასწავლებლის სტრიქონებით, ჯგუფის მთელი განრიგით და ყველა მოსწავლის პერიოდით (მეორე მხარე, D201)
     Task<List<GroupSchedule>> GetTeacherSchedules(IReadOnlyCollection<int> teacherContractIds, int exceptGrpId,
         CancellationToken cancellationToken = default);
 
     //მოსწავლეების დროების შესამოწმებლად (D179): ჯგუფები exceptGrpId-ის გარდა, სადაც ეს კონტრაქტები სწავლობს, მხოლოდ
-    //ამ კონტრაქტების მოსწავლის სტრიქონებით და ჯგუფის მთელი განრიგით
+    //ამ კონტრაქტების მოსწავლის სტრიქონებით, ჯგუფის მთელი განრიგით და ყველა მასწავლებლის პერიოდით (მეორე მხარე, D201)
     Task<List<GroupSchedule>> GetStudentSchedules(IReadOnlyCollection<int> studentContractIds, int exceptGrpId,
         CancellationToken cancellationToken = default);
 

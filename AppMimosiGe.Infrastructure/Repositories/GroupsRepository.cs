@@ -194,7 +194,9 @@ public sealed class GroupsRepository(IMimosiGeDbContext context) : IGroupsReposi
                     g.GroupsByTeachers.Where(t => teacherContractIds.Contains(t.TeacherContractId)).Select(t =>
                         new GroupScheduleMember(t.TeacherContractId, t.StartDate, t.EndDate)).ToList(),
                     g.GroupDayTimePlaces.Select(d => new GroupScheduleDayTime(d.WeekDayId, d.LessonStartTime.LstTime,
-                        d.HoursCount, d.StartDate, d.EndDate)).ToList())).ToListAsync(cancellationToken);
+                        d.HoursCount, d.StartDate, d.EndDate)).ToList(),
+                    g.GroupsByStudents.Select(s => new GroupSchedulePeriod(s.StartDate, s.EndDate)).ToList()))
+            .ToListAsync(cancellationToken);
     }
 
     public Task<List<GroupSchedule>> GetStudentSchedules(IReadOnlyCollection<int> studentContractIds,
@@ -207,7 +209,9 @@ public sealed class GroupsRepository(IMimosiGeDbContext context) : IGroupsReposi
                     g.GroupsByStudents.Where(s => studentContractIds.Contains(s.StudentContractId)).Select(s =>
                         new GroupScheduleMember(s.StudentContractId, s.StartDate, s.EndDate)).ToList(),
                     g.GroupDayTimePlaces.Select(d => new GroupScheduleDayTime(d.WeekDayId, d.LessonStartTime.LstTime,
-                        d.HoursCount, d.StartDate, d.EndDate)).ToList())).ToListAsync(cancellationToken);
+                        d.HoursCount, d.StartDate, d.EndDate)).ToList(),
+                    g.GroupsByTeachers.Select(t => new GroupSchedulePeriod(t.StartDate, t.EndDate)).ToList()))
+            .ToListAsync(cancellationToken);
     }
 
     public Task<Dictionary<int, string>> GetStudentContractNames(IReadOnlyCollection<int> scIds,

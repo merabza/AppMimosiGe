@@ -13,6 +13,9 @@ public sealed class GroupMapperTests
 {
     private static readonly DateTime OtherDate = new(2026, 10, 1, 0, 0, 0, DateTimeKind.Unspecified);
 
+    //the dates of the other side's rows, unlike the members' (D201)
+    private static readonly DateTime NovemberFirst = new(2026, 11, 1, 0, 0, 0, DateTimeKind.Unspecified);
+
     //the start times by id and the teacher contracts' default schemes the handler loads
     private static readonly Dictionary<int, TimeOnly> LessonStartTimes = new()
     {
@@ -77,14 +80,16 @@ public sealed class GroupMapperTests
         Assert.Null(input.VoidDate);
     }
 
-    //D178: the group as ApplyFields and ApplyRows save it (code trimmed, dates without time), with the start times
+    //D178: the group as ApplyFields and ApplyRows save it (code trimmed, dates without time), with the start times;
+    //the other side is the students' periods (D201)
     [Fact]
-    public void ToTeacherSchedule_TakesTheRequestsVoidDateTeachersAndSchedule()
+    public void ToTeacherSchedule_TakesTheRequestsVoidDateTeachersScheduleAndStudentPeriods()
     {
         // Arrange
         GroupRequest request = ValidRequest(" 1011 ", new DateTime(2026, 12, 20, 13, 45, 0, DateTimeKind.Unspecified),
             [Teacher(100, endDate: OtherDate.AddHours(10)), Teacher(teacherContractId: 6, startDate: OtherDate)],
-            dayTimePlaces: [DayTimePlace(300, 1, 17, 2f, endDate: OtherDate), DayTimePlace(0, 3, 18)]);
+            [Student(200, endDate: NovemberFirst.AddHours(10)), Student(studentContractId: 21, startDate: NovemberFirst)],
+            [DayTimePlace(300, 1, 17, 2f, endDate: OtherDate), DayTimePlace(0, 3, 18)]);
 
         // Act
         GroupSchedule schedule = GroupMapper.ToTeacherSchedule(42, request, LessonStartTimes);
@@ -99,6 +104,8 @@ public sealed class GroupMapperTests
             new GroupScheduleDayTime(1, new TimeOnly(15, 0), 2f, StartDate, OtherDate),
             new GroupScheduleDayTime(3, new TimeOnly(17, 30), 1.5f, StartDate, null)
         ], schedule.DayTimes);
+        Assert.Equal([new GroupSchedulePeriod(StartDate, NovemberFirst), new GroupSchedulePeriod(NovemberFirst, null)],
+            schedule.OtherSidePeriods);
     }
 
     [Fact]
@@ -107,13 +114,14 @@ public sealed class GroupMapperTests
         Assert.Null(GroupMapper.ToTeacherSchedule(0, ValidRequest(), LessonStartTimes).VoidDate);
     }
 
-    //D179: the same group with the students' rows instead of the teachers'
+    //D179: the same group with the students' rows instead of the teachers'; the other side is the teachers' periods
+    //(D201)
     [Fact]
-    public void ToStudentSchedule_TakesTheRequestsVoidDateStudentsAndSchedule()
+    public void ToStudentSchedule_TakesTheRequestsVoidDateStudentsScheduleAndTeacherPeriods()
     {
         // Arrange
         GroupRequest request = ValidRequest(" 1011 ", new DateTime(2026, 12, 20, 13, 45, 0, DateTimeKind.Unspecified),
-            [Teacher(100)],
+            [Teacher(100, endDate: NovemberFirst.AddHours(10)), Teacher(teacherContractId: 6, startDate: NovemberFirst)],
             [Student(200, endDate: OtherDate.AddHours(10)), Student(studentContractId: 21, startDate: OtherDate)],
             [DayTimePlace(300, 1, 17, 2f, endDate: OtherDate), DayTimePlace(0, 3, 18)]);
 
@@ -130,6 +138,8 @@ public sealed class GroupMapperTests
             new GroupScheduleDayTime(1, new TimeOnly(15, 0), 2f, StartDate, OtherDate),
             new GroupScheduleDayTime(3, new TimeOnly(17, 30), 1.5f, StartDate, null)
         ], schedule.DayTimes);
+        Assert.Equal([new GroupSchedulePeriod(StartDate, NovemberFirst), new GroupSchedulePeriod(NovemberFirst, null)],
+            schedule.OtherSidePeriods);
     }
 
     [Fact]

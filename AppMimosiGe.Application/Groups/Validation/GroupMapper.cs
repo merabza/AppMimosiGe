@@ -116,7 +116,8 @@ public static class GroupMapper
 
     /// <summary>
     ///     ჯგუფი შენახვის შემდეგ, როგორც მას ApplyFields და ApplyRows შეინახავს, მასწავლებლების დროების შესამოწმებლად
-    ///     (GroupScheduleOverlapsRule, D178). grpId: 0 ახალი ჯგუფისთვის; lessonStartTimes: განრიგის დაწყების დრო ID-ით
+    ///     (GroupScheduleOverlapsRule, D178); მეორე მხარე მოსწავლეებია (D201). grpId: 0 ახალი ჯგუფისთვის;
+    ///     lessonStartTimes: განრიგის დაწყების დრო ID-ით
     /// </summary>
     public static GroupSchedule ToTeacherSchedule(int grpId, GroupRequest request,
         IReadOnlyDictionary<int, TimeOnly> lessonStartTimes)
@@ -124,12 +125,14 @@ public static class GroupMapper
         return ToSchedule(grpId, request,
             request.Teachers.Select(row =>
                 new GroupScheduleMember(row.TeacherContractId, row.StartDate.Date, row.EndDate?.Date)),
+            request.Students.Select(row => new GroupSchedulePeriod(row.StartDate.Date, row.EndDate?.Date)),
             lessonStartTimes);
     }
 
     /// <summary>
     ///     ჯგუფი შენახვის შემდეგ, როგორც მას ApplyFields და ApplyRows შეინახავს, მოსწავლეების დროების შესამოწმებლად
-    ///     (GroupScheduleOverlapsRule, D179). grpId: 0 ახალი ჯგუფისთვის; lessonStartTimes: განრიგის დაწყების დრო ID-ით
+    ///     (GroupScheduleOverlapsRule, D179); მეორე მხარე მასწავლებლებია (D201). grpId: 0 ახალი ჯგუფისთვის;
+    ///     lessonStartTimes: განრიგის დაწყების დრო ID-ით
     /// </summary>
     public static GroupSchedule ToStudentSchedule(int grpId, GroupRequest request,
         IReadOnlyDictionary<int, TimeOnly> lessonStartTimes)
@@ -137,16 +140,17 @@ public static class GroupMapper
         return ToSchedule(grpId, request,
             request.Students.Select(row =>
                 new GroupScheduleMember(row.StudentContractId, row.StartDate.Date, row.EndDate?.Date)),
+            request.Teachers.Select(row => new GroupSchedulePeriod(row.StartDate.Date, row.EndDate?.Date)),
             lessonStartTimes);
     }
 
     private static GroupSchedule ToSchedule(int grpId, GroupRequest request, IEnumerable<GroupScheduleMember> members,
-        IReadOnlyDictionary<int, TimeOnly> lessonStartTimes)
+        IEnumerable<GroupSchedulePeriod> otherSidePeriods, IReadOnlyDictionary<int, TimeOnly> lessonStartTimes)
     {
         return new GroupSchedule(grpId, request.GroupCode!.Trim(), request.VoidDate?.Date, [.. members], [
             .. request.DayTimePlaces.Select(row => new GroupScheduleDayTime(row.WeekDayId,
                 lessonStartTimes[row.LessonStartTimeId], row.HoursCount, row.StartDate.Date, row.EndDate?.Date))
-        ]);
+        ], [.. otherSidePeriods]);
     }
 
     private static bool AllKnown(IEnumerable<int> requestedIds, IEnumerable<int> existingIds)
