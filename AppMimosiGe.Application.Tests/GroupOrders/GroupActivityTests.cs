@@ -85,6 +85,28 @@ public sealed class GroupActivityTests
         Assert.False(GroupActivity.IsActiveOn(state, Day(8, 31).AddHours(23)));
     }
 
+    //D190: ჯგუფი გაუქმების დღიდან დახურულია; გაუქმების თარიღის გარეშე ღიაა
+    [Theory]
+    [InlineData(10, 31, false)]
+    [InlineData(11, 1, true)]
+    [InlineData(11, 2, true)]
+    public void IsClosedOn_VoidDate_IsTheFirstClosedDay(int month, int day, bool isClosed)
+    {
+        Assert.Equal(isClosed, GroupActivity.IsClosedOn(State(Day(11, 1)), Day(month, day)));
+        Assert.Equal(isClosed, GroupActivity.IsClosedOn(State(Day(11, 1)), Day(month, day).AddHours(23)));
+        Assert.False(GroupActivity.IsClosedOn(State(), Day(month, day)));
+    }
+
+    //[StartDate, EndDate): სტრიქონი დაწყების დღეს უკვე მოქმედებს, დასრულების დღეს აღარ; დასრულების გარეშე ღიაა
+    [Fact]
+    public void IsRowActiveOn_FromTheStartUntilTheDayBeforeTheEnd()
+    {
+        Assert.Equal([false, true, true, false],
+            new[] { Day(10, 14), Day(10, 15), Day(10, 19), Day(10, 20) }.Select(d =>
+                GroupActivity.IsRowActiveOn(Day(10, 15), Day(10, 20), d)));
+        Assert.True(GroupActivity.IsRowActiveOn(Day(10, 15), null, Day(12, 31)));
+    }
+
     [Fact]
     public void ActivePeriods_RowsWithoutEnd_OneEndlessPeriod()
     {

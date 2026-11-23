@@ -1,5 +1,7 @@
 using System;
+using System.Linq;
 using AppMimosiGe.Application.GroupOrders.Models;
+using AppMimosiGeShared.Contracts.Errors;
 using MimosiGeCore.Domain.Models;
 using Xunit;
 using static AppMimosiGe.Application.Tests.GroupOrders.GroupOrdersTestData;
@@ -79,9 +81,13 @@ public sealed class GroupOrdersFoldTests
     private static GroupState Fold(params GroupOrderData[] orders)
     {
         GroupOrdersFoldResult result = GroupOrdersFold.Run(orders);
-        Assert.Null(result.NotFittingOrderId);
-        Assert.NotNull(result.State);
-        return result.State;
+        Assert.Null(result.NotFitting);
+        return result.States[GroupId];
+    }
+
+    private static GroupOrderNotFitting? NotFitting(params GroupOrderData[] orders)
+    {
+        return GroupOrdersFold.Run(orders).NotFitting;
     }
 
     //D196: 0 წერს ველებს და გაუქმების თარიღს, სტრიქონებს კი თავიანთი თარიღებით ქმნის, დასრულებულებსაც; ყოველ
@@ -141,15 +147,18 @@ public sealed class GroupOrdersFoldTests
     [Fact]
     public void Run_PausedCreateGroup_CreatesNoGroup()
     {
-        Assert.Equal(new GroupOrdersFoldResult(null, null), GroupOrdersFold.Run([PausedCreateOrder(1, Day(9, 15))]));
+        GroupOrdersFoldResult result = GroupOrdersFold.Run([PausedCreateOrder(1, Day(9, 15))]);
+
+        Assert.Null(result.NotFitting);
+        Assert.Empty(result.States);
     }
 
     //დაპაუზებული ბრძანება ეფექტს არ იძლევა, ამიტომ მის შემდეგ დასახური ჯგუფი არ არის
     [Fact]
     public void Run_PausedCreateGroup_LaterOrderDoesNotFit()
     {
-        Assert.Equal(new GroupOrdersFoldResult(null, 2),
-            GroupOrdersFold.Run([PausedCreateOrder(1, Day(9, 15)), CloseOrder(2, Day(11, 20))]));
+        Assert.Equal(new GroupOrderNotFitting(2, GroupOrderErrors.OrderIsBeforeGroupStart),
+            NotFitting(PausedCreateOrder(1, Day(9, 15)), CloseOrder(2, Day(11, 20))));
     }
 
     //D185: ერთი დღის ბრძანებები Id-ის რიგით გაივლის: ჯერ შექმნა (3), მერე დახურვა (8), თუმცა სიაში პირიქითაა
@@ -165,8 +174,8 @@ public sealed class GroupOrdersFoldTests
     [Fact]
     public void Run_SameDay_LowerIdGoesFirst()
     {
-        Assert.Equal(new GroupOrdersFoldResult(null, 4),
-            GroupOrdersFold.Run([CreateOrder(9, Day(9, 15)), CloseOrder(4, Day(9, 15))]));
+        Assert.Equal(new GroupOrderNotFitting(4, GroupOrderErrors.OrderIsBeforeGroupStart),
+            NotFitting(CreateOrder(9, Day(9, 15)), CloseOrder(4, Day(9, 15))));
     }
 
     //თარიღი Id-ზე წინაა: შექმნა (5) დახურვაზე (2) ერთი დღით ადრეა
@@ -184,8 +193,27 @@ public sealed class GroupOrdersFoldTests
     [InlineData(EGroupOrderType.CreateGroup)]
     public void Run_OrderBeforeTheGroupStart_DoesNotFit(EGroupOrderType creatingType)
     {
-        Assert.Equal(new GroupOrdersFoldResult(null, 2),
-            GroupOrdersFold.Run([Creating(1, creatingType, Day(9, 15)), CloseOrder(2, Day(9, 14))]));
+        Assert.Equal(new GroupOrderNotFitting(2, GroupOrderErrors.OrderIsBeforeGroupStart),
+            NotFitting(Creating(1, creatingType, Day(9, 15)), CloseOrder(2, Day(9, 14))));
+    }
+
+    //D190: ჯგუფის დაწყებამდე B2-ის ტიპებიც არ ესადაგება, ხაზების შემოწმებამდე; გადაყვანისას „საიდან“ ჯგუფი
+    [Theory]
+    [InlineData(EGroupOrderType.ChangeTeacher)]
+    [InlineData(EGroupOrderType.AddStudents)]
+    [InlineData(EGroupOrderType.RemoveStudents)]
+    [InlineData(EGroupOrderType.TransferStudents)]
+    [InlineData(EGroupOrderType.ChangeStudentFees)]
+    [InlineData(EGroupOrderType.ChangeSalaryScheme)]
+    public void Run_StudentOrTeacherOrderBeforeTheGroupStart_DoesNotFit(EGroupOrderType orderType)
+    {
+        GroupOrderData order = Order(2, orderType, Day(9, 14), GroupId) with
+        {
+            TargetGroupId = orderType == EGroupOrderType.TransferStudents ? GroupId + 1 : null
+        };
+
+        Assert.Equal(new GroupOrderNotFitting(2, GroupOrderErrors.OrderIsBeforeGroupStart),
+            NotFitting(CreateOrder(1, Day(9, 15)), CreateOrder(3, Day(9, 1)) with { GroupId = GroupId + 1 }, order));
     }
 
     //D202: ჯგუფს ერთხელ ქმნის საწყისი ან შექმნის ბრძანება
@@ -196,21 +224,71 @@ public sealed class GroupOrdersFoldTests
     [InlineData(EGroupOrderType.CreateGroup, EGroupOrderType.CreateGroup)]
     public void Run_SecondOrderCreatingTheGroup_DoesNotFit(EGroupOrderType first, EGroupOrderType second)
     {
-        Assert.Equal(new GroupOrdersFoldResult(null, 2),
-            GroupOrdersFold.Run([Creating(1, first, Day(9, 2)), Creating(2, second, Day(10, 1))]));
+        Assert.Equal(new GroupOrderNotFitting(2, GroupOrderErrors.CreateOrderCannotHaveGroup),
+            NotFitting(Creating(1, first, Day(9, 2)), Creating(2, second, Day(10, 1))));
     }
 
     //გატარება პირველივე შეუსაბამო ბრძანებაზე ჩერდება
     [Fact]
     public void Run_SeveralOrdersDoNotFit_ReturnsTheFirst()
     {
-        Assert.Equal(new GroupOrdersFoldResult(null, 5),
-            GroupOrdersFold.Run([CloseOrder(4, Day(9, 2)), CloseOrder(5, Day(9, 1))]));
+        Assert.Equal(new GroupOrderNotFitting(5, GroupOrderErrors.OrderIsBeforeGroupStart),
+            NotFitting(CloseOrder(4, Day(9, 2)), CloseOrder(5, Day(9, 1))));
     }
 
     [Fact]
     public void Run_NoOrders_CreatesNoGroup()
     {
-        Assert.Equal(new GroupOrdersFoldResult(null, null), GroupOrdersFold.Run([]));
+        GroupOrdersFoldResult result = GroupOrdersFold.Run([]);
+
+        Assert.Null(result.NotFitting);
+        Assert.Empty(result.States);
+    }
+
+    //ყოველ ჯგუფს თავისი ბრძანებები და მდგომარეობა აქვს: 43-ის დახურვა 42-ს არ ეხება
+    [Fact]
+    public void Run_SeveralGroups_EachGetsItsOwnOrders()
+    {
+        GroupOrdersFoldResult result = GroupOrdersFold.Run([
+            CreateOrder(1, Day(9, 15)), CreateOrder(2, Day(9, 15)) with { GroupId = GroupId + 1 },
+            CloseOrder(3, Day(11, 20)) with { GroupId = GroupId + 1 }
+        ]);
+
+        Assert.Null(result.NotFitting);
+        Assert.Equal([GroupId, GroupId + 1], result.States.Keys.Order());
+        Assert.Null(result.States[GroupId].VoidDate);
+        Assert.Equal(Day(11, 20), result.States[GroupId + 1].VoidDate);
+    }
+
+    //შეუსაბამო ბრძანებისას მდგომარეობა არცერთ ჯგუფს არ აქვს, იმასაც, რომლის ბრძანებები ესადაგება
+    [Fact]
+    public void Run_OrderDoesNotFit_ReturnsNoStates()
+    {
+        GroupOrdersFoldResult result = GroupOrdersFold.Run([
+            CreateOrder(1, Day(9, 15)), CloseOrder(2, Day(9, 1)) with { GroupId = GroupId + 1 }
+        ]);
+
+        Assert.Equal(new GroupOrderNotFitting(2, GroupOrderErrors.OrderIsBeforeGroupStart), result.NotFitting);
+        Assert.Empty(result.States);
+    }
+
+    //ჯგუფის გარეშე მხოლოდ დაპაუზებული ბრძანებაა (D186)
+    [Fact]
+    public void Run_ActiveOrderWithoutAGroup_Throws()
+    {
+        Assert.Throws<InvalidOperationException>(() =>
+            GroupOrdersFold.Run([CreateOrder(1, Day(9, 15)) with { GroupId = null }]));
+    }
+
+    //გადაყვანა ორ ჯგუფს ცვლის, ამიტომ ერთი ჯგუფის Apply მას არ იღებს
+    [Fact]
+    public void Apply_Transfer_Throws()
+    {
+        GroupOrderData transfer = Order(2, EGroupOrderType.TransferStudents, Day(10, 1), GroupId) with
+        {
+            TargetGroupId = GroupId + 1
+        };
+
+        Assert.Throws<ArgumentException>(() => GroupOrderEffects.Apply(Fold(CreateOrder(1, Day(9, 15))), transfer));
     }
 }

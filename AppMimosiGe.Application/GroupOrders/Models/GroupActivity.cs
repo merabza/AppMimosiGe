@@ -18,10 +18,26 @@ public static class GroupActivity
     public static bool IsActiveOn(GroupState state, DateTime day)
     {
         DateTime dayAfter = day.Date.AddDays(1);
-        return (state.VoidDate is null || state.VoidDate >= dayAfter) &&
+        return !IsClosedOn(state, day) &&
                state.Teachers.Any(t => IsActiveRow(t.StartDate, t.EndDate, dayAfter)) &&
                state.Students.Any(s => IsActiveRow(s.StartDate, s.EndDate, dayAfter)) &&
                state.DayTimePlaces.Any(d => IsActiveRow(d.StartDate, d.EndDate, dayAfter));
+    }
+
+    /// <summary>
+    ///     ჯგუფი day დღეს უკვე დახურულია (გაუქმებულია) თუ არა: VoidDate ≤ day (D190)
+    /// </summary>
+    public static bool IsClosedOn(GroupState state, DateTime day)
+    {
+        return state.VoidDate is { } voidDate && voidDate < day.Date.AddDays(1);
+    }
+
+    /// <summary>
+    ///     სტრიქონი [startDate, endDate) მოქმედებს თუ არა day დღეს
+    /// </summary>
+    public static bool IsRowActiveOn(DateTime startDate, DateTime? endDate, DateTime day)
+    {
+        return IsActiveRow(startDate, endDate, day.Date.AddDays(1));
     }
 
     /// <summary>

@@ -1,31 +1,43 @@
 using System;
 using System.Linq;
+using AppMimosiGeShared.Contracts.Errors;
 using MimosiGeCore.Domain.Models;
+using SystemTools.SharedKernel;
 
 namespace AppMimosiGe.Application.GroupOrders.Models;
 
 /// <summary>
 ///     ბრძანებების ტიპების ეფექტები ჯგუფის მდგომარეობაზე (GROUP_ORDERS.md §4). ჯგუფს ერთხელ ქმნის საწყისი (0) ან შექმნის
 ///     (1) ბრძანება: მანამდე სხვა ბრძანება არ ესადაგება, მის შემდეგ კი თვითონ ისინი აღარ ესადაგება. ახალი ტიპის ეფექტი
-///     Apply-ის switch-ს ემატება
+///     Apply-ის switch-ს ემატება. გადაყვანა (5) ორ ჯგუფს ცვლის, ამიტომ მისი ეფექტი ცალკეა
+///     (GroupStudentOrderEffects.Transfer)
 /// </summary>
 public static class GroupOrderEffects
 {
     /// <summary>
-    ///     order-ის ეფექტი state-ზე (null: ჯგუფი ჯერ არ შექმნილა). აბრუნებს ახალ მდგომარეობას, ან null-ს, თუ ბრძანება
-    ///     მდგომარეობას არ ესადაგება
+    ///     order-ის ეფექტი state-ზე (null: ჯგუფი ჯერ არ შექმნილა). აბრუნებს ახალ მდგომარეობას, ან მიზეზს, რის გამოც
+    ///     ბრძანება მდგომარეობას არ ესადაგება
     /// </summary>
-    public static GroupState? Apply(GroupState? state, GroupOrderData order)
+    public static Result<GroupState> Apply(GroupState? state, GroupOrderData order)
     {
         return (order.OrderType, state) switch
         {
+            (EGroupOrderType.TransferStudents, _) => throw new ArgumentException(
+                "A transfer changes two groups: use GroupStudentOrderEffects.Transfer", nameof(order)),
             (EGroupOrderType.Initial, null) => Initial(order),
             (EGroupOrderType.CreateGroup, null) => CreateGroup(order),
-            (EGroupOrderType.Initial or EGroupOrderType.CreateGroup, _) => null,
+            (EGroupOrderType.Initial or EGroupOrderType.CreateGroup, _) => GroupOrderErrors.CreateOrderCannotHaveGroup,
             //ჯგუფის შექმნამდე, ანუ მის დაწყებამდე, სხვა ბრძანება არ ესადაგება (D190)
-            (_, null) => null,
+            (_, null) => GroupOrderErrors.OrderIsBeforeGroupStart,
+            (EGroupOrderType.ChangeTeacher, { } created) => GroupTeacherOrderEffects.ChangeTeacher(created, order),
+            (EGroupOrderType.AddStudents, { } created) => GroupStudentOrderEffects.AddStudents(created, order),
+            (EGroupOrderType.RemoveStudents, { } created) => GroupStudentOrderEffects.RemoveStudents(created, order),
             (EGroupOrderType.CloseGroup, { } created) => CloseGroup(created, order),
-            //2–6 და 8–10 ტიპების ეფექტები გეგმის B2 და B3 ამოცანებშია
+            (EGroupOrderType.ChangeStudentFees, { } created) =>
+                GroupStudentOrderEffects.ChangeStudentFees(created, order),
+            (EGroupOrderType.ChangeSalaryScheme, { } created) =>
+                GroupTeacherOrderEffects.ChangeSalaryScheme(created, order),
+            //6 და 10 ტიპების ეფექტები გეგმის B3 ამოცანაშია
             _ => throw new NotSupportedException($"Group order type {order.OrderType} is not supported yet")
         };
     }

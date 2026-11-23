@@ -1,8 +1,12 @@
+using System.Collections.Generic;
+
 namespace AppMimosiGe.Application.GroupOrders.Models;
 
 /// <summary>
-///     ბრძანებების გატარების შედეგი (GroupOrdersFold). NotFittingOrderId: ბრძანება, რომელიც ჯგუფის მდგომარეობას აღარ
-///     ესადაგება (D185); მაშინ State null-ია. სხვა შემთხვევაში State ჯგუფის მდგომარეობაა, ან null, თუ ჯგუფი არ შექმნილა:
-///     ბრძანება არ არის, ან შექმნის ბრძანება დაპაუზებულია (D186)
+///     ბრძანებების გატარების შედეგი (GroupOrdersFold). States: ჯგუფების მდგომარეობები ჯგუფის Id-ით; ჯგუფი, რომელიც არ
+///     შექმნილა (შექმნის ბრძანება არ არის ან დაპაუზებულია, D186), აქ არ არის. NotFitting: პირველი ბრძანება, რომელიც
+///     მდგომარეობას აღარ ესადაგება (D185); მაშინ States ცარიელია
 /// </summary>
-public sealed record GroupOrdersFoldResult(GroupState? State, int? NotFittingOrderId);
+public sealed record GroupOrdersFoldResult(
+    IReadOnlyDictionary<int, GroupState> States,
+    GroupOrderNotFitting? NotFitting);
