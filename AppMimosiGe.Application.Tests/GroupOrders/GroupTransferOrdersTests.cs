@@ -53,6 +53,22 @@ public sealed class GroupTransferOrdersTests
             result.States[Target].Students);
     }
 
+    //D187: „სად“-ის სტრიქონის საათები „სად“-ის განრიგით ითვლება: 3 საათი კვირაში → 12 (საიდან-ში 8 იყო)
+    [Fact]
+    public void Transfer_TheTargetRowHoursComeFromTheTargetSchedule()
+    {
+        GroupOrderData targetInitial = TargetInitial with
+        {
+            DayTimePlaces = [new GroupOrderDayTimePlaceLine(432, 1, 4, 3f, 1, Day(9, 1))]
+        };
+
+        GroupOrdersFoldResult result = Fold(SourceInitial, targetInitial,
+            Transfer(3, 10, 1, new GroupOrderStudentLine(71, 20, null, 72m, 6m, 1f)));
+
+        Assert.Equal(new GroupStudentRow(71, 20, 12f, 72m, 6m, 1f, null, Day(10, 1), null),
+            result.States[Target].Students[1]);
+    }
+
     //D205: „სად“-ის სტრიქონი „საიდან“-ის სტრიქონის დასრულებას იღებს
     [Fact]
     public void Transfer_SourceRowHasAnEnd_TheTargetRowTakesIt()

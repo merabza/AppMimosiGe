@@ -8,7 +8,8 @@ namespace AppMimosiGe.Application.GroupOrders.Models;
 
 /// <summary>
 ///     მოსწავლის ბრძანებების ეფექტები: დამატება (3), გაყვანა (4), გადაყვანა (5) და საფასურის შეცვლა (8). ბრძანება
-///     რამდენიმე მოსწავლეს ეხება; მოსწავლეს ჯგუფში ერთ დღეს ერთი სტრიქონი აქვს (D64). შენიშვნა ხაზიდან იწერება (D189)
+///     რამდენიმე მოსწავლეს ეხება; მოსწავლეს ჯგუფში ერთ დღეს ერთი სტრიქონი აქვს (D64). შენიშვნა ხაზიდან იწერება (D189).
+///     ახალი სტრიქონის 4 კვირის საათები ფორმულით ითვლება მისი ჯგუფის a-ზე მოქმედი განრიგიდან (D187)
 /// </summary>
 public static class GroupStudentOrderEffects
 {
@@ -17,6 +18,7 @@ public static class GroupStudentOrderEffects
     /// </summary>
     public static Result<GroupState> AddStudents(GroupState state, GroupOrderData order)
     {
+        float weeklyHours = GroupOrderFormulas.WeeklyHours(state.DayTimePlaces, order.OrderDate);
         List<GroupStudentRow> students = [.. state.Students];
         foreach (GroupOrderStudentLine line in order.Students)
         {
@@ -25,7 +27,7 @@ public static class GroupStudentOrderEffects
                 return GroupOrderErrors.StudentIsAlreadyInGroup;
             }
 
-            students.Add(line.ToRow(order.OrderDate, null));
+            students.Add(line.ToRow(order.OrderDate, null, weeklyHours));
         }
 
         return state with { Students = students };
@@ -54,10 +56,12 @@ public static class GroupStudentOrderEffects
 
     /// <summary>
     ///     8 (D189): a-ზე მოქმედი სტრიქონი a-თი სრულდება და a-დან ძველის დასრულებამდე ახალი ტარიფითა და შენიშვნით
-    ///     იწყება. თუ ტარიფი არ იცვლება, სტრიქონი არ იყოფა: შენიშვნა მასში ადგილზე იწერება
+    ///     იწყება. თუ ტარიფი არ იცვლება, სტრიქონი არ იყოფა: შენიშვნა მასში ადგილზე იწერება. ამავე წესით ცვლის
+    ///     მოსწავლეებს ბრძანება 10, უკვე შეცვლილი განრიგით (D209)
     /// </summary>
     public static Result<GroupState> ChangeStudentFees(GroupState state, GroupOrderData order)
     {
+        float weeklyHours = GroupOrderFormulas.WeeklyHours(state.DayTimePlaces, order.OrderDate);
         List<GroupStudentRow> students = [.. state.Students];
         foreach (GroupOrderStudentLine line in order.Students)
         {
@@ -68,7 +72,7 @@ public static class GroupStudentOrderEffects
             }
 
             GroupStudentRow current = students[index];
-            GroupStudentRow changed = line.ToRow(order.OrderDate, current.EndDate);
+            GroupStudentRow changed = line.ToRow(order.OrderDate, current.EndDate, weeklyHours);
             if (!TariffChanges(current, changed))
             {
                 students[index] = current with { Note = line.Note };
@@ -112,6 +116,7 @@ public static class GroupStudentOrderEffects
             return GroupOrderErrors.TargetGroupDoesNotMatch;
         }
 
+        float targetWeeklyHours = GroupOrderFormulas.WeeklyHours(target.DayTimePlaces, order.OrderDate);
         List<GroupStudentRow> sourceStudents = [.. source.Students];
         List<GroupStudentRow> targetStudents = [.. target.Students];
         foreach (GroupOrderStudentLine line in order.Students)
@@ -129,7 +134,7 @@ public static class GroupStudentOrderEffects
 
             GroupStudentRow current = sourceStudents[index.Value];
             sourceStudents[index.Value] = current with { EndDate = order.OrderDate };
-            targetStudents.Add(line.ToRow(order.OrderDate, current.EndDate));
+            targetStudents.Add(line.ToRow(order.OrderDate, current.EndDate, targetWeeklyHours));
         }
 
         return (source with { Students = sourceStudents }, target with { Students = targetStudents });

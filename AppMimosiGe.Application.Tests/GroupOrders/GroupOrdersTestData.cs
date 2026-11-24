@@ -55,7 +55,8 @@ internal static class GroupOrdersTestData
         };
     }
 
-    //მოსწავლის ხაზი: კოეფიციენტი 1, 4 კვირაში 8 საათი, საათის ფასი oneHourFee
+    //მოსწავლის ხაზი: კოეფიციენტი 1, 4 კვირაში 8 საათი, საათის ფასი oneHourFee. საათები მხოლოდ საწყის ბრძანებაში
+    //მოდის ხაზიდან; სხვა ბრძანებაში მათ ფორმულა იძლევა (D187), 2-საათიანი განრიგით იგივე 8-ს
     public static GroupOrderStudentLine StudentLine(int id, int studentContractId, decimal oneHourFee = 6m,
         string? note = null)
     {

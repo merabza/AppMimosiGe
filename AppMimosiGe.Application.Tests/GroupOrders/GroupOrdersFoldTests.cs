@@ -197,14 +197,16 @@ public sealed class GroupOrdersFoldTests
             NotFitting(Creating(1, creatingType, Day(9, 15)), CloseOrder(2, Day(9, 14))));
     }
 
-    //D190: ჯგუფის დაწყებამდე B2-ის ტიპებიც არ ესადაგება, ხაზების შემოწმებამდე; გადაყვანისას „საიდან“ ჯგუფი
+    //D190: ჯგუფის დაწყებამდე B2-ისა და B3-ის ტიპებიც არ ესადაგება, ხაზების შემოწმებამდე; გადაყვანისას „საიდან“ ჯგუფი
     [Theory]
     [InlineData(EGroupOrderType.ChangeTeacher)]
     [InlineData(EGroupOrderType.AddStudents)]
     [InlineData(EGroupOrderType.RemoveStudents)]
     [InlineData(EGroupOrderType.TransferStudents)]
+    [InlineData(EGroupOrderType.ChangeSchedule)]
     [InlineData(EGroupOrderType.ChangeStudentFees)]
     [InlineData(EGroupOrderType.ChangeSalaryScheme)]
+    [InlineData(EGroupOrderType.ChangeWeeklyHours)]
     public void Run_StudentOrTeacherOrderBeforeTheGroupStart_DoesNotFit(EGroupOrderType orderType)
     {
         GroupOrderData order = Order(2, orderType, Day(9, 14), GroupId) with
@@ -290,5 +292,46 @@ public sealed class GroupOrdersFoldTests
         };
 
         Assert.Throws<ArgumentException>(() => GroupOrderEffects.Apply(Fold(CreateOrder(1, Day(9, 15))), transfer));
+    }
+
+    [Fact]
+    public void Apply_UnknownOrderType_Throws()
+    {
+        GroupOrderData unknown = Order(2, (EGroupOrderType)11, Day(10, 1), GroupId);
+
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            GroupOrderEffects.Apply(Fold(CreateOrder(1, Day(9, 15))), unknown));
+    }
+
+    //D187: 1-ის მოსწავლის საათები ბრძანების განრიგით ითვლება (1.5 + 1.5 = 3 საათი კვირაში), ხაზის საათები არ ითვლება
+    [Fact]
+    public void Run_CreateGroup_StudentHoursComeFromTheOrderSchedule()
+    {
+        GroupOrderData order = CreateOrder(1, Day(9, 15)) with
+        {
+            Students =
+            [
+                new GroupOrderStudentLine(21, 20, null, 108m, 6m, 1.5f),
+                new GroupOrderStudentLine(22, 30, 8f, 72m, 6m, 1f)
+            ],
+            DayTimePlaces =
+            [
+                new GroupOrderDayTimePlaceLine(31, 2, 4, 1.5f, 1), new GroupOrderDayTimePlaceLine(32, 4, 4, 1.5f, 1)
+            ]
+        };
+
+        Assert.Equal([18f, 12f], Fold(order).Students.Select(s => s.FourWeekHours));
+    }
+
+    //D194, D196: 0-ის საათები ხაზიდან მოდის, ფორმულას (2 საათი კვირაში → 8) რომ არ ესადაგებოდეს, მაშინაც
+    [Fact]
+    public void Run_Initial_StudentHoursComeFromTheLine()
+    {
+        GroupOrderData order = InitialOrder(1, Day(9, 2)) with
+        {
+            Students = [new GroupOrderStudentLine(21, 20, 10f, 60m, 6m, 1f, null, Day(9, 2))]
+        };
+
+        Assert.Equal(10f, Fold(order).Students[0].FourWeekHours);
     }
 }

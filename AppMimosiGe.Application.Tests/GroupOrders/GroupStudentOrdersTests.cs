@@ -180,21 +180,44 @@ public sealed class GroupStudentOrdersTests
             FoldStudents(Initial, Students(2, EGroupOrderType.ChangeStudentFees, 10, 1, almostTheSame)));
     }
 
-    //ტარიფის ცვლილებაა ნებისმიერი მისი ნაწილის ცვლილება
+    //ტარიფის ცვლილებაა გადასახადის, ფასის ან კოეფიციენტის ცვლილება. საათებს ფორმულა იძლევა (D187): 2-საათიან
+    //განრიგში კოეფიციენტი 1.5 მათ 8-დან 12-მდე ზრდის
     [Theory]
-    [InlineData(8.5f, 48, 6, 1f)]
-    [InlineData(8f, 49, 6, 1f)]
-    [InlineData(8f, 48, 7, 1f)]
-    [InlineData(8f, 48, 6, 1.5f)]
-    public void ChangeStudentFees_AnyTariffPartChanges_SplitsTheRow(float fourWeekHours, int fourWeekFee,
-        int oneHourFee, float hoursCoefficient)
+    [InlineData(49, 6, 1f, 8f)]
+    [InlineData(48, 7, 1f, 8f)]
+    [InlineData(72, 6, 1.5f, 12f)]
+    public void ChangeStudentFees_AnyTariffPartChanges_SplitsTheRow(int fourWeekFee, int oneHourFee,
+        float hoursCoefficient, float fourWeekHours)
     {
-        GroupOrderStudentLine line = new(61, 20, fourWeekHours, fourWeekFee, oneHourFee, hoursCoefficient);
+        GroupOrderStudentLine line = new(61, 20, null, fourWeekFee, oneHourFee, hoursCoefficient);
 
         Assert.Equal(
             new GroupStudentRow(61, 20, fourWeekHours, fourWeekFee, oneHourFee, hoursCoefficient, null, Day(10, 1),
                 null),
             FoldStudents(Initial, Students(2, EGroupOrderType.ChangeStudentFees, 10, 1, line))[2]);
+    }
+
+    //D187: ხაზზე შენახული საათები არ ითვლება: ფორმულა 8 საათს იძლევა, ტარიფი არ იცვლება და შენიშვნა ადგილზე იწერება
+    [Fact]
+    public void ChangeStudentFees_HoursComeFromTheFormulaNotFromTheLine()
+    {
+        GroupOrderStudentLine staleHours = new(61, 20, 8.5f, 48m, 6m, 1f, "შენიშვნა");
+
+        Assert.Equal(
+            [StudentLineRow(21, 20, Day(9, 1), null, note: "შენიშვნა"), StudentLineRow(22, 30, Day(9, 1), null)],
+            FoldStudents(Initial, Students(2, EGroupOrderType.ChangeStudentFees, 10, 1, staleHours)));
+    }
+
+    //D187: ახალი მოსწავლის საათები = 4 × კოეფიციენტი × ჯგუფის კვირის საათები (2)
+    [Theory]
+    [InlineData(1f, 8f)]
+    [InlineData(1.5f, 12f)]
+    public void AddStudents_HoursComeFromTheFormula(float hoursCoefficient, float fourWeekHours)
+    {
+        GroupOrderStudentLine line = new(41, 40, null, 48m, 6m, hoursCoefficient);
+
+        Assert.Equal(fourWeekHours,
+            FoldStudents(Initial, Students(2, EGroupOrderType.AddStudents, 10, 1, line))[2].FourWeekHours);
     }
 
     //D206: ახალი ტარიფით სტრიქონი იმ დღეს ვერ გაიყოფა, როცა დაიწყო

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using AppMimosiGeShared.Contracts.Errors;
 using MimosiGeCore.Domain.Models;
@@ -37,27 +38,32 @@ public static class GroupOrderEffects
                 GroupStudentOrderEffects.ChangeStudentFees(created, order),
             (EGroupOrderType.ChangeSalaryScheme, { } created) =>
                 GroupTeacherOrderEffects.ChangeSalaryScheme(created, order),
-            //6 და 10 ტიპების ეფექტები გეგმის B3 ამოცანაშია
-            _ => throw new NotSupportedException($"Group order type {order.OrderType} is not supported yet")
+            (EGroupOrderType.ChangeSchedule, { } created) => GroupScheduleOrderEffects.ChangeSchedule(created, order),
+            (EGroupOrderType.ChangeWeeklyHours, { } created) =>
+                GroupScheduleOrderEffects.ChangeWeeklyHours(created, order),
+            _ => throw new ArgumentOutOfRangeException(nameof(order), order.OrderType, "Unknown group order type")
         };
     }
 
-    //საწყისი ბრძანება (D196): ჯგუფის ველები, გაუქმების თარიღი და ყველა სტრიქონი თავისი თარიღებით, დასრულებულებიც
+    //საწყისი ბრძანება (D196): ჯგუფის ველები, გაუქმების თარიღი და ყველა სტრიქონი თავისი თარიღებით, დასრულებულებიც.
+    //მოსწავლის საათები ხაზიდან მოდის: ეს ისტორიაა და ფორმულას D0-მდე შეიძლება არ ესადაგებოდეს (D194)
     private static GroupState Initial(GroupOrderData order)
     {
         return new GroupState(RequiredFields(order), order.VoidDate,
             [.. order.Teachers.Select(t => t.ToRow(RequiredStartDate(order, t.StartDate), t.EndDate))],
-            [.. order.Students.Select(s => s.ToRow(RequiredStartDate(order, s.StartDate), s.EndDate))],
+            [.. order.Students.Select(s => s.ToInitialRow(RequiredStartDate(order, s.StartDate), s.EndDate))],
             [.. order.DayTimePlaces.Select(d => d.ToRow(RequiredStartDate(order, d.StartDate), d.EndDate))]);
     }
 
-    //შექმნის ბრძანება (D186): ჯგუფის ველები და ყველა სტრიქონი ბრძანების თარიღიდან
+    //შექმნის ბრძანება (D186): ჯგუფის ველები და ყველა სტრიქონი ბრძანების თარიღიდან; მოსწავლის საათები ბრძანების
+    //განრიგით ითვლება (D187)
     private static GroupState CreateGroup(GroupOrderData order)
     {
+        List<GroupDayTimePlaceRow> dayTimePlaces = [.. order.DayTimePlaces.Select(d => d.ToRow(order.OrderDate, null))];
+        float weeklyHours = GroupOrderFormulas.WeeklyHours(dayTimePlaces, order.OrderDate);
         return new GroupState(RequiredFields(order), null,
             [.. order.Teachers.Select(t => t.ToRow(order.OrderDate, null))],
-            [.. order.Students.Select(s => s.ToRow(order.OrderDate, null))],
-            [.. order.DayTimePlaces.Select(d => d.ToRow(order.OrderDate, null))]);
+            [.. order.Students.Select(s => s.ToRow(order.OrderDate, null, weeklyHours))], dayTimePlaces);
     }
 
     //დახურვის ბრძანება (D190): მხოლოდ VoidDate = a
