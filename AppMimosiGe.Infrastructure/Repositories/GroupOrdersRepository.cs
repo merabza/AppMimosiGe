@@ -307,7 +307,7 @@ public sealed class GroupOrdersRepository(IMimosiGeDbContext context) : IGroupOr
         List<Group> groups = await context.Groups.AsNoTracking().Include(g => g.GroupsByTeachers)
             .Include(g => g.GroupsByStudents).Include(g => g.GroupDayTimePlaces).AsSplitQuery()
             .Where(g => groupIds.Contains(g.GrpId)).ToListAsync(cancellationToken);
-        return groups.ToDictionary(g => g.GrpId, ToState);
+        return groups.ToDictionary(g => g.GrpId, GroupStateMapper.ToState);
     }
 
     public Task<List<GroupOrderGroupLookupResponse>> GetGroupLookups(int academicYearId,
@@ -338,6 +338,38 @@ public sealed class GroupOrdersRepository(IMimosiGeDbContext context) : IGroupOr
     {
         return context.StudentStatuses.AsNoTracking().Where(x => x.Id == studentStatusId).Select(x => (int?)x.Rate)
             .SingleOrDefaultAsync(cancellationToken);
+    }
+
+    public Task<List<Group>> GetAllGroupsForChange(CancellationToken cancellationToken = default)
+    {
+        return context.Groups.Include(g => g.GroupsByTeachers).Include(g => g.GroupsByStudents)
+            .Include(g => g.GroupDayTimePlaces).AsSplitQuery().ToListAsync(cancellationToken);
+    }
+
+    public Task<GroupOrdersMode?> GetModeForChange(CancellationToken cancellationToken = default)
+    {
+        return context.GroupOrdersMode.SingleOrDefaultAsync(x => x.Id == GroupOrdersMode.SingleRowId,
+            cancellationToken);
+    }
+
+    public void AddMode(GroupOrdersMode mode)
+    {
+        context.GroupOrdersMode.Add(mode);
+    }
+
+    public Task<List<GroupOrder>> GetAllOrdersForChange(CancellationToken cancellationToken = default)
+    {
+        return context.GroupOrders.Include(o => o.GroupOrderTeachers).Include(o => o.GroupOrderStudents)
+            .Include(o => o.GroupOrderDayTimePlaces).AsSplitQuery().OrderBy(o => o.Id).ToListAsync(cancellationToken);
+    }
+
+    public async Task<GroupOrderLinkedRows> GetLinkedRowsForChange(CancellationToken cancellationToken = default)
+    {
+        return new GroupOrderLinkedRows(
+            await context.GroupsByTeachers.Where(x => x.GroupOrderTeacherId != null).ToListAsync(cancellationToken),
+            await context.GroupsByStudents.Where(x => x.GroupOrderStudentId != null).ToListAsync(cancellationToken),
+            await context.GroupDayTimePlaces.Where(x => x.GroupOrderDayTimePlaceId != null)
+                .ToListAsync(cancellationToken));
     }
 
     private IQueryable<GroupOrderRowData> CreateRows(GroupOrdersListQuery query)
@@ -437,27 +469,5 @@ public sealed class GroupOrdersRepository(IMimosiGeDbContext context) : IGroupOr
     private static string? NumberText(int? numberYear, int? number)
     {
         return numberYear is { } year && number is { } n ? new OrderNumber(year, n).ToString() : null;
-    }
-
-    //სტრიქონის LineId ბაზის სტრიქონის Id-ია, როგორც ვიზარდი 1-ის შესავალში (GroupOrdersSwitchPlanner)
-    private static GroupState ToState(Group group)
-    {
-        return new GroupState(
-            new GroupFields(group.AcademicYearId, group.GroupCode, group.CourseId, group.GroupSizeId,
-                group.StudentStatusId), group.VoidDate,
-            [
-                .. group.GroupsByTeachers.OrderBy(t => t.StartDate).ThenBy(t => t.Id).Select(t =>
-                    new GroupTeacherRow(t.Id, t.TeacherContractId, t.SalarySchemaId, t.StartDate, t.EndDate))
-            ],
-            [
-                .. group.GroupsByStudents.OrderBy(s => s.StartDate).ThenBy(s => s.GbsId).Select(s =>
-                    new GroupStudentRow(s.GbsId, s.StudentContractId, s.FourWeekHours, s.FourWeekFee, s.OneHourFee,
-                        s.HoursCoefficient, s.Note, s.StartDate, s.EndDate))
-            ],
-            [
-                .. group.GroupDayTimePlaces.OrderBy(d => d.StartDate).ThenBy(d => d.GdtpId).Select(d =>
-                    new GroupDayTimePlaceRow(d.GdtpId, d.WeekDayId, d.LessonStartTimeId, d.HoursCount, d.RoomId,
-                        d.StartDate, d.EndDate))
-            ]);
     }
 }

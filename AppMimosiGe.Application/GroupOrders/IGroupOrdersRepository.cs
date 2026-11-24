@@ -108,4 +108,19 @@ public interface IGroupOrdersRepository
 
     //მოსწავლის სტატუსის Rate, კოდის კლასისთვის (D186); null, თუ სტატუსი არ არის
     Task<int?> GetStudentStatusRate(int studentStatusId, CancellationToken cancellationToken = default);
+
+    //ვიზარდი 1-ისთვის (D194): ყველა ჯგუფი, ყველა წლისა, სტრიქონებით, EF-ის თვალყურის დევნებით: სტრიქონებს ხაზის
+    //კავშირი ეწერება
+    Task<List<Group>> GetAllGroupsForChange(CancellationToken cancellationToken = default);
+
+    //რეჟიმის ერთადერთი სტრიქონი შესაცვლელად, EF-ის თვალყურის დევნებით; null: სტრიქონი არ არის (ჯგუფების რეჟიმი)
+    Task<GroupOrdersMode?> GetModeForChange(CancellationToken cancellationToken = default);
+
+    void AddMode(GroupOrdersMode mode);
+
+    //ვიზარდი 2-ისთვის (D195): ყველა ბრძანება ხაზებით, დაპაუზებულებიც, Id-ის რიგით, EF-ის თვალყურის დევნებით
+    Task<List<GroupOrder>> GetAllOrdersForChange(CancellationToken cancellationToken = default);
+
+    //ვიზარდი 2-ისთვის (D195): ჯგუფების სტრიქონები, რომლებსაც ხაზის კავშირი აქვს, EF-ის თვალყურის დევნებით
+    Task<GroupOrderLinkedRows> GetLinkedRowsForChange(CancellationToken cancellationToken = default);
 }

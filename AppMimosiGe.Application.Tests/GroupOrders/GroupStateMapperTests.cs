@@ -21,6 +21,29 @@ public sealed class GroupStateMapperTests
             [StudentRow(Day(9, 1)), StudentLineRow(7, 21, Day(10, 1), null, 7m, "შენიშვნა")]);
     }
 
+    //ბაზის ჯგუფი: სტრიქონები დაწყებისა და Id-ის რიგით, LineId ბაზის სტრიქონის Id-ია (ვიზარდი 1-ის შესავალი)
+    [Fact]
+    public void ToState_HasTheFieldsAndTheRowsByStartWithTheirIds()
+    {
+        MimosiGeCore.Domain.Models.Group group = GroupOrdersModeTestData.StoredGroup(4, "605", voidDate: Day(12, 31));
+        group.GroupsByStudents.Add(new MimosiGeCore.Domain.Models.GroupByStudent
+        {
+            GbsId = 40, GroupId = 4, StudentContractId = 50, StartDate = Day(8, 31), EndDate = Day(9, 30)
+        });
+
+        GroupState state = GroupStateMapper.ToState(group);
+
+        Assert.Equal((new GroupFields(11, "605", 6, 2, 10), (DateTime?)Day(12, 31)), (state.Fields, state.VoidDate));
+        Assert.Equal([new GroupTeacherRow(41, 5, 8, Day(9, 1), null)], state.Teachers);
+        Assert.Equal(
+        [
+            new GroupStudentRow(40, 50, 8f, 48m, 6m, 1f, null, Day(8, 31), Day(9, 30)),
+            new GroupStudentRow(42, 24, 8f, 48m, 6m, 1f, "შენიშვნა", Day(9, 1), null),
+            new GroupStudentRow(43, 44, 8f, 48m, 6m, 1f, null, Day(9, 1), Day(9, 15))
+        ], state.Students);
+        Assert.Equal([new GroupDayTimePlaceRow(44, 1, 4, 2f, 1, Day(9, 1), null)], state.DayTimePlaces);
+    }
+
     [Fact]
     public void ToGroupRequest_HasTheFieldsAndEveryRow()
     {

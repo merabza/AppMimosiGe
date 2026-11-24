@@ -9,12 +9,14 @@ using AppMimosiGe.Application.AcademicYears.CreateAcademicYear;
 using AppMimosiGe.Application.AcademicYears.GetAcademicYears;
 using AppMimosiGe.Application.AcademicYears.GetAcademicYearWizardInfo;
 using AppMimosiGe.Application.AcademicYears.Models;
+using AppMimosiGe.Application.GroupOrders;
 using AppMimosiGe.Application.LessonGenerator;
 using AppMimosiGe.Application.LessonGenerator.Models;
 using AppMimosiGe.Application.StudentContracts;
 using AppMimosiGe.Application.StudentContracts.GetStudentContractNextNumber;
 using AppMimosiGeShared.Contracts.Errors;
 using AppMimosiGeShared.Contracts.V1.Responses;
+using BackendCarcass.Application.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using MimosiGeCore.Domain.Models;
 using Moq;
@@ -211,9 +213,17 @@ public sealed class AcademicYearHandlersTests
         return (scopeFactory, unitsOfWork);
     }
 
-    private CloseAcademicYearGroupsCommandHandler CloseHandler(IServiceScopeFactory scopeFactory) =>
-        new(_repository.Object, _lessonGeneratorRepository.Object, _unitOfWork.Object, scopeFactory,
-            _timeProvider.Object);
+    //ჯგუფების რეჟიმი: დახურვა VoidDate-ით, როგორც ბრძანებებამდე (ბრძანებების რეჟიმი
+    //CloseAcademicYearGroupsByOrdersTests-შია)
+    private CloseAcademicYearGroupsCommandHandler CloseHandler(IServiceScopeFactory scopeFactory)
+    {
+        var groupOrdersRepository = new Mock<IGroupOrdersRepository>();
+        groupOrdersRepository.Setup(r => r.GetMode(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new GroupOrdersModeResponse(false, null, null, null));
+        return new CloseAcademicYearGroupsCommandHandler(_repository.Object, groupOrdersRepository.Object,
+            _lessonGeneratorRepository.Object, _unitOfWork.Object, scopeFactory, new Mock<ICurrentUser>().Object,
+            new GroupOrdersSettings(), _timeProvider.Object);
+    }
 
     private void SetUpGroupsToClose(DateTime closeDate, params int[] grpIds)
     {

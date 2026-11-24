@@ -17,6 +17,7 @@ using AppMimosiGe.Application.TeacherContracts;
 using AppMimosiGe.Application.WorkHours;
 using AppMimosiGe.Infrastructure.BankTransactions.BogBonline;
 using AppMimosiGe.Infrastructure.BankTransactions.TbcBis;
+using AppMimosiGe.Infrastructure.GroupOrders;
 using AppMimosiGe.Infrastructure.Reports;
 using AppMimosiGe.Infrastructure.Repositories;
 using AppMimosiGe.Infrastructure.Rights;
@@ -43,6 +44,7 @@ public static class AppMimosiGeInfrastructureDependencyInjection
         services.AddScoped<ITeacherContractsRepository, TeacherContractsRepository>();
         services.AddScoped<IGroupsRepository, GroupsRepository>();
         services.AddScoped<IGroupOrdersRepository, GroupOrdersRepository>();
+        services.AddSingleton<IGroupOrdersExportFiles, GroupOrdersExportFiles>();
         services.AddScoped<ILessonGeneratorRepository, LessonGeneratorRepository>();
         services.AddScoped<ILessonsRepository, LessonsRepository>();
         services.AddScoped<IPaymentsRepository, PaymentsRepository>();

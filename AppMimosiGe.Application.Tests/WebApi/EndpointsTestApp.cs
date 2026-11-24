@@ -29,7 +29,11 @@ using AppMimosiGe.Application.GroupOrders.GetGroupOrder;
 using AppMimosiGe.Application.GroupOrders.GetGroupOrderFormLookups;
 using AppMimosiGe.Application.GroupOrders.GetGroupOrderPrint;
 using AppMimosiGe.Application.GroupOrders.GetGroupOrders;
+using AppMimosiGe.Application.GroupOrders.GetGroupOrdersExportFile;
 using AppMimosiGe.Application.GroupOrders.GetGroupOrdersMode;
+using AppMimosiGe.Application.GroupOrders.Models;
+using AppMimosiGe.Application.GroupOrders.SwitchToGroupEditing;
+using AppMimosiGe.Application.GroupOrders.SwitchToGroupOrders;
 using AppMimosiGe.Application.GroupOrders.UpdateGroupOrder;
 using AppMimosiGe.Application.Groups.CreateGroup;
 using AppMimosiGe.Application.Groups.DeleteGroup;
@@ -146,6 +150,11 @@ internal static class EndpointsTestApp
         builder.Services.AddSingleton(Mock.Of<ICommandHandler<CreateGroupOrderCommand, int>>());
         builder.Services.AddSingleton(Mock.Of<ICommandHandler<UpdateGroupOrderCommand>>());
         builder.Services.AddSingleton(Mock.Of<ICommandHandler<DeleteGroupOrderCommand>>());
+        builder.Services.AddSingleton(Mock
+            .Of<ICommandHandler<SwitchToGroupOrdersCommand, SwitchToGroupOrdersResponse>>());
+        builder.Services.AddSingleton(Mock
+            .Of<ICommandHandler<SwitchToGroupEditingCommand, SwitchToGroupEditingResponse>>());
+        builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetGroupOrdersExportFileQuery, GroupOrdersExportFile>>());
         builder.Services.AddSingleton(
             Mock.Of<ICommandHandler<GenerateGroupLessonsCommand, LessonsGenerationResponse>>());
         builder.Services.AddSingleton(

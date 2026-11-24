@@ -65,19 +65,11 @@ public sealed class CreateGroupOrderCommandHandler(
             return saveError;
         }
 
-        //ნომერი და გამოცემის თარიღი პირველი შენახვისას ენიჭება, დაპაუზებულ ბრძანებასაც (D192); ორგანიზაცია და
-        //ხელმომწერი კონფიგურაციიდან ბრძანებაში იწერება, რომ ის ისე დაიბეჭდოს, როგორც გამოიცა (D193)
+        //ნომერი და გამოცემის თარიღი პირველი შენახვისას ენიჭება, დაპაუზებულ ბრძანებასაც (D192)
         AcademicYear academicYear =
             await studentContractsRepository.GetAcademicYear(order.AcademicYearId, cancellationToken) ??
             throw new InvalidOperationException($"Academic year {order.AcademicYearId} not found");
-        OrderNumber number =
-            await repository.NextNumber(OrderNumber.YearOf(academicYear.StartDate), cancellationToken);
-        order.NumberYear = number.NumberYear;
-        order.Number = number.Number;
-        order.IssueDate = now.Date;
-        order.OrganizationName = settings.OrganizationName;
-        order.SignerTitle = settings.SignerTitle;
-        order.SignerName = settings.SignerName;
+        await repository.Issue(order, academicYear.StartDate, now, settings, cancellationToken);
 
         if (await _steps.SaveChanges(cancellationToken) is { } concurrencyError)
         {

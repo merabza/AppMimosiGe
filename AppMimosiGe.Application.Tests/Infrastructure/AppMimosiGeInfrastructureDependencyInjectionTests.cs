@@ -18,6 +18,7 @@ using AppMimosiGe.Application.WorkHours;
 using AppMimosiGe.Infrastructure.BankTransactions.BogBonline;
 using AppMimosiGe.Infrastructure.BankTransactions.TbcBis;
 using AppMimosiGe.Infrastructure.DependencyInjection;
+using AppMimosiGe.Infrastructure.GroupOrders;
 using AppMimosiGe.Infrastructure.Reports;
 using AppMimosiGe.Infrastructure.Repositories;
 using AppMimosiGe.Infrastructure.Rights;
@@ -92,6 +93,23 @@ public sealed class AppMimosiGeInfrastructureDependencyInjectionTests
             Assert.Single(services, s => s.ServiceType == typeof(IGroupOrdersRepository));
         Assert.Equal(typeof(GroupOrdersRepository), descriptor.ImplementationType);
         Assert.Equal(ServiceLifetime.Scoped, descriptor.Lifetime);
+    }
+
+    //ვიზარდი 2-ის ფაილები (D195): მდგომარეობის გარეშე, ერთი მთელი პროცესისთვის
+    [Fact]
+    public void AddAppMimosiGeInfrastructure_RegistersGroupOrdersExportFilesAsSingleton()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+
+        // Act
+        services.AddAppMimosiGeInfrastructure(null);
+
+        // Assert
+        ServiceDescriptor descriptor =
+            Assert.Single(services, s => s.ServiceType == typeof(IGroupOrdersExportFiles));
+        Assert.Equal(typeof(GroupOrdersExportFiles), descriptor.ImplementationType);
+        Assert.Equal(ServiceLifetime.Singleton, descriptor.Lifetime);
     }
 
     [Fact]

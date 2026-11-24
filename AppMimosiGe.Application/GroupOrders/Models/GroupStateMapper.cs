@@ -4,6 +4,7 @@ using System.Linq;
 using AppMimosiGe.Application.Groups.Models;
 using AppMimosiGe.Application.LessonGenerator.Models;
 using AppMimosiGeShared.Contracts.V1.Requests;
+using MimosiGeCore.Domain.Models;
 
 namespace AppMimosiGe.Application.GroupOrders.Models;
 
@@ -13,6 +14,32 @@ namespace AppMimosiGe.Application.GroupOrders.Models;
 /// </summary>
 public static class GroupStateMapper
 {
+    /// <summary>
+    ///     ბაზის ჯგუფის ახლანდელი მდგომარეობა სტრიქონებით, დაწყებისა და Id-ის რიგით. სტრიქონის LineId ბაზის სტრიქონის
+    ///     Id-ია (GroupByTeacher.Id, GroupByStudent.GbsId, GroupDayTimePlace.GdtpId), როგორც ვიზარდი 1-ის შესავალში
+    ///     (GroupOrdersSwitchPlanner)
+    /// </summary>
+    public static GroupState ToState(Group group)
+    {
+        return new GroupState(
+            new GroupFields(group.AcademicYearId, group.GroupCode, group.CourseId, group.GroupSizeId,
+                group.StudentStatusId), group.VoidDate,
+            [
+                .. group.GroupsByTeachers.OrderBy(t => t.StartDate).ThenBy(t => t.Id).Select(t =>
+                    new GroupTeacherRow(t.Id, t.TeacherContractId, t.SalarySchemaId, t.StartDate, t.EndDate))
+            ],
+            [
+                .. group.GroupsByStudents.OrderBy(s => s.StartDate).ThenBy(s => s.GbsId).Select(s =>
+                    new GroupStudentRow(s.GbsId, s.StudentContractId, s.FourWeekHours, s.FourWeekFee, s.OneHourFee,
+                        s.HoursCoefficient, s.Note, s.StartDate, s.EndDate))
+            ],
+            [
+                .. group.GroupDayTimePlaces.OrderBy(d => d.StartDate).ThenBy(d => d.GdtpId).Select(d =>
+                    new GroupDayTimePlaceRow(d.GdtpId, d.WeekDayId, d.LessonStartTimeId, d.HoursCount, d.RoomId,
+                        d.StartDate, d.EndDate))
+            ]);
+    }
+
     /// <summary>
     ///     ჯგუფის მოთხოვნა GroupRequestValidator-ისთვის (D55, D181-ის 00:00, ცნობარები, დადებითი მნიშვნელობები). სტრიქონებს
     ///     Id არ სჭირდება: ვალიდატორი მათ არ ადარებს

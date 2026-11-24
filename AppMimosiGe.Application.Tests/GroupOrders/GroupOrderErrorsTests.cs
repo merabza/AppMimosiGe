@@ -57,6 +57,19 @@ public sealed class GroupOrderErrorsTests
             error.Description);
     }
 
+    //D197, D220: ჯგუფები „კოდი — მიზეზი", წერტილმძიმით, როგორც სხვა სიებში
+    [Fact]
+    public void GroupsCannotBeClosed_ListsTheGroupsWithTheirReasons()
+    {
+        Error error = GroupOrderErrors.GroupsCannotBeClosed(["605 — პირველი", "606 — მეორე"]);
+
+        Assert.Equal(nameof(GroupOrderErrors.GroupsCannotBeClosed), error.Code);
+        Assert.Equal(ErrorType.Conflict, error.Type);
+        Assert.Equal(
+            "წლის ჯგუფების დახურვა შეჩერდა: ამ ჯგუფებს დახურვის ბრძანება ვერ შეექმნება. გაასწორეთ და გაიმეორეთ: " +
+            "605 — პირველი; 606 — მეორე", error.Description);
+    }
+
     [Fact]
     public void StudentFeeDoesNotMatchHours_MoreThanTenRows_ListsTheFirstTenAndTheCount()
     {

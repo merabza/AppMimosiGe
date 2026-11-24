@@ -14,4 +14,10 @@ public sealed class GroupOrdersSettings
     public string SignerTitle { get; set; } = "დირექტორი";
 
     public string SignerName { get; set; } = "ნატალია ჭყონია";
+
+    /// <summary>
+    ///     საქაღალდე, სადაც ვიზარდი 2 ბრძანებების ფაილს წერს (D195). ნაგულისხმევი არ აქვს: მის გარეშე ვიზარდი 2 არ
+    ///     ეშვება
+    /// </summary>
+    public string? ExportFolder { get; set; }
 }

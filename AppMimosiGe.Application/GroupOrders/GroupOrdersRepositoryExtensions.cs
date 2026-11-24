@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -49,6 +50,24 @@ public static class GroupOrdersRepositoryExtensions
 
         await MarkNextPayDatesDirty(repository, studentContractIds, cancellationToken);
         return groups;
+    }
+
+    /// <summary>
+    ///     ბრძანების გამოცემა პირველი შენახვისას: ნომერი და გამოცემის თარიღი (D192), ორგანიზაცია და ხელმომწერი
+    ///     კონფიგურაციიდან, რომ ბრძანება ისე დაიბეჭდოს, როგორც გამოიცა (D193). ნომრის წელი ბრძანების სასწავლო წლისაა
+    ///     (academicYearStartDate); მთვლელი ბრძანებასთან ერთად ინახება
+    /// </summary>
+    public static async Task Issue(this IGroupOrdersRepository repository, GroupOrder order,
+        DateTime academicYearStartDate, DateTime now, GroupOrdersSettings settings,
+        CancellationToken cancellationToken)
+    {
+        OrderNumber number = await repository.NextNumber(OrderNumber.YearOf(academicYearStartDate), cancellationToken);
+        order.NumberYear = number.NumberYear;
+        order.Number = number.Number;
+        order.IssueDate = now.Date;
+        order.OrganizationName = settings.OrganizationName;
+        order.SignerTitle = settings.SignerTitle;
+        order.SignerName = settings.SignerName;
     }
 
     /// <summary>
