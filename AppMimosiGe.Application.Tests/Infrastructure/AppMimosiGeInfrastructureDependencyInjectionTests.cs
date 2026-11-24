@@ -310,6 +310,40 @@ public sealed class AppMimosiGeInfrastructureDependencyInjectionTests
         Assert.Equal(ServiceLifetime.Scoped, descriptor.Lifetime);
     }
 
+    //D193: კონფიგურაციის სექციის გარეშე ნაგულისხმევი ორგანიზაცია და ხელმომწერი
+    [Fact]
+    public void AddAppMimosiGeInfrastructure_WithoutGroupOrdersSettings_RegistersTheDefaults()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+
+        // Act
+        services.AddAppMimosiGeInfrastructure(null);
+
+        // Assert
+        ServiceDescriptor descriptor = Assert.Single(services, s => s.ServiceType == typeof(GroupOrdersSettings));
+        Assert.Equal(ServiceLifetime.Singleton, descriptor.Lifetime);
+        var settings = Assert.IsType<GroupOrdersSettings>(descriptor.ImplementationInstance);
+        Assert.Equal("ცოდნის სახლი მიმოსი", settings.OrganizationName);
+        Assert.Equal("დირექტორი", settings.SignerTitle);
+        Assert.Equal("ნატალია ჭყონია", settings.SignerName);
+    }
+
+    [Fact]
+    public void AddAppMimosiGeInfrastructure_RegistersTheGivenGroupOrdersSettings()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        var settings = new GroupOrdersSettings { SignerName = "სხვა ხელმომწერი" };
+
+        // Act
+        services.AddAppMimosiGeInfrastructure(null, groupOrdersSettings: settings);
+
+        // Assert
+        ServiceDescriptor descriptor = Assert.Single(services, s => s.ServiceType == typeof(GroupOrdersSettings));
+        Assert.Same(settings, descriptor.ImplementationInstance);
+    }
+
     [Fact]
     public void AddAppMimosiGeInfrastructure_WithDebugLogger_LogsStartAndFinish()
     {

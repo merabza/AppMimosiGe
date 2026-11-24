@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using AppMimosiGe.Application.GroupOrders;
 using AppMimosiGe.Application.Groups;
 using AppMimosiGe.Application.Groups.CreateGroup;
 using AppMimosiGe.Application.Groups.DeleteGroup;
@@ -35,6 +36,8 @@ public sealed class GroupHandlersTests
     //Mondays of the group, which starts on Tuesday 15.09.2026
     private static readonly DateTime Monday21 = new(2026, 9, 21, 0, 0, 0, DateTimeKind.Unspecified);
 
+    //groups mode unless a test switches to orders mode (D183)
+    private readonly Mock<IGroupOrdersRepository> _groupOrders = new();
     private readonly Mock<ILessonGeneratorRepository> _lessonGenerator = new();
 
     //the student contracts the handler loaded to set their DirtyNextPayDate flag
@@ -44,6 +47,7 @@ public sealed class GroupHandlersTests
 
     public GroupHandlersTests()
     {
+        WithOrdersMode(false);
         //the calendar ends in December: the generator's horizon is 31.12.2026. By default the saved group has no
         //lessons, so no change makes a lesson erroneous
         _lessonGenerator.Setup(r => r.GetLastOperationMonth(It.IsAny<CancellationToken>()))
@@ -247,15 +251,67 @@ public sealed class GroupHandlersTests
     //today is 01.10.2026 unless given
     private UpdateGroupCommandHandler UpdateHandler(DateTimeOffset? now = null)
     {
-        return new UpdateGroupCommandHandler(_repository.Object, _lessonGenerator.Object, _unitOfWork.Object,
-            TimeProviderAt(now ?? new DateTimeOffset(2026, 10, 1, 10, 0, 0, TimeSpan.Zero)));
+        return new UpdateGroupCommandHandler(_repository.Object, _groupOrders.Object, _lessonGenerator.Object,
+            _unitOfWork.Object, TimeProviderAt(now ?? new DateTimeOffset(2026, 10, 1, 10, 0, 0, TimeSpan.Zero)));
     }
 
     //today is 01.10.2026
     private CreateGroupCommandHandler CreateHandler()
     {
-        return new CreateGroupCommandHandler(_repository.Object, _unitOfWork.Object,
+        return new CreateGroupCommandHandler(_repository.Object, _groupOrders.Object, _unitOfWork.Object,
             TimeProviderAt(new DateTimeOffset(2026, 10, 1, 10, 0, 0, TimeSpan.Zero)));
+    }
+
+    private DeleteGroupCommandHandler DeleteHandler()
+    {
+        return new DeleteGroupCommandHandler(_repository.Object, _groupOrders.Object, _unitOfWork.Object);
+    }
+
+    private void WithOrdersMode(bool isOrdersMode)
+    {
+        _groupOrders.Setup(r => r.GetMode(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new GroupOrdersModeResponse(isOrdersMode, null, null, null));
+    }
+
+    //D183: in orders mode the group editor changes nothing, before any other check
+    [Fact]
+    public async Task Create_InOrdersMode_IsConflictAndNothingIsAdded()
+    {
+        WithOrdersMode(true);
+
+        Result<int> result = await CreateHandler().Handle(new CreateGroupCommand(ValidRequest()),
+            CancellationToken.None);
+
+        Assert.Equal(GroupErrors.GroupsAreManagedByOrders.Code, result.Error.Code);
+        _repository.Verify(r => r.Add(It.IsAny<Group>()), Times.Never);
+        VerifySaved(Times.Never());
+    }
+
+    [Fact]
+    public async Task Update_InOrdersMode_IsConflictAndTheGroupIsNotLoaded()
+    {
+        WithOrdersMode(true);
+        WithExistingGroup(ExistingGroup());
+
+        Result result = await UpdateHandler().Handle(new UpdateGroupCommand(42, ValidRequest()),
+            CancellationToken.None);
+
+        Assert.Equal(GroupErrors.GroupsAreManagedByOrders.Code, result.Error.Code);
+        _repository.Verify(r => r.GetForChange(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
+        VerifySaved(Times.Never());
+    }
+
+    [Fact]
+    public async Task Delete_InOrdersMode_IsConflictAndNothingIsRemoved()
+    {
+        WithOrdersMode(true);
+        WithExistingGroup(ExistingGroup());
+
+        Result result = await DeleteHandler().Handle(new DeleteGroupCommand(42), CancellationToken.None);
+
+        Assert.Equal(GroupErrors.GroupsAreManagedByOrders.Code, result.Error.Code);
+        _repository.Verify(r => r.Remove(It.IsAny<Group>()), Times.Never);
+        VerifySaved(Times.Never());
     }
 
     [Fact]
@@ -1036,7 +1092,7 @@ public sealed class GroupHandlersTests
     [Fact]
     public async Task Delete_NotFound_ReturnsNotFound()
     {
-        var handler = new DeleteGroupCommandHandler(_repository.Object, _unitOfWork.Object);
+        DeleteGroupCommandHandler handler = DeleteHandler();
 
         Result result = await handler.Handle(new DeleteGroupCommand(42), CancellationToken.None);
 
@@ -1049,7 +1105,7 @@ public sealed class GroupHandlersTests
     {
         WithExistingGroup(ExistingGroup());
         _repository.Setup(r => r.IsInUse(42, It.IsAny<CancellationToken>())).ReturnsAsync(true);
-        var handler = new DeleteGroupCommandHandler(_repository.Object, _unitOfWork.Object);
+        DeleteGroupCommandHandler handler = DeleteHandler();
 
         Result result = await handler.Handle(new DeleteGroupCommand(42), CancellationToken.None);
 
@@ -1064,7 +1120,7 @@ public sealed class GroupHandlersTests
     {
         Group group = ExistingGroup();
         WithExistingGroup(group);
-        var handler = new DeleteGroupCommandHandler(_repository.Object, _unitOfWork.Object);
+        DeleteGroupCommandHandler handler = DeleteHandler();
 
         Result result = await handler.Handle(new DeleteGroupCommand(42), CancellationToken.None);
 

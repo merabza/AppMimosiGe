@@ -24,7 +24,14 @@ public sealed class GroupOrdersRepository(IMimosiGeDbContext context) : IGroupOr
             .Where(o => o.GroupId != null && groupIds.Contains(o.GroupId.Value) ||
                         o.TargetGroupId != null && groupIds.Contains(o.TargetGroupId.Value))
             .OrderBy(o => o.OrderDate).ThenBy(o => o.Id).ToListAsync(cancellationToken);
-        return [.. orders.Select(ToData)];
+        return [.. orders.Select(GroupOrderEntityMapper.ToData)];
+    }
+
+    public Task<GroupOrder?> GetOrderForChange(int orderId, CancellationToken cancellationToken = default)
+    {
+        return context.GroupOrders.Include(o => o.GroupOrderTeachers).Include(o => o.GroupOrderStudents)
+            .Include(o => o.GroupOrderDayTimePlaces).AsSplitQuery()
+            .SingleOrDefaultAsync(o => o.Id == orderId, cancellationToken);
     }
 
     public Task<List<Group>> GetGroupsForChange(IReadOnlyCollection<int> groupIds,
@@ -33,6 +40,22 @@ public sealed class GroupOrdersRepository(IMimosiGeDbContext context) : IGroupOr
         return context.Groups.Include(g => g.GroupsByTeachers).Include(g => g.GroupsByStudents)
             .Include(g => g.GroupDayTimePlaces).AsSplitQuery().Where(g => groupIds.Contains(g.GrpId))
             .ToListAsync(cancellationToken);
+    }
+
+    public Task<bool> GroupExists(int grpId, CancellationToken cancellationToken = default)
+    {
+        return context.Groups.AnyAsync(g => g.GrpId == grpId, cancellationToken);
+    }
+
+    public async Task<bool> GroupCodeIsTaken(int academicYearId, string groupCode, int? exceptGrpId,
+        int? exceptOrderId, CancellationToken cancellationToken = default)
+    {
+        return await context.Groups.AnyAsync(
+                   g => g.AcademicYearId == academicYearId && g.GroupCode == groupCode && g.GrpId != exceptGrpId,
+                   cancellationToken) ||
+               await context.GroupOrders.AnyAsync(
+                   o => o.IsPaused && o.AcademicYearId == academicYearId && o.GroupCode == groupCode &&
+                        o.Id != exceptOrderId, cancellationToken);
     }
 
     public async Task<GroupOrdersModeResponse> GetMode(CancellationToken cancellationToken = default)
@@ -58,6 +81,44 @@ public sealed class GroupOrdersRepository(IMimosiGeDbContext context) : IGroupOr
         }
 
         return number;
+    }
+
+    public async Task<OrderNumber?> GetNumber(int orderId, CancellationToken cancellationToken = default)
+    {
+        var stored = await context.GroupOrders.AsNoTracking().Where(o => o.Id == orderId)
+            .Select(o => new { o.NumberYear, o.Number }).SingleOrDefaultAsync(cancellationToken);
+        return stored is { NumberYear: { } numberYear, Number: { } number }
+            ? new OrderNumber(numberYear, number)
+            : null;
+    }
+
+    public void AddOrder(GroupOrder order)
+    {
+        context.GroupOrders.Add(order);
+    }
+
+    public void RemoveOrder(GroupOrder order)
+    {
+        RemoveLines(new GroupOrderRemovedLines([.. order.GroupOrderTeachers], [.. order.GroupOrderStudents],
+            [.. order.GroupOrderDayTimePlaces]));
+        context.GroupOrders.Remove(order);
+    }
+
+    public void RemoveLines(GroupOrderRemovedLines lines)
+    {
+        context.GroupOrderTeachers.RemoveRange(lines.Teachers);
+        context.GroupOrderStudents.RemoveRange(lines.Students);
+        context.GroupOrderDayTimePlaces.RemoveRange(lines.DayTimePlaces);
+    }
+
+    public async Task SetOrdersAcademicYear(int groupId, int academicYearId,
+        CancellationToken cancellationToken = default)
+    {
+        foreach (GroupOrder order in await context.GroupOrders
+                     .Where(o => o.GroupId == groupId || o.TargetGroupId == groupId).ToListAsync(cancellationToken))
+        {
+            order.AcademicYearId = academicYearId;
+        }
     }
 
     public void AddGroup(Group group)
@@ -88,7 +149,7 @@ public sealed class GroupOrdersRepository(IMimosiGeDbContext context) : IGroupOr
     //ყველაფერი, რაც ჯგუფს Restrict-ით ებმის, კონტექსტში იტვირთება და იშლება: ბრძანებების ხაზებიც, რომ EF-მა სტრიქონები
     //მათზე ადრე წაშალოს. ჯგუფის სტრიქონებზე მიბმულ გაკვეთილების მოსწავლეებს RemoveRows შლის, აქ კი ჯგუფის
     //გაკვეთილების ყველა მოსწავლე იშლება. გენერატორის ჟურნალს ბაზა თვითონ შლის (Cascade)
-    public async Task RemoveGroup(Group group, CancellationToken cancellationToken = default)
+    public async Task RemoveGroup(Group group, int? keptOrderId, CancellationToken cancellationToken = default)
     {
         int groupId = group.GrpId;
         context.LessonsByStudents.RemoveRange(await context.LessonsByStudents
@@ -97,7 +158,7 @@ public sealed class GroupOrdersRepository(IMimosiGeDbContext context) : IGroupOr
             .ToListAsync(cancellationToken));
         context.GroupOrders.RemoveRange(await context.GroupOrders.Include(o => o.GroupOrderTeachers)
             .Include(o => o.GroupOrderStudents).Include(o => o.GroupOrderDayTimePlaces).AsSplitQuery()
-            .Where(o => o.GroupId == groupId).ToListAsync(cancellationToken));
+            .Where(o => o.GroupId == groupId && o.Id != keptOrderId).ToListAsync(cancellationToken));
         await RemoveRows(new GroupRemovedRows([.. group.GroupsByTeachers], [.. group.GroupsByStudents],
             [.. group.GroupDayTimePlaces]), cancellationToken);
         context.Groups.Remove(group);
@@ -107,40 +168,5 @@ public sealed class GroupOrdersRepository(IMimosiGeDbContext context) : IGroupOr
         CancellationToken cancellationToken = default)
     {
         return context.StudentContracts.Where(x => scIds.Contains(x.ScId)).ToListAsync(cancellationToken);
-    }
-
-    //ჯგუფის ველები მხოლოდ საწყის და შექმნის ბრძანებას აქვს (D186, D196); ხაზები Id-ის რიგით
-    private static GroupOrderData ToData(GroupOrder order)
-    {
-        return new GroupOrderData
-        {
-            Id = order.Id,
-            OrderType = order.OrderType,
-            OrderDate = order.OrderDate,
-            IsPaused = order.IsPaused,
-            GroupId = order.GroupId,
-            TargetGroupId = order.TargetGroupId,
-            Fields = order.OrderType is EGroupOrderType.Initial or EGroupOrderType.CreateGroup
-                ? new GroupFields(order.AcademicYearId, order.GroupCode!, order.CourseId!.Value,
-                    order.GroupSizeId!.Value, order.StudentStatusId!.Value)
-                : null,
-            VoidDate = order.VoidDate,
-            Teachers =
-            [
-                .. order.GroupOrderTeachers.OrderBy(x => x.Id).Select(x =>
-                    new GroupOrderTeacherLine(x.Id, x.TeacherContractId, x.SalarySchemaId, x.StartDate, x.EndDate))
-            ],
-            Students =
-            [
-                .. order.GroupOrderStudents.OrderBy(x => x.Id).Select(x => new GroupOrderStudentLine(x.Id,
-                    x.StudentContractId, x.FourWeekHours, x.FourWeekFee, x.OneHourFee, x.HoursCoefficient, x.Note,
-                    x.StartDate, x.EndDate))
-            ],
-            DayTimePlaces =
-            [
-                .. order.GroupOrderDayTimePlaces.OrderBy(x => x.Id).Select(x => new GroupOrderDayTimePlaceLine(x.Id,
-                    x.WeekDayId, x.LessonStartTimeId, x.HoursCount, x.RoomId, x.StartDate, x.EndDate))
-            ]
-        };
     }
 }

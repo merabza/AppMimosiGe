@@ -622,7 +622,7 @@ public sealed class GroupOrdersRepositoryTests : IDisposable
         Group group = LoadGroup(4);
 
         // Act
-        await _repository.RemoveGroup(group);
+        await _repository.RemoveGroup(group, null);
         Save();
 
         // Assert
@@ -833,7 +833,7 @@ public sealed class GroupOrdersRepositoryTests : IDisposable
         SeedCreatedGroup();
 
         // Act
-        Result result = await _repository.DeleteGroup(4, CancellationToken.None);
+        Result result = await _repository.DeleteGroup(4, null, CancellationToken.None);
         Save();
 
         // Assert
@@ -853,12 +853,179 @@ public sealed class GroupOrdersRepositoryTests : IDisposable
         AddAndSave(new SalaryLineDetail { SadId = 1, SaId = 1, GroupId = 4 });
 
         // Act
-        Result result = await _repository.DeleteGroup(4, CancellationToken.None);
+        Result result = await _repository.DeleteGroup(4, null, CancellationToken.None);
 
         // Assert
         Assert.True(result.IsFailure);
         Assert.Equal(nameof(GroupOrderErrors.CreateOrderHasSalary), result.Error.Code);
         Assert.Equal(ErrorType.Conflict, result.Error.Type);
         Assert.Empty(_context.ChangeTracker.Entries());
+    }
+
+    //შესაცვლელად ბრძანება ხაზებით და თვალყურის დევნებით იტვირთება
+    [Fact]
+    public async Task GetOrderForChange_ReturnsTheTrackedOrderWithItsLines()
+    {
+        // Act
+        GroupOrder? order = await _repository.GetOrderForChange(1);
+
+        // Assert
+        Assert.NotNull(order);
+        Assert.Equal(EntityState.Unchanged, _context.Entry(order).State);
+        Assert.Equal([101], order.GroupOrderTeachers.Select(x => x.Id));
+        Assert.Equal([201, 202], order.GroupOrderStudents.Select(x => x.Id).Order());
+        Assert.Equal([301], order.GroupOrderDayTimePlaces.Select(x => x.Id));
+        Assert.Null(await _repository.GetOrderForChange(99));
+    }
+
+    [Fact]
+    public async Task GroupExists_FindsOnlyStoredGroups()
+    {
+        Assert.True(await _repository.GroupExists(2));
+        Assert.False(await _repository.GroupExists(9));
+    }
+
+    //D186: კოდი დაკავებულია, თუ ის წელში ჯგუფს ან დაპაუზებულ შექმნის ბრძანებას აქვს; საკუთარი ჯგუფი და ბრძანება
+    //არ ითვლება
+    [Fact]
+    public async Task GroupCodeIsTaken_CountsTheYearsGroupsAndPausedCreateOrders()
+    {
+        // Arrange
+        GroupOrder paused = Order(8, EGroupOrderType.CreateGroup, Day(12, 1), null);
+        paused.IsPaused = true;
+        SetFields(paused, "605");
+        AddAndSave(paused);
+
+        // Act + Assert
+        Assert.True(await _repository.GroupCodeIsTaken(11, "601", null, null));
+        Assert.False(await _repository.GroupCodeIsTaken(11, "601", 1, null));
+        Assert.False(await _repository.GroupCodeIsTaken(12, "601", null, null));
+        Assert.True(await _repository.GroupCodeIsTaken(11, "605", null, null));
+        Assert.False(await _repository.GroupCodeIsTaken(11, "605", null, 8));
+        Assert.False(await _repository.GroupCodeIsTaken(11, "606", null, null));
+    }
+
+    //D192: საწყის ბრძანებას ნომერი არ აქვს
+    [Fact]
+    public async Task GetNumber_ReturnsTheOrdersNumber()
+    {
+        Assert.Equal(new OrderNumber(26, 1), await _repository.GetNumber(3));
+        Assert.Null(await _repository.GetNumber(1));
+        Assert.Null(await _repository.GetNumber(99));
+    }
+
+    //ბრძანება 9: მასწავლებლის, მოსწავლის და განრიგის ხაზებით, რომლებზეც სტრიქონი არ არის მიბმული
+    private void SeedUnlinkedOrder()
+    {
+        GroupOrder order = Order(9, EGroupOrderType.AddStudents, Day(12, 1), 1);
+        order.GroupOrderTeachers.Add(TeacherLine(191, 1, null));
+        order.GroupOrderStudents.Add(StudentLine(291, 12, null));
+        order.GroupOrderStudents.Add(StudentLine(292, 13, null));
+        order.GroupOrderDayTimePlaces.Add(DayTimePlaceLine(391, 2, 1, null));
+        AddAndSave(order);
+    }
+
+    [Fact]
+    public async Task RemoveOrder_DeletesTheOrderWithItsLines()
+    {
+        // Arrange
+        SeedUnlinkedOrder();
+        GroupOrder order = (await _repository.GetOrderForChange(9))!;
+
+        // Act
+        _repository.RemoveOrder(order);
+        Save();
+
+        // Assert
+        Assert.Equal([1, 2, 3], StoredIds(c => c.GroupOrders.Select(o => o.Id)));
+        Assert.Equal([101, 111], StoredIds(c => c.GroupOrderTeachers.Select(x => x.Id)));
+        Assert.Equal([201, 202, 211, 221], StoredIds(c => c.GroupOrderStudents.Select(x => x.Id)));
+        Assert.Equal([301, 311], StoredIds(c => c.GroupOrderDayTimePlaces.Select(x => x.Id)));
+    }
+
+    [Fact]
+    public async Task RemoveLines_DeletesOnlyTheGivenLines()
+    {
+        // Arrange
+        SeedUnlinkedOrder();
+        GroupOrder order = (await _repository.GetOrderForChange(9))!;
+
+        // Act
+        _repository.RemoveLines(new GroupOrderRemovedLines([], [order.GroupOrderStudents.Single(x => x.Id == 292)],
+            [order.GroupOrderDayTimePlaces.Single()]));
+        Save();
+
+        // Assert
+        Assert.Equal([1, 2, 3, 9], StoredIds(c => c.GroupOrders.Select(o => o.Id)));
+        Assert.Equal([101, 111, 191], StoredIds(c => c.GroupOrderTeachers.Select(x => x.Id)));
+        Assert.Equal([201, 202, 211, 221, 291], StoredIds(c => c.GroupOrderStudents.Select(x => x.Id)));
+        Assert.Equal([301, 311], StoredIds(c => c.GroupOrderDayTimePlaces.Select(x => x.Id)));
+    }
+
+    //ჯგუფ 2-ის წელი იცვლება: მისი საწყისი ბრძანება და გადაყვანა, რომლის სამიზნეც ის არის
+    [Fact]
+    public async Task SetOrdersAcademicYear_ChangesTheGroupsOrders()
+    {
+        // Act
+        await _repository.SetOrdersAcademicYear(2, 12);
+        Save();
+
+        // Assert
+        Assert.Equal((11, 12, 12),
+            (StoredOrder(1).AcademicYearId, StoredOrder(2).AcademicYearId, StoredOrder(3).AcademicYearId));
+    }
+
+    //D213: ხელახლა დაპაუზებული შექმნის ბრძანება ხაზებით რჩება, ჯგუფი და მისი სხვა ბრძანებები კი იშლება
+    [Fact]
+    public async Task RemoveGroup_KeepsTheKeptOrderWithItsLines()
+    {
+        // Arrange
+        SeedCreatedGroup();
+        GroupOrder kept = (await _repository.GetOrderForChange(4))!;
+        kept.GroupId = null;
+        kept.IsPaused = true;
+        Group group = LoadGroup(4);
+
+        // Act
+        await _repository.RemoveGroup(group, 4);
+        Save();
+
+        // Assert
+        Assert.Equal([1, 2, 3], StoredIds(c => c.Groups.Select(g => g.GrpId)));
+        Assert.Equal([1, 2, 3, 4], StoredIds(c => c.GroupOrders.Select(o => o.Id)));
+        Assert.Null(StoredOrder(4).GroupId);
+        Assert.Equal([101, 111, 141], StoredIds(c => c.GroupOrderTeachers.Select(x => x.Id)));
+        Assert.Equal([201, 202, 211, 221, 241], StoredIds(c => c.GroupOrderStudents.Select(x => x.Id)));
+        Assert.Equal([1, 2, 3], StoredIds(c => c.Lessons.Select(l => l.Id)));
+    }
+
+    //D205: გადაყვანები ჯგუფებს ჯაჭვით აკავშირებს: 1 → 2 (ბრძანება 3) და 2 → 3 (ბრძანება 9)
+    [Fact]
+    public async Task GetLinkedOrders_FollowsTheTransfersChain()
+    {
+        // Arrange
+        GroupOrder transfer = Order(9, EGroupOrderType.TransferStudents, Day(11, 2), 2);
+        transfer.TargetGroupId = 3;
+        AddAndSave(transfer);
+
+        // Act
+        List<GroupOrderData> fromFirst = await _repository.GetLinkedOrders([1], CancellationToken.None);
+        List<GroupOrderData> fromLast = await _repository.GetLinkedOrders([3], CancellationToken.None);
+
+        // Assert
+        Assert.Equal([1, 2, 3, 9], fromFirst.Select(o => o.Id));
+        Assert.Equal([1, 2, 3, 9], fromLast.Select(o => o.Id));
+    }
+
+    //ჯგუფი, რომელსაც გადაყვანა არ აკავშირებს, მხოლოდ თავის ბრძანებებს იღებს
+    [Fact]
+    public async Task GetLinkedOrders_GroupWithoutTransfers_GetsItsOwnOrders()
+    {
+        // Arrange
+        SeedCreatedGroup();
+
+        // Act + Assert
+        Assert.Equal([4, 5], (await _repository.GetLinkedOrders([4], CancellationToken.None)).Select(o => o.Id));
+        Assert.Empty(await _repository.GetLinkedOrders([], CancellationToken.None));
     }
 }

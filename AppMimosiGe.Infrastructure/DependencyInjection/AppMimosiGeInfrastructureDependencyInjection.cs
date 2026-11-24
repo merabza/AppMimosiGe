@@ -29,11 +29,15 @@ namespace AppMimosiGe.Infrastructure.DependencyInjection;
 public static class AppMimosiGeInfrastructureDependencyInjection
 {
     //tbcBisSettings, bogBonlineSettings: კონფიგურაციის სექციები "TbcBis" და "BogBonline" (ჰოსტი კითხულობს); null:
-    //ამ ბანკთან ინტეგრაცია არ არის კონფიგურირებული
+    //ამ ბანკთან ინტეგრაცია არ არის კონფიგურირებული. groupOrdersSettings: სექცია "GroupOrders"; null: ნაგულისხმევი
+    //ორგანიზაცია და ხელმომწერი (D193)
     public static IServiceCollection AddAppMimosiGeInfrastructure(this IServiceCollection services,
-        ILogger? debugLogger, TbcBisSettings? tbcBisSettings = null, BogBonlineSettings? bogBonlineSettings = null)
+        ILogger? debugLogger, TbcBisSettings? tbcBisSettings = null, BogBonlineSettings? bogBonlineSettings = null,
+        GroupOrdersSettings? groupOrdersSettings = null)
     {
         debugLogger?.Information("{MethodName} Started", nameof(AddAppMimosiGeInfrastructure));
+
+        services.AddSingleton(groupOrdersSettings ?? new GroupOrdersSettings());
 
         services.AddScoped<IStudentContractsRepository, StudentContractsRepository>();
         services.AddScoped<ITeacherContractsRepository, TeacherContractsRepository>();

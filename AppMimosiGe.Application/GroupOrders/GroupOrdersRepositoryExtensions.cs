@@ -52,13 +52,34 @@ public static class GroupOrdersRepositoryExtensions
     }
 
     /// <summary>
-    ///     ჯგუფის წაშლა მისი შექმნის ბრძანების წაშლისას (D191): გაკვეთილები, დასწრება, სტრიქონები, ჯგუფის ბრძანებები და
-    ///     ჯგუფი. უარყოფილია, თუ ჯგუფის რომელიმე გაკვეთილი ხელფასის დათვლაშია. გადაყვანის კავშირს handler-ი ამოწმებს.
+    ///     ბრძანებები გადათამაშებისთვის (D185, D205): groupIds-ის და მათთან გადაყვანებით, ჯაჭვით, დაკავშირებული ყველა
+    ///     ჯგუფის ყველა ბრძანება, ნებისმიერი თარიღით. ჯაჭვს ყოველი ახალი რგოლი ერთი წაკითხვით აგრძელებს
+    /// </summary>
+    public static async Task<List<GroupOrderData>> GetLinkedOrders(this IGroupOrdersRepository repository,
+        IEnumerable<int> groupIds, CancellationToken cancellationToken)
+    {
+        HashSet<int> loadedGroupIds = [.. groupIds];
+        List<GroupOrderData> orders = await repository.GetOrders(loadedGroupIds, cancellationToken);
+        int[] linkedGroupIds = LinkedGroupIds(orders, loadedGroupIds);
+        while (linkedGroupIds.Length > 0)
+        {
+            loadedGroupIds.UnionWith(linkedGroupIds);
+            orders = await repository.GetOrders(loadedGroupIds, cancellationToken);
+            linkedGroupIds = LinkedGroupIds(orders, loadedGroupIds);
+        }
+
+        return orders;
+    }
+
+    /// <summary>
+    ///     ჯგუფის წაშლა მისი შექმნის ბრძანების წაშლისას (D191) ან ხელახლა დაპაუზებისას (D213): გაკვეთილები, დასწრება,
+    ///     სტრიქონები, ჯგუფის ბრძანებები (keptOrderId-ის გარდა: ხელახლა დაპაუზებული შექმნის ბრძანება რჩება) და ჯგუფი.
+    ///     უარყოფილია, თუ ჯგუფის რომელიმე გაკვეთილი ხელფასის დათვლაშია. გადაყვანის კავშირს handler-ი ამოწმებს.
     ///     მოსწავლეების შემდეგი გადახდის თარიღი თავიდან ითვლება. ბაზაში არაფერი იწერება: წაშლას handler-ის SaveChanges
     ///     ჩაწერს
     /// </summary>
     public static async Task<Result> DeleteGroup(this IGroupOrdersRepository repository, int groupId,
-        CancellationToken cancellationToken)
+        int? keptOrderId, CancellationToken cancellationToken)
     {
         if (await repository.HasSalary(groupId, cancellationToken))
         {
@@ -68,8 +89,19 @@ public static class GroupOrdersRepositoryExtensions
         Group group = (await repository.GetGroupsForChange([groupId], cancellationToken)).Single();
         await MarkNextPayDatesDirty(repository, group.GroupsByStudents.Select(s => s.StudentContractId),
             cancellationToken);
-        await repository.RemoveGroup(group, cancellationToken);
+        await repository.RemoveGroup(group, keptOrderId, cancellationToken);
         return Result.Success();
+    }
+
+    //გადაყვანებით დაკავშირებული ჯგუფები, რომელთა ბრძანებებიც ჯერ არ წაკითხულა
+    private static int[] LinkedGroupIds(IEnumerable<GroupOrderData> orders, HashSet<int> loadedGroupIds)
+    {
+        return
+        [
+            .. orders.Where(o => o is { OrderType: EGroupOrderType.TransferStudents, IsPaused: false })
+                .SelectMany(o => new[] { o.GroupId, o.TargetGroupId }).OfType<int>()
+                .Where(id => !loadedGroupIds.Contains(id)).Distinct()
+        ];
     }
 
     //Access-ის SetStudentNextPayDateDirtyForGroup: ჯგუფის ცვლილება მისი მოსწავლეების შემდეგი გადახდის თარიღს ცვლის

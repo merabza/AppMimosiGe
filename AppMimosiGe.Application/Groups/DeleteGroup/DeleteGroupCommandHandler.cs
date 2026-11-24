@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using AppMimosiGe.Application.GroupOrders;
 using AppMimosiGeShared.Contracts.Errors;
 using MimosiGeCore.Domain.Models;
 using SystemTools.Application.Abstractions.Messaging;
@@ -10,11 +11,19 @@ using SystemTools.SharedKernel;
 namespace AppMimosiGe.Application.Groups.DeleteGroup;
 
 // ReSharper disable once ClassNeverInstantiated.Global
-public sealed class DeleteGroupCommandHandler(IGroupsRepository repository, IUnitOfWork unitOfWork)
-    : ICommandHandler<DeleteGroupCommand>
+public sealed class DeleteGroupCommandHandler(
+    IGroupsRepository repository,
+    IGroupOrdersRepository groupOrdersRepository,
+    IUnitOfWork unitOfWork) : ICommandHandler<DeleteGroupCommand>
 {
     public async Task<Result> Handle(DeleteGroupCommand command, CancellationToken cancellationToken)
     {
+        //ბრძანებების რეჟიმში ჯგუფი მხოლოდ მისი შექმნის ბრძანების წაშლით იშლება (D183, D191)
+        if ((await groupOrdersRepository.GetMode(cancellationToken)).IsOrdersMode)
+        {
+            return Result.Failure(GroupErrors.GroupsAreManagedByOrders);
+        }
+
         Group? group = await repository.GetForChange(command.GrpId, cancellationToken);
         if (group is null)
         {

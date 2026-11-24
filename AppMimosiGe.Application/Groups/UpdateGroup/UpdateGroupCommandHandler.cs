@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using AppMimosiGe.Application.GroupOrders;
 using AppMimosiGe.Application.Groups.Models;
 using AppMimosiGe.Application.Groups.Validation;
 using AppMimosiGe.Application.LessonGenerator;
@@ -19,6 +20,7 @@ namespace AppMimosiGe.Application.Groups.UpdateGroup;
 // ReSharper disable once ClassNeverInstantiated.Global
 public sealed class UpdateGroupCommandHandler(
     IGroupsRepository repository,
+    IGroupOrdersRepository groupOrdersRepository,
     ILessonGeneratorRepository lessonGeneratorRepository,
     IUnitOfWork unitOfWork,
     TimeProvider timeProvider) : ICommandHandler<UpdateGroupCommand>
@@ -26,6 +28,12 @@ public sealed class UpdateGroupCommandHandler(
     public async Task<Result> Handle(UpdateGroupCommand command, CancellationToken cancellationToken)
     {
         GroupRequest request = command.Request!;
+
+        //ბრძანებების რეჟიმში ჯგუფი მხოლოდ ბრძანებით იცვლება (D183)
+        if ((await groupOrdersRepository.GetMode(cancellationToken)).IsOrdersMode)
+        {
+            return Result.Failure(GroupErrors.GroupsAreManagedByOrders);
+        }
 
         Group? group = await repository.GetForChange(command.GrpId, cancellationToken);
         if (group is null)

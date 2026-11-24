@@ -17,12 +17,22 @@ public static class GroupsRepositoryExtensions
     ///     Access-ის TeacherContractID_Change: მასწავლებლის არჩევისას სქემა ხდება მისი კონტრაქტის ძირითადი სქემა
     ///     (SalarySchemaByHours). აბრუნებს ამ სქემებს იმ კონტრაქტებისთვის, რომელთა სტრიქონიც სქემის გარეშე მოვიდა
     /// </summary>
-    public static async Task<Dictionary<int, int>> GetDefaultSalarySchemes(this IGroupsRepository repository,
+    public static Task<Dictionary<int, int>> GetDefaultSalarySchemes(this IGroupsRepository repository,
         IEnumerable<GroupTeacherRequest> teachers, CancellationToken cancellationToken)
     {
+        return repository.GetDefaultSalarySchemes(
+            teachers.Where(x => x.SalarySchemaId is null).Select(x => x.TeacherContractId), cancellationToken);
+    }
+
+    /// <summary>
+    ///     იგივე კონტრაქტების მიხედვით: teacherContractIds მასწავლებლის სტრიქონებისა ან ბრძანების ხაზებისაა, რომლებიც
+    ///     სქემის გარეშე მოვიდა (D187)
+    /// </summary>
+    public static async Task<Dictionary<int, int>> GetDefaultSalarySchemes(this IGroupsRepository repository,
+        IEnumerable<int> teacherContractIds, CancellationToken cancellationToken)
+    {
         var defaultSalarySchemes = new Dictionary<int, int>();
-        foreach (int teacherContractId in teachers.Where(x => x.SalarySchemaId is null).Select(x => x.TeacherContractId)
-                     .Distinct())
+        foreach (int teacherContractId in teacherContractIds.Distinct())
         {
             //ვალიდატორმა უკვე შეამოწმა, რომ კონტრაქტს ძირითადი სქემა აქვს
             defaultSalarySchemes[teacherContractId] =
@@ -39,12 +49,25 @@ public static class GroupsRepositoryExtensions
     ///     შენახვის შემდეგ მათ სხვა ჯგუფებს ედრება; today-მდე დასრულებული გადაფარვა არ ითვლება (D203). აბრუნებს შეცდომას
     ///     გადაფარვების აღწერებით, ან null-ს, თუ გადაფარვა არ არის
     /// </summary>
+    public static Task<Error?> FindTeacherTimesOverlap(this IGroupsRepository repository, GroupSchedule schedule,
+        DateTime today, CancellationToken cancellationToken)
+    {
+        return repository.FindTeacherTimesOverlap(schedule, today, [], cancellationToken);
+    }
+
+    /// <summary>
+    ///     იგივე, ბრძანების შედეგისთვის (D185): replacedSchedules სხვა შეხებული ჯგუფების სამიზნე მდგომარეობაა, რომელიც
+    ///     ბაზის განრიგს ანაცვლებს, ამიტომ შეხებული ჯგუფები ერთმანეთსაც ედრება. fromDate-მდე დასრულებული გადაფარვა არ
+    ///     ითვლება: ბრძანებებისთვის ეს გადასვლის დღეა (D212)
+    /// </summary>
     public static async Task<Error?> FindTeacherTimesOverlap(this IGroupsRepository repository,
-        GroupSchedule schedule, DateTime today, CancellationToken cancellationToken)
+        GroupSchedule schedule, DateTime fromDate, IReadOnlyCollection<GroupSchedule> replacedSchedules,
+        CancellationToken cancellationToken)
     {
         List<GroupSchedule> otherSchedules = await repository.GetTeacherSchedules(ContractIds(schedule),
             schedule.GrpId, cancellationToken);
-        IReadOnlyList<GroupScheduleOverlap> overlaps = GroupScheduleOverlapsRule.Find(schedule, otherSchedules, today);
+        IReadOnlyList<GroupScheduleOverlap> overlaps =
+            GroupScheduleOverlapsRule.Find(schedule, Replace(otherSchedules, replacedSchedules), fromDate);
         if (overlaps.Count == 0)
         {
             return null;
@@ -61,12 +84,23 @@ public static class GroupsRepositoryExtensions
     ///     შენახვის შემდეგ მათ სხვა ჯგუფებს ედრება; today-მდე დასრულებული გადაფარვა არ ითვლება (D203). აბრუნებს შეცდომას
     ///     გადაფარვების აღწერებით, ან null-ს, თუ გადაფარვა არ არის
     /// </summary>
+    public static Task<Error?> FindStudentTimesOverlap(this IGroupsRepository repository, GroupSchedule schedule,
+        DateTime today, CancellationToken cancellationToken)
+    {
+        return repository.FindStudentTimesOverlap(schedule, today, [], cancellationToken);
+    }
+
+    /// <summary>
+    ///     იგივე, ბრძანების შედეგისთვის (D185, D212), როგორც მასწავლებლებისთვის
+    /// </summary>
     public static async Task<Error?> FindStudentTimesOverlap(this IGroupsRepository repository,
-        GroupSchedule schedule, DateTime today, CancellationToken cancellationToken)
+        GroupSchedule schedule, DateTime fromDate, IReadOnlyCollection<GroupSchedule> replacedSchedules,
+        CancellationToken cancellationToken)
     {
         List<GroupSchedule> otherSchedules = await repository.GetStudentSchedules(ContractIds(schedule),
             schedule.GrpId, cancellationToken);
-        IReadOnlyList<GroupScheduleOverlap> overlaps = GroupScheduleOverlapsRule.Find(schedule, otherSchedules, today);
+        IReadOnlyList<GroupScheduleOverlap> overlaps =
+            GroupScheduleOverlapsRule.Find(schedule, Replace(otherSchedules, replacedSchedules), fromDate);
         if (overlaps.Count == 0)
         {
             return null;
@@ -82,6 +116,16 @@ public static class GroupsRepositoryExtensions
     private static int[] ContractIds(GroupSchedule schedule)
     {
         return [.. schedule.Members.Select(x => x.ContractId).Distinct()];
+    }
+
+    //ბაზის ჯგუფები, რომელთა ნაცვლადაც replacedSchedules-ის ჯგუფია
+    private static List<GroupSchedule> Replace(IEnumerable<GroupSchedule> schedules,
+        IReadOnlyCollection<GroupSchedule> replacedSchedules)
+    {
+        return
+        [
+            .. schedules.Where(s => replacedSchedules.All(r => r.GrpId != s.GrpId)), .. replacedSchedules
+        ];
     }
 
     //გადაფარვების აღწერები იმავე რიგით: წევრის სახელი (კონტრაქტის ID-ით) და კვირის დღის სახელი

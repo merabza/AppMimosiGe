@@ -283,4 +283,85 @@ public sealed class GroupsRepositoryExtensionsTests
             error.Description, StringComparison.Ordinal);
         _repository.Verify(r => r.GetTeacherContracts(It.IsAny<CancellationToken>()), Times.Never);
     }
+
+    //D187: the order lines without a scheme, by their contracts; a contract is looked up once
+    [Fact]
+    public async Task GetDefaultSalarySchemes_ContractIds_LooksEachUpOnce()
+    {
+        // Arrange
+        _repository.Setup(r => r.GetDefaultSalarySchemeId(5, It.IsAny<CancellationToken>())).ReturnsAsync(9);
+        _repository.Setup(r => r.GetDefaultSalarySchemeId(6, It.IsAny<CancellationToken>())).ReturnsAsync(14);
+
+        // Act
+        Dictionary<int, int> result =
+            await _repository.Object.GetDefaultSalarySchemes([5, 6, 5], CancellationToken.None);
+
+        // Assert
+        Assert.Equal(new Dictionary<int, int> { [5] = 9, [6] = 14 }, result);
+        _repository.Verify(r => r.GetDefaultSalarySchemeId(5, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    //D185: an order's result replaces the stored schedule of a touched group, so group 7 is compared as it will be
+    [Fact]
+    public async Task FindTeacherTimesOverlap_ReplacedSchedule_TakesThePlaceOfTheStoredGroup()
+    {
+        // Arrange
+        WithOtherGroup(new TimeOnly(16, 0));
+
+        // Act
+        Error? error = await _repository.Object.FindTeacherTimesOverlap(Schedule(), Today,
+            OtherSchedules(new TimeOnly(16, 30)), CancellationToken.None);
+
+        // Assert
+        Assert.Null(error);
+    }
+
+    //D185: a touched group that the stored schedules don't have yet is compared too; the group itself is not
+    [Fact]
+    public async Task FindTeacherTimesOverlap_ReplacedScheduleOfAnotherGroup_IsCompared()
+    {
+        // Arrange
+        _repository.Setup(r => r.GetTeacherSchedules(It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<int>(),
+            It.IsAny<CancellationToken>())).ReturnsAsync([]);
+        _repository.Setup(r => r.GetTeacherContracts(It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new GroupTeacherContractLookupResponse(5, "Alpha Ann / T5", 8)]);
+        WithWeekDays();
+
+        // Act
+        Error? error = await _repository.Object.FindTeacherTimesOverlap(Schedule(), Today,
+            [Schedule(), .. OtherSchedules(new TimeOnly(16, 0))], CancellationToken.None);
+
+        // Assert
+        Assert.Equal(nameof(GroupErrors.TeacherTimesOverlap), error?.Code);
+    }
+
+    [Fact]
+    public async Task FindStudentTimesOverlap_ReplacedSchedule_TakesThePlaceOfTheStoredGroup()
+    {
+        // Arrange
+        WithOtherGroupOfStudent(new TimeOnly(16, 0));
+
+        // Act
+        Error? error = await _repository.Object.FindStudentTimesOverlap(Schedule(), Today,
+            OtherSchedules(new TimeOnly(16, 30)), CancellationToken.None);
+
+        // Assert
+        Assert.Null(error);
+    }
+
+    //D212: the orders compare from the transition day, so an overlap that is over by then doesn't count
+    [Fact]
+    public async Task FindStudentTimesOverlap_OverlapOverByTheFromDate_IsNull()
+    {
+        // Arrange
+        _repository.Setup(r => r.GetStudentSchedules(It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<int>(),
+            It.IsAny<CancellationToken>())).ReturnsAsync([]);
+
+        // Act
+        Error? error = await _repository.Object.FindStudentTimesOverlap(Schedule(), Day(10, 1),
+            OtherSchedules(new TimeOnly(16, 0)), CancellationToken.None);
+
+        // Assert
+        Assert.Null(error);
+    }
 }
