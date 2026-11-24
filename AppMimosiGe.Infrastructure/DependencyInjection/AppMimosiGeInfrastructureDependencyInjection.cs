@@ -4,6 +4,7 @@ using AppMimosiGe.Application.AcademicYears;
 using AppMimosiGe.Application.Balances;
 using AppMimosiGe.Application.BankTransactions;
 using AppMimosiGe.Application.CrmCalls;
+using AppMimosiGe.Application.GroupOrders;
 using AppMimosiGe.Application.Groups;
 using AppMimosiGe.Application.LessonGenerator;
 using AppMimosiGe.Application.Lessons;
@@ -37,6 +38,7 @@ public static class AppMimosiGeInfrastructureDependencyInjection
         services.AddScoped<IStudentContractsRepository, StudentContractsRepository>();
         services.AddScoped<ITeacherContractsRepository, TeacherContractsRepository>();
         services.AddScoped<IGroupsRepository, GroupsRepository>();
+        services.AddScoped<IGroupOrdersRepository, GroupOrdersRepository>();
         services.AddScoped<ILessonGeneratorRepository, LessonGeneratorRepository>();
         services.AddScoped<ILessonsRepository, LessonsRepository>();
         services.AddScoped<IPaymentsRepository, PaymentsRepository>();
