@@ -363,4 +363,40 @@ public sealed class GroupOrdersReplayTests
 
         Assert.Empty(Affected(null, paused, paused, Transfer(25, 10, 1, A, B)));
     }
+
+    //D190 გადათამაშებისას: 7-ის (20.11) შემდეგ გადატანილი ბრძანება დახურულ ჯგუფს აღარ ესადაგება
+    [Fact]
+    public void Run_OrderMovedAfterTheClose_DoesNotFit()
+    {
+        GroupOrderData order = At(10, 11, 1, A);
+
+        GroupOrdersReplayResult result = GroupOrdersReplay.Run(order, At(10, 11, 25, A),
+            [AInitial, order, Order(11, EGroupOrderType.CloseGroup, Day(11, 20), A)]);
+
+        Assert.Equal(new GroupOrderNotFitting(10, GroupOrderErrors.GroupIsClosedOnOrderDate), result.NotFitting);
+    }
+
+    //7 გადაიტანეს 10.11-ის ბრძანებაზე ადრე: ეს ბრძანება დახურულ ჯგუფს აღარ ესადაგება
+    [Fact]
+    public void Run_CloseMovedBeforeAnOrder_TheOrderNoLongerFits()
+    {
+        GroupOrderData close = Order(11, EGroupOrderType.CloseGroup, Day(11, 20), A);
+
+        GroupOrdersReplayResult result = GroupOrdersReplay.Run(close, close with { OrderDate = Day(11, 5) },
+            [AInitial, At(10, 11, 10, A), close]);
+
+        Assert.Equal(new GroupOrderNotFitting(10, GroupOrderErrors.GroupIsClosedOnOrderDate), result.NotFitting);
+    }
+
+    //7-ის დღეზე გადატანილი, ადრე შექმნილი ბრძანება 7-ზე ადრე გაივლის, ამიტომ აღარ ესადაგება 7
+    [Fact]
+    public void Run_OrderMovedToTheCloseDay_TheCloseNoLongerFits()
+    {
+        GroupOrderData order = At(10, 11, 10, A);
+
+        GroupOrdersReplayResult result = GroupOrdersReplay.Run(order, At(10, 11, 20, A),
+            [AInitial, order, Order(11, EGroupOrderType.CloseGroup, Day(11, 20), A)]);
+
+        Assert.Equal(new GroupOrderNotFitting(11, GroupOrderErrors.GroupHasLaterOrders), result.NotFitting);
+    }
 }

@@ -59,6 +59,14 @@ public sealed class GroupOrderFormulasTests
         Assert.Equal(matches, GroupOrderFormulas.HoursMatchSchedule(fourWeekHours, hoursCoefficient, weeklyHours));
     }
 
+    //საათის ფასი × საათები; float-ის საათები 7 ციფრამდე მრგვალდება (≈ 6.6 → 6.6), როგორც FeeMatchesHours-ში
+    [Fact]
+    public void FourWeekFee_IsTheHourFeeTimesTheHours()
+    {
+        Assert.Equal(72m, GroupOrderFormulas.FourWeekFee(6m, 12f));
+        Assert.Equal(66m, GroupOrderFormulas.FourWeekFee(10m, GroupOrderFormulas.FourWeekHours(1.1f, 1.5f)));
+    }
+
     public static TheoryData<decimal, decimal, float, bool> FeeCases => new()
     {
         { 72m, 6m, 12f, true },

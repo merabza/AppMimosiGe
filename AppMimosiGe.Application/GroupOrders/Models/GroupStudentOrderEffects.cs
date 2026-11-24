@@ -93,8 +93,8 @@ public static class GroupStudentOrderEffects
 
     /// <summary>
     ///     5 (D190, D202, D205): „საიდან“ ჯგუფში (source) a-ზე მოქმედი სტრიქონი a-თი სრულდება, „სად“ ჯგუფში (target) კი
-    ///     a-დან იწყება ახალი, ხაზის ტარიფითა და შენიშვნით, „საიდან“-ის სტრიქონის დასრულებამდე. პირობები: „სად“ a-ზე
-    ///     შექმნილი და ღიაა; ჯგუფები ერთი სასწავლო წლისა და საგნისაა; მოსწავლე „სად“-ში a-ზე უკვე არ არის, როგორც
+    ///     a-დან იწყება ახალი, ხაზის ტარიფითა და შენიშვნით, „საიდან“-ის სტრიქონის დასრულებამდე. პირობები: ორივე ჯგუფი
+    ///     a-ზე შექმნილი და ღიაა; ჯგუფები ერთი სასწავლო წლისა და საგნისაა; მოსწავლე „სად“-ში a-ზე უკვე არ არის, როგორც
     ///     დამატებისას (3). null: ჯგუფი ჯერ არ შექმნილა
     /// </summary>
     public static Result<(GroupState Source, GroupState Target)> Transfer(GroupState? source, GroupState? target,
@@ -103,6 +103,12 @@ public static class GroupStudentOrderEffects
         if (source is null)
         {
             return GroupOrderErrors.OrderIsBeforeGroupStart;
+        }
+
+        //„საიდან“-ის დახურვა ყველა ბრძანების საერთო წესია (GroupOrderEffects.Apply)
+        if (GroupActivity.IsClosedOn(source, order.OrderDate))
+        {
+            return GroupOrderErrors.GroupIsClosedOnOrderDate;
         }
 
         if (target is null || GroupActivity.IsClosedOn(target, order.OrderDate))

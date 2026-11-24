@@ -9,9 +9,9 @@ namespace AppMimosiGe.Application.GroupOrders.Models;
 
 /// <summary>
 ///     ბრძანებების ტიპების ეფექტები ჯგუფის მდგომარეობაზე (GROUP_ORDERS.md §4). ჯგუფს ერთხელ ქმნის საწყისი (0) ან შექმნის
-///     (1) ბრძანება: მანამდე სხვა ბრძანება არ ესადაგება, მის შემდეგ კი თვითონ ისინი აღარ ესადაგება. ახალი ტიპის ეფექტი
-///     Apply-ის switch-ს ემატება. გადაყვანა (5) ორ ჯგუფს ცვლის, ამიტომ მისი ეფექტი ცალკეა
-///     (GroupStudentOrderEffects.Transfer)
+///     (1) ბრძანება: მანამდე სხვა ბრძანება არ ესადაგება, მის შემდეგ კი თვითონ ისინი აღარ ესადაგება. დახურვის
+///     (გაუქმების) დღეს და მის შემდეგ ჯგუფს ბრძანება აღარ ესადაგება (D190). ახალი ტიპის ეფექტი Apply-ის switch-ს
+///     ემატება. გადაყვანა (5) ორ ჯგუფს ცვლის, ამიტომ მისი ეფექტი ცალკეა (GroupStudentOrderEffects.Transfer)
 /// </summary>
 public static class GroupOrderEffects
 {
@@ -30,6 +30,8 @@ public static class GroupOrderEffects
             (EGroupOrderType.Initial or EGroupOrderType.CreateGroup, _) => GroupOrderErrors.CreateOrderCannotHaveGroup,
             //ჯგუფის შექმნამდე, ანუ მის დაწყებამდე, სხვა ბრძანება არ ესადაგება (D190)
             (_, null) => GroupOrderErrors.OrderIsBeforeGroupStart,
+            (_, { } closed) when GroupActivity.IsClosedOn(closed, order.OrderDate) =>
+                GroupOrderErrors.GroupIsClosedOnOrderDate,
             (EGroupOrderType.ChangeTeacher, { } created) => GroupTeacherOrderEffects.ChangeTeacher(created, order),
             (EGroupOrderType.AddStudents, { } created) => GroupStudentOrderEffects.AddStudents(created, order),
             (EGroupOrderType.RemoveStudents, { } created) => GroupStudentOrderEffects.RemoveStudents(created, order),

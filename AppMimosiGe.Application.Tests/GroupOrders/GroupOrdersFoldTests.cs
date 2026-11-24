@@ -161,13 +161,14 @@ public sealed class GroupOrdersFoldTests
             NotFitting(PausedCreateOrder(1, Day(9, 15)), CloseOrder(2, Day(11, 20))));
     }
 
-    //D185: ერთი დღის ბრძანებები Id-ის რიგით გაივლის: ჯერ შექმნა (3), მერე დახურვა (8), თუმცა სიაში პირიქითაა
+    //D185: ერთი დღის ბრძანებები Id-ის რიგით გაივლის: ჯერ შექმნა (3), მერე დამატება (8), თუმცა სიაში პირიქითაა
     [Fact]
     public void Run_SameDay_OrdersGoByTheirIds()
     {
-        GroupState state = Fold(CloseOrder(8, Day(9, 15)), CreateOrder(3, Day(9, 15)));
+        GroupState state = Fold(StudentsOrder(8, EGroupOrderType.AddStudents, Day(9, 15), GroupId,
+            StudentLine(81, 40)), CreateOrder(3, Day(9, 15)));
 
-        Assert.Equal(Day(9, 15), state.VoidDate);
+        Assert.Equal(StudentLineRow(81, 40, Day(9, 15), null), state.Students[2]);
     }
 
     //დახურვა (4) იმავე დღის შექმნაზე (9) ადრე შეიქმნა, ამიტომ ჯგუფის შექმნამდე გადის და არ ესადაგება
@@ -185,6 +186,73 @@ public sealed class GroupOrdersFoldTests
         GroupState state = Fold(CloseOrder(2, Day(9, 16)), CreateOrder(5, Day(9, 15)));
 
         Assert.Equal(Day(9, 16), state.VoidDate);
+    }
+
+    //D190: 7-ის დღეს ჯგუფს სხვა ბრძანება არ უნდა ჰქონდეს: შექმნის დღეს ჯგუფი ვერ დაიხურება
+    [Fact]
+    public void Run_CloseGroupOnTheCreationDay_DoesNotFit()
+    {
+        Assert.Equal(new GroupOrderNotFitting(8, GroupOrderErrors.GroupHasLaterOrders),
+            NotFitting(CloseOrder(8, Day(9, 15)), CreateOrder(3, Day(9, 15))));
+    }
+
+    //D190: დახურვა იმავე დღის ადრე შექმნილი ბრძანების შემდეგ არ ესადაგება, წინა დღისას კი ესადაგება
+    [Theory]
+    [InlineData(11, 20, false)]
+    [InlineData(11, 19, true)]
+    public void Run_CloseGroupAfterAnotherOrder_FitsOnlyOnALaterDay(int month, int day, bool fits)
+    {
+        GroupOrderNotFitting? notFitting = NotFitting(CreateOrder(1, Day(9, 15)),
+            StudentsOrder(2, EGroupOrderType.AddStudents, Day(month, day), GroupId, StudentLine(81, 40)),
+            CloseOrder(3, Day(11, 20)));
+
+        Assert.Equal(fits ? null : new GroupOrderNotFitting(3, GroupOrderErrors.GroupHasLaterOrders), notFitting);
+    }
+
+    //D190: 7-ის დღეს (მოგვიანებით შექმნილი) და მის შემდეგ ბრძანება დახურულ ჯგუფს აღარ ესადაგება, მეორე 7-იც
+    [Theory]
+    [InlineData(EGroupOrderType.AddStudents, 11, 20)]
+    [InlineData(EGroupOrderType.AddStudents, 11, 21)]
+    [InlineData(EGroupOrderType.CloseGroup, 12, 1)]
+    public void Run_OrderOnOrAfterTheCloseDate_DoesNotFit(EGroupOrderType orderType, int month, int day)
+    {
+        Assert.Equal(new GroupOrderNotFitting(4, GroupOrderErrors.GroupIsClosedOnOrderDate),
+            NotFitting(CreateOrder(1, Day(9, 15)), CloseOrder(3, Day(11, 20)),
+                Order(4, orderType, Day(month, day), GroupId)));
+    }
+
+    //D190: 0-ის გაუქმების დღეს ჯგუფს არცერთი ტიპის ბრძანება აღარ ესადაგება, ხაზების შემოწმებამდე; გადაყვანისას
+    //„საიდან“ ჯგუფი
+    [Theory]
+    [InlineData(EGroupOrderType.ChangeTeacher)]
+    [InlineData(EGroupOrderType.AddStudents)]
+    [InlineData(EGroupOrderType.RemoveStudents)]
+    [InlineData(EGroupOrderType.TransferStudents)]
+    [InlineData(EGroupOrderType.ChangeSchedule)]
+    [InlineData(EGroupOrderType.CloseGroup)]
+    [InlineData(EGroupOrderType.ChangeStudentFees)]
+    [InlineData(EGroupOrderType.ChangeSalaryScheme)]
+    [InlineData(EGroupOrderType.ChangeWeeklyHours)]
+    public void Run_OrderOnTheVoidDate_DoesNotFit(EGroupOrderType orderType)
+    {
+        GroupOrderData order = Order(2, orderType, Day(12, 31), GroupId) with
+        {
+            TargetGroupId = orderType == EGroupOrderType.TransferStudents ? GroupId + 1 : null
+        };
+
+        Assert.Equal(new GroupOrderNotFitting(2, GroupOrderErrors.GroupIsClosedOnOrderDate),
+            NotFitting(InitialOrder(1, Day(9, 2), Day(12, 31)), CreateOrder(3, Day(9, 1)) with { GroupId = GroupId + 1 },
+                order));
+    }
+
+    //0-ის გაუქმების წინა დღეს ჯგუფი ჯერ კიდევ ღიაა
+    [Fact]
+    public void Run_OrderTheDayBeforeTheVoidDate_Fits()
+    {
+        GroupState state = Fold(InitialOrder(1, Day(9, 2), Day(12, 31)),
+            StudentsOrder(2, EGroupOrderType.AddStudents, Day(12, 30), GroupId, StudentLine(81, 40)));
+
+        Assert.Equal(StudentLineRow(81, 40, Day(12, 30), null), state.Students[2]);
     }
 
     //D190: ჯგუფის დაწყებამდე (0-ის ან 1-ის თარიღამდე) ბრძანება არ ესადაგება, თუმცა ის მოგვიანებით შეიქმნა

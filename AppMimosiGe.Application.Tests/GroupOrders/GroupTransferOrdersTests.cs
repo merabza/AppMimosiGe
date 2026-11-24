@@ -172,6 +172,30 @@ public sealed class GroupTransferOrdersTests
         Assert.Equal(fits ? null : new GroupOrderNotFitting(3, GroupOrderErrors.TargetGroupIsNotOpen), notFitting);
     }
 
+    //D190: „საიდან“-ის დახურვა ყველა ბრძანების საერთო წესია: გაუქმების დღეს ის უკვე დახურულია, წინა დღეს ღიაა
+    [Theory]
+    [InlineData(10, 1, false)]
+    [InlineData(10, 2, true)]
+    public void Transfer_SourceVoidDate_IsTheFirstClosedDay(int month, int day, bool fits)
+    {
+        GroupOrderNotFitting? notFitting = NotFitting(SourceInitial with { VoidDate = Day(month, day) },
+            TargetInitial, Transfer(3, 10, 1, StudentLine(71, 20)));
+
+        Assert.Equal(fits ? null : new GroupOrderNotFitting(3, GroupOrderErrors.GroupIsClosedOnOrderDate),
+            notFitting);
+    }
+
+    //D190: გადაყვანა ორივე ჯგუფის ბრძანებაა, ამიტომ მის დღეს ვერც „საიდან“ დაიხურება და ვერც „სად“
+    [Theory]
+    [InlineData(Source)]
+    [InlineData(Target)]
+    public void Transfer_GroupClosedLaterTheSameDay_ClosingDoesNotFit(int closedGroupId)
+    {
+        Assert.Equal(new GroupOrderNotFitting(4, GroupOrderErrors.GroupHasLaterOrders),
+            NotFitting(SourceInitial, TargetInitial, Transfer(3, 10, 1, StudentLine(71, 20)),
+                Order(4, EGroupOrderType.CloseGroup, Day(10, 1), closedGroupId)));
+    }
+
     //D190: „სად“ ბრძანება 7-ით დაიხურა იმავე დღეს, გადაყვანამდე
     [Fact]
     public void Transfer_TargetClosedTheSameDay_DoesNotFit()

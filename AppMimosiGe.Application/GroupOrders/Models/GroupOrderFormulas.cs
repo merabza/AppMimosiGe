@@ -47,11 +47,19 @@ public static class GroupOrderFormulas
     }
 
     /// <summary>
+    ///     4 კვირის გადასახადი ფორმულით: საათის ფასი × 4 კვირის საათები
+    /// </summary>
+    public static decimal FourWeekFee(decimal oneHourFee, float fourWeekHours)
+    {
+        return oneHourFee * SingleToDecimal(fourWeekHours);
+    }
+
+    /// <summary>
     ///     |4 კვირის გადასახადი − საათის ფასი × 4 კვირის საათები| ≤ 0.01
     /// </summary>
     public static bool FeeMatchesHours(decimal fourWeekFee, decimal oneHourFee, float fourWeekHours)
     {
-        return Math.Abs(fourWeekFee - oneHourFee * SingleToDecimal(fourWeekHours)) <= FeeTolerance;
+        return Math.Abs(fourWeekFee - FourWeekFee(oneHourFee, fourWeekHours)) <= FeeTolerance;
     }
 
     //float 7 მნიშვნელოვან ციფრამდე, როგორც r30-ში (MismatchReports.SingleToDecimal): .NET 11-ის ზუსტი ორობითი
