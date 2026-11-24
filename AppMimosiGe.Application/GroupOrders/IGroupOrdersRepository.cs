@@ -72,4 +72,40 @@ public interface IGroupOrdersRepository
     //dirty ალმის დასაყენებლად, EF-ის თვალყურის დევნებით
     Task<List<StudentContract>> GetStudentContractsForChange(IReadOnlyCollection<int> scIds,
         CancellationToken cancellationToken = default);
+
+    //ბრძანებების სიის ერთი გვერდი: ფილტრი, დათვლა და დალაგება SQL სერვერზე. ბოლოს Id-ით, რომ გვერდებად დაყოფა მდგრადი
+    //იყოს
+    Task<GroupOrdersRowsDataResponse> GetRowsData(GroupOrdersListQuery query,
+        CancellationToken cancellationToken = default);
+
+    //ბრძანება რედაქტირებისთვის, ხაზებით
+    Task<GroupOrderResponse?> GetOne(int orderId, CancellationToken cancellationToken = default);
+
+    //ბრძანება ხაზებით ძრავისთვის, EF-ის თვალყურის დევნების გარეშე
+    Task<GroupOrderData?> GetOrder(int orderId, CancellationToken cancellationToken = default);
+
+    //ბრძანება ბეჭდვისთვის: ხაზები, ნომერი, გამოცემის მონაცემები და ჯგუფის სახელები
+    Task<GroupOrderPrintSource?> GetPrintSource(int orderId, CancellationToken cancellationToken = default);
+
+    //ბეჭდვის სახელები: მასწავლებლებისა და მოსწავლეების „გვარი სახელი" მოთხოვნილი კონტრაქტებით, ხელფასის სქემები,
+    //კვირის დღეები, დაწყების დროები და ოთახები
+    Task<GroupOrderPrintNames> GetPrintNames(IReadOnlyCollection<int> teacherContractIds,
+        IReadOnlyCollection<int> studentContractIds, CancellationToken cancellationToken = default);
+
+    //ჯგუფების ახლანდელი მდგომარეობა ბაზის სტრიქონებით, ჯგუფის Id-ით. სტრიქონის LineId ბაზის სტრიქონის Id-ია, როგორც
+    //ვიზარდი 1-ის შესავალში (GroupOrdersSwitchPlanner); ჯგუფი, რომელიც არ არის, შედეგში არ არის
+    Task<Dictionary<int, GroupState>> GetGroupStates(IReadOnlyCollection<int> groupIds,
+        CancellationToken cancellationToken = default);
+
+    //სასწავლო წლის ჯგუფები ბრძანების ფორმისა და სიის ფილტრისთვის, კოდის რიგით. CanHaveOrders: D202
+    Task<List<GroupOrderGroupLookupResponse>> GetGroupLookups(int academicYearId,
+        CancellationToken cancellationToken = default);
+
+    //სასწავლო წლის დაკავებული კოდები (D186): ჯგუფებისა (exceptGrpId-ის გარდა) და დაპაუზებული შექმნის ბრძანებებისა
+    //(exceptOrderId-ის გარდა), როგორც GroupCodeIsTaken-ში
+    Task<List<string>> GetTakenGroupCodes(int academicYearId, int? exceptGrpId, int? exceptOrderId,
+        CancellationToken cancellationToken = default);
+
+    //მოსწავლის სტატუსის Rate, კოდის კლასისთვის (D186); null, თუ სტატუსი არ არის
+    Task<int?> GetStudentStatusRate(int studentStatusId, CancellationToken cancellationToken = default);
 }

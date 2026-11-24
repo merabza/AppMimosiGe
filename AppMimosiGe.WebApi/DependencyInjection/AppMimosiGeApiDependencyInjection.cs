@@ -15,6 +15,7 @@ public static class AppMimosiGeApiDependencyInjection
         endpoints.UseStudentContractsEndpoints(debugLogger);
         endpoints.UseTeacherContractsEndpoints(debugLogger);
         endpoints.UseGroupsEndpoints(debugLogger);
+        endpoints.UseGroupOrdersEndpoints(debugLogger);
         endpoints.UseLessonGeneratorEndpoints(debugLogger);
         endpoints.UseLessonsEndpoints(debugLogger);
         endpoints.UsePaymentsEndpoints(debugLogger);

@@ -23,6 +23,14 @@ using AppMimosiGe.Application.CrmCalls.GetCrmCallFormLookups;
 using AppMimosiGe.Application.CrmCalls.GetCrmCallsRowsData;
 using AppMimosiGe.Application.CrmCalls.GetCrmCallStudentContracts;
 using AppMimosiGe.Application.CrmCalls.UpdateCrmCall;
+using AppMimosiGe.Application.GroupOrders.CreateGroupOrder;
+using AppMimosiGe.Application.GroupOrders.DeleteGroupOrder;
+using AppMimosiGe.Application.GroupOrders.GetGroupOrder;
+using AppMimosiGe.Application.GroupOrders.GetGroupOrderFormLookups;
+using AppMimosiGe.Application.GroupOrders.GetGroupOrderPrint;
+using AppMimosiGe.Application.GroupOrders.GetGroupOrders;
+using AppMimosiGe.Application.GroupOrders.GetGroupOrdersMode;
+using AppMimosiGe.Application.GroupOrders.UpdateGroupOrder;
 using AppMimosiGe.Application.Groups.CreateGroup;
 using AppMimosiGe.Application.Groups.DeleteGroup;
 using AppMimosiGe.Application.Groups.GetGroup;
@@ -129,6 +137,15 @@ internal static class EndpointsTestApp
         builder.Services.AddSingleton(Mock.Of<ICommandHandler<CreateGroupCommand, int>>());
         builder.Services.AddSingleton(Mock.Of<ICommandHandler<UpdateGroupCommand>>());
         builder.Services.AddSingleton(Mock.Of<ICommandHandler<DeleteGroupCommand>>());
+        builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetGroupOrdersQuery, GroupOrdersRowsDataResponse>>());
+        builder.Services.AddSingleton(Mock
+            .Of<IQueryHandler<GetGroupOrderFormLookupsQuery, GroupOrderFormLookupsResponse>>());
+        builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetGroupOrdersModeQuery, GroupOrdersModeResponse>>());
+        builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetGroupOrderQuery, GroupOrderResponse>>());
+        builder.Services.AddSingleton(Mock.Of<IQueryHandler<GetGroupOrderPrintQuery, GroupOrderPrintResponse>>());
+        builder.Services.AddSingleton(Mock.Of<ICommandHandler<CreateGroupOrderCommand, int>>());
+        builder.Services.AddSingleton(Mock.Of<ICommandHandler<UpdateGroupOrderCommand>>());
+        builder.Services.AddSingleton(Mock.Of<ICommandHandler<DeleteGroupOrderCommand>>());
         builder.Services.AddSingleton(
             Mock.Of<ICommandHandler<GenerateGroupLessonsCommand, LessonsGenerationResponse>>());
         builder.Services.AddSingleton(
