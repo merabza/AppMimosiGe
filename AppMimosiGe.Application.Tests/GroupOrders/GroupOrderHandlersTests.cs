@@ -130,8 +130,11 @@ public sealed class GroupOrderHandlersTests
 
     private GroupRequestValidator GroupValidator()
     {
-        return new GroupRequestValidator(_groupsRepository.Object, _studentContracts.Object,
-            GroupTestData.TeacherContractsRepositoryWhereEverythingExists().Object);
+        return
+        [
+            with(_groupsRepository.Object, _studentContracts.Object,
+                GroupTestData.TeacherContractsRepositoryWhereEverythingExists().Object)
+        ];
     }
 
     private CreateGroupOrderCommandHandler CreateHandler()
